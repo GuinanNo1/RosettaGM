@@ -1,8 +1,8 @@
 .DS_Store
 node_modules/
-tests/out/
 __pycache__/
-rhythmgm/samples/
-rhythmgm/inst_samples/
-rhythmgm/drum_samples/
-rhythmgm/latin_samples/
+**/tests/out/
+circuitgm/rhythmgm/samples/
+circuitgm/rhythmgm/inst_samples/
+circuitgm/rhythmgm/drum_samples/
+circuitgm/rhythmgm/latin_samples/
