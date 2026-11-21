@@ -16,7 +16,7 @@ import { sceneOrder, defaultOrderKind, PPQ } from '../song.js';
 
 // Shown next to "For testing" (from the code actually running, so a stale cached page shows
 // its own version). Bump it, with a line in help.html's version list, on every change.
-export const VERSION = '0.19';
+export const VERSION = '0.20';
 export const VERSION_DATE = '16 Nov 2026';
 
 const $ = (s) => document.querySelector(s);

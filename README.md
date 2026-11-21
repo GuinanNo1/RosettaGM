@@ -1,30 +1,39 @@
-# CircuitGM
-General MIDI for the Novation Circuit Tracks and Circuit Rhythm: sound packs, and browser tools that convert MIDI files to Circuit packs and back, edit synth patches and trim packs.
+# RosettaGM
+General MIDI as a common language for grooveboxes. Like the Rosetta Stone, every tool here translates through one shared language, General MIDI, so songs and sounds can move between devices that can't read each other's files. Each device gets a General MIDI sound pack and converters to and from MIDI.
 
-**Website: https://guinanno1.github.io/CircuitGM/**
+**Website: https://guinanno1.github.io/RosettaGM/**
+
+| Device family | Packs and tools | Status |
+|---|---|---|
+| **CircuitGM**: Novation Circuit Tracks and Circuit Rhythm | TracksGM, RhythmGM, MIDI2Circuit, MIDI2Rhythm, Circuit2MIDI, PatchWorker, CircuitTrim (below) | Ready / alpha |
+| **MoveGM**: Ableton Move | MoveGM sound pack, MIDI2Move converter | In development |
+
+RosettaGM grew out of the CircuitGM repository (21 Nov 2026) and keeps its full history. The old address, `guinanno1.github.io/CircuitGM/`, redirects here.
+
+## CircuitGM: General MIDI for the Novation Circuit
 
 | | What it is | Status | Links |
 |---|---|---|---|
-| **TracksGM** | General MIDI pack for the Circuit Tracks: 128 synth patches in GM order, 64 drum samples in 8 kits | Ready | [Page and patch list](https://guinanno1.github.io/CircuitGM/tracksgm/) · [Download](https://github.com/GuinanNo1/CircuitGM/raw/main/tracksgm/TracksGM_v1.circuittrackspack) · [Code](tracksgm/) |
-| **RhythmGM** | General MIDI sample packs for the Circuit Rhythm: RhythmInstGM (all 128 GM instruments, slot = GM program) and RhythmDrumGM (8 kits × 16 hits, same order in every kit) | Beta | [Page and sample lists](https://guinanno1.github.io/CircuitGM/rhythmgm/) · Download [RhythmInstGM](https://github.com/GuinanNo1/CircuitGM/raw/main/rhythmgm/RhythmInstGM.circuitrhythmpack), [RhythmDrumGM](https://github.com/GuinanNo1/CircuitGM/raw/main/rhythmgm/RhythmDrumGM.circuitrhythmpack) · [Code](rhythmgm/) |
-| **PatchWorker** | Synth patch editor for the Circuit Tracks: edit any patch in a pack, hear it in the browser or live on a linked Circuit Tracks, save `.syx` patches and whole packs | For testing (v0.6) | [Open](https://guinanno1.github.io/CircuitGM/patchworker/) · [Help](https://guinanno1.github.io/CircuitGM/patchworker/help.html) · [Code](patchworker/) |
-| **CircuitTrim** | Trims a Circuit Tracks or Circuit Rhythm pack to the samples and patches its projects use | Alpha 0.3 | [Open](https://guinanno1.github.io/CircuitGM/circuittrim/) · [Code](circuittrim/) |
-| **MIDI2Circuit** | MIDI files, or Circuit Tracks and Circuit Rhythm projects, to Circuit Tracks packs | Alpha 0.14 | [Open](https://guinanno1.github.io/CircuitGM/midi2circuit/) · [Help](https://guinanno1.github.io/CircuitGM/midi2circuit/help.html) · [Code](midi2circuit/) |
-| **MIDI2Rhythm** | MIDI files or Circuit pack projects to Circuit Rhythm packs (RhythmInstGM + a RhythmDrumGM kit, or the pack's own samples) | For testing (v0.19) | [Open](https://guinanno1.github.io/CircuitGM/midi2rhythm/) · [Help](https://guinanno1.github.io/CircuitGM/midi2rhythm/help.html) · [Code](midi2rhythm/) |
-| **Circuit2MIDI** | A project from a Circuit Tracks or Circuit Rhythm pack to a Standard MIDI file | Alpha 0.5 | [Open](https://guinanno1.github.io/CircuitGM/circuit2midi/) · [Help](https://guinanno1.github.io/CircuitGM/circuit2midi/help.html) · [Code](circuit2midi/) |
+| **TracksGM** | General MIDI pack for the Circuit Tracks: 128 synth patches in GM order, 64 drum samples in 8 kits | Ready | [Page and patch list](https://guinanno1.github.io/RosettaGM/tracksgm/) · [Download](https://github.com/GuinanNo1/RosettaGM/raw/main/tracksgm/TracksGM_v1.circuittrackspack) · [Code](tracksgm/) |
+| **RhythmGM** | General MIDI sample packs for the Circuit Rhythm: RhythmInstGM (all 128 GM instruments, slot = GM program) and RhythmDrumGM (8 kits × 16 hits, same order in every kit) | Beta | [Page and sample lists](https://guinanno1.github.io/RosettaGM/rhythmgm/) · Download [RhythmInstGM](https://github.com/GuinanNo1/RosettaGM/raw/main/rhythmgm/RhythmInstGM.circuitrhythmpack), [RhythmDrumGM](https://github.com/GuinanNo1/RosettaGM/raw/main/rhythmgm/RhythmDrumGM.circuitrhythmpack) · [Code](rhythmgm/) |
+| **PatchWorker** | Synth patch editor for the Circuit Tracks: edit any patch in a pack, hear it in the browser or live on a linked Circuit Tracks, save `.syx` patches and whole packs | For testing (v0.7) | [Open](https://guinanno1.github.io/RosettaGM/patchworker/) · [Help](https://guinanno1.github.io/RosettaGM/patchworker/help.html) · [Code](patchworker/) |
+| **CircuitTrim** | Trims a Circuit Tracks or Circuit Rhythm pack to the samples and patches its projects use | Alpha 0.4 | [Open](https://guinanno1.github.io/RosettaGM/circuittrim/) · [Code](circuittrim/) |
+| **MIDI2Circuit** | MIDI files, or Circuit Tracks and Circuit Rhythm projects, to Circuit Tracks packs | Alpha 0.15 | [Open](https://guinanno1.github.io/RosettaGM/midi2circuit/) · [Help](https://guinanno1.github.io/RosettaGM/midi2circuit/help.html) · [Code](midi2circuit/) |
+| **MIDI2Rhythm** | MIDI files or Circuit pack projects to Circuit Rhythm packs (RhythmInstGM + a RhythmDrumGM kit, or the pack's own samples) | For testing (v0.20) | [Open](https://guinanno1.github.io/RosettaGM/midi2rhythm/) · [Help](https://guinanno1.github.io/RosettaGM/midi2rhythm/help.html) · [Code](midi2rhythm/) |
+| **Circuit2MIDI** | A project from a Circuit Tracks or Circuit Rhythm pack to a Standard MIDI file | Alpha 0.6 | [Open](https://guinanno1.github.io/RosettaGM/circuit2midi/) · [Help](https://guinanno1.github.io/RosettaGM/circuit2midi/help.html) · [Code](circuit2midi/) |
 
-Everything runs in the browser: nothing is uploaded, and there is no server. Each folder has its own README with the details. The alpha tools are for testing: please report problems in [Issues](https://github.com/GuinanNo1/CircuitGM/issues).
+Everything runs in the browser: nothing is uploaded, and there is no server. Each folder has its own README with the details. [`circuitgm/`](circuitgm/) is the CircuitGM overview page. The alpha tools are for testing: please report problems in [Issues](https://github.com/GuinanNo1/RosettaGM/issues).
 
 ## Hosting on GitHub Pages
 
-The site is static (HTML, CSS and JavaScript modules), with no build step. In **Settings → Pages**, set **Source** to *Deploy from a branch*, choose `main` and the `/ (root)` folder, then **Save**. After a minute or two it is live at `https://guinanno1.github.io/CircuitGM/`.
+The site is static (HTML, CSS and JavaScript modules), with no build step. In **Settings → Pages**, set **Source** to *Deploy from a branch*, choose `main` and the `/ (root)` folder, then **Save**. After a minute or two it is live at `https://guinanno1.github.io/RosettaGM/`.
 
 ## Running it on your own computer
 
 Browsers block JavaScript modules and file loading when a page is opened straight from disk, so serve the folder instead:
 
 ```sh
-cd CircuitGM
+cd RosettaGM
 python3 -m http.server 8765
 ```
 
@@ -34,7 +43,8 @@ Then open <http://localhost:8765/>.
 
 | Path | What it is |
 |---|---|
-| `index.html` | The CircuitGM landing page. |
+| `index.html` | The RosettaGM home page (all device families). |
+| `circuitgm/index.html` | The CircuitGM overview page (Circuit packs and tools). |
 | `css/app.css` | Styles shared by every page, including the site navigation. |
 | `tracksgm/` | The TracksGM pack, its web page, drum samples, build tools and patch data (see [`tracksgm/PACK.md`](tracksgm/PACK.md)). |
 | `rhythmgm/` | The RhythmInstGM and RhythmDrumGM packs, their SD-card versions, web page, build scripts and sample data (see [`rhythmgm/README.md`](rhythmgm/README.md)). |

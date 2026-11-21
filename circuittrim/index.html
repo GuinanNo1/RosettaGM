@@ -14,10 +14,16 @@
 <script>(function(){var r=document.documentElement;try{if(localStorage.getItem('circuitgm-advanced-circuittrim')!=='1')r.classList.add('simple')}catch(e){r.classList.add('simple')}})();</script>
 </head>
 <body>
-<nav class="sitenav" aria-label="CircuitGM">
+<nav class="sitenav" aria-label="RosettaGM">
   <div class="wrap">
-    <a class="brand" href="../" title="CircuitGM home: all packs and tools">Circuit<b>GM</b></a>
+    <a class="brand" href="../" title="RosettaGM home: all devices, packs and tools">Rosetta<b>GM</b></a>
     <ul class="navgroups">
+      <li class="navgroup">
+        <button type="button" aria-haspopup="true">Devices</button>
+        <ul>
+          <li><a href="../circuitgm/">Novation Circuit (CircuitGM)</a></li>
+        </ul>
+      </li>
       <li class="navgroup">
         <button type="button" aria-haspopup="true">General MIDI Packs</button>
         <ul>
@@ -26,7 +32,7 @@
         </ul>
       </li>
       <li class="navgroup">
-        <button type="button" aria-haspopup="true">Circuit MIDI Converters</button>
+        <button type="button" aria-haspopup="true">MIDI Converters</button>
         <ul>
           <li><a href="../midi2circuit/">MIDI2Circuit</a></li>
           <li><a href="../midi2rhythm/">MIDI2Rhythm</a></li>
@@ -51,9 +57,9 @@
 
 <header class="masthead">
   <div class="wrap">
-    <h1>CircuitTrim <span>Trim Circuit Tracks and Circuit Rhythm packs</span> <em class="badge" title="Version of this page. If you expect a newer one, refresh with Shift-reload; GitHub Pages can take about 10 minutes to update.">alpha 0.3</em></h1>
+    <h1>CircuitTrim <span>Trim Circuit Tracks and Circuit Rhythm packs</span> <em class="badge" title="Version of this page. If you expect a newer one, refresh with Shift-reload; GitHub Pages can take about 10 minutes to update.">alpha 0.4</em></h1>
     <p class="lede">Load a pack saved from Novation Components. CircuitTrim looks through every project in it and saves a smaller copy that keeps all of those projects, plus every sample and patch they use, and leaves out the rest. In Advanced mode you can keep just one project and its sounds instead.</p>
-    <p class="alpha">Alpha 0.3, for testing. Keep your original pack, and please report anything odd on <a href="https://github.com/GuinanNo1/CircuitGM/issues">GitHub</a>.</p>
+    <p class="alpha">Alpha 0.4, for testing. Keep your original pack, and please report anything odd on <a href="https://github.com/GuinanNo1/RosettaGM/issues">GitHub</a>.</p>
   </div>
 </header>
 
@@ -121,7 +127,7 @@
 
 <footer class="wrap sitefoot">
   <p>Project-format code and research: <a href="https://github.com/namirsab/circuit-tracks-tools">circuit-tracks-tools</a> by Namir Sayed-Ahmad Baraza, and <a href="https://github.com/Ondrysak/ncstool">ncstool</a>.</p>
-  <p>Not affiliated with Novation or Focusrite; "Circuit Tracks", "Circuit Rhythm" and "Components" are their trademarks. <a href="https://github.com/GuinanNo1/CircuitGM">Source on GitHub</a> · <a href="https://github.com/GuinanNo1/CircuitGM/issues">Report a problem</a></p>
+  <p>Not affiliated with Novation or Focusrite; "Circuit Tracks", "Circuit Rhythm" and "Components" are their trademarks. <a href="https://github.com/GuinanNo1/RosettaGM">Source on GitHub</a> · <a href="https://github.com/GuinanNo1/RosettaGM/issues">Report a problem</a></p>
 </footer>
 <script type="module" src="../js/circuittrim.js?v=20261117ct"></script>
 </body>

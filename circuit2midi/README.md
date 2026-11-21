@@ -1,8 +1,8 @@
-# CircuitGM Circuit to MIDI Converter (Circuit2MIDI), alpha 0.5
+# CircuitGM Circuit to MIDI Converter (Circuit2MIDI), alpha 0.6
 
-**Try it:** https://guinanno1.github.io/CircuitGM/circuit2midi/
+**Try it:** https://guinanno1.github.io/RosettaGM/circuit2midi/
 
-**Help:** [Quickstart](https://guinanno1.github.io/CircuitGM/circuit2midi/help.html#quickstart) · [User guide](https://guinanno1.github.io/CircuitGM/circuit2midi/help.html)
+**Help:** [Quickstart](https://guinanno1.github.io/RosettaGM/circuit2midi/help.html#quickstart) · [User guide](https://guinanno1.github.io/RosettaGM/circuit2midi/help.html)
 
 The reverse of MIDI2Circuit. A web page that opens a Novation Components pack for the **Circuit Tracks** (`.circuittrackspack`) or **Circuit Rhythm** (`.circuitrhythmpack`), and:
 

@@ -1,8 +1,8 @@
-# CircuitGM Patch Editor (PatchWorker), for testing, v0.6
+# CircuitGM Patch Editor (PatchWorker), for testing, v0.7
 
-**Try it:** https://guinanno1.github.io/CircuitGM/patchworker/
+**Try it:** https://guinanno1.github.io/RosettaGM/patchworker/
 
-**Help:** https://guinanno1.github.io/CircuitGM/patchworker/help.html
+**Help:** https://guinanno1.github.io/RosettaGM/patchworker/help.html
 
 A web page that edits the synth patches of a Novation Circuit Tracks. It opens with the [TracksGM](../tracksgm/) pack, plays patches in the browser, links to a Circuit Tracks over Web MIDI when one is connected, and saves single `.syx` patches or a complete `.circuittrackspack`. Nothing is uploaded, and there is no server.
 

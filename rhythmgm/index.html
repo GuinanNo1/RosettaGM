@@ -12,10 +12,16 @@
 <link rel="stylesheet" href="../css/app.css?v=20261116fx4">
 </head>
 <body>
-<nav class="sitenav" aria-label="CircuitGM">
+<nav class="sitenav" aria-label="RosettaGM">
   <div class="wrap">
-    <a class="brand" href="../" title="CircuitGM home: all packs and tools">Circuit<b>GM</b></a>
+    <a class="brand" href="../" title="RosettaGM home: all devices, packs and tools">Rosetta<b>GM</b></a>
     <ul class="navgroups">
+      <li class="navgroup">
+        <button type="button" aria-haspopup="true">Devices</button>
+        <ul>
+          <li><a href="../circuitgm/">Novation Circuit (CircuitGM)</a></li>
+        </ul>
+      </li>
       <li class="navgroup current">
         <button type="button" aria-haspopup="true">General MIDI Packs</button>
         <ul>
@@ -24,7 +30,7 @@
         </ul>
       </li>
       <li class="navgroup">
-        <button type="button" aria-haspopup="true">Circuit MIDI Converters</button>
+        <button type="button" aria-haspopup="true">MIDI Converters</button>
         <ul>
           <li><a href="../midi2circuit/">MIDI2Circuit</a></li>
           <li><a href="../midi2rhythm/">MIDI2Rhythm</a></li>
@@ -51,7 +57,7 @@
   <div class="wrap">
     <h1>RhythmGM <span>General MIDI packs for the Circuit Rhythm</span> <em class="badge">beta</em></h1>
     <p class="lede">Three Novation Components packs for the Circuit Rhythm, each filling all <b>128 sample slots</b> from GeneralUser GS. <b>RhythmInstGM</b> holds all 128 General MIDI instruments in GM order: slot 1 is Grand Piano and slot 128 is Gunshot, just as on any GM sound list. <b>RhythmDrumGM</b> holds the eight GS drum kits, 16 hits each: the TracksGM kit in the first eight, second sounds in the next eight, and <b>RhythmLatinGM</b> eight Latin percussion kits in the same sixteen slots.</p>
-    <p class="alpha">Beta: built and checked in software, not yet loaded on a Circuit Rhythm. Keep a backup of your packs, and please report anything odd on <a href="https://github.com/GuinanNo1/CircuitGM/issues">GitHub</a>.</p>
+    <p class="alpha">Beta: built and checked in software, not yet loaded on a Circuit Rhythm. Keep a backup of your packs, and please report anything odd on <a href="https://github.com/GuinanNo1/RosettaGM/issues">GitHub</a>.</p>
   </div>
 </header>
 
@@ -363,7 +369,7 @@
   <section class="panel" id="made">
     <h2>How they were made</h2>
     <p>Every sample was rendered from GeneralUser GS through FluidSynth (the synth it is voiced for), with reverb and chorus off, summed to mono at 48 kHz and 16 bits, the format the Circuit Rhythm stores. Instruments play at velocity 100; sustained sounds are held for 1.4 seconds and keep their release, and every instrument is capped at two seconds so all 128 fit. Drums play at velocity 110 with the same length caps as TracksGM (cymbals four seconds; open hats, toms and percussion two). The packs' project files and Grid FX are laid out exactly as Components saves a pack with empty projects and default Grid FX.</p>
-    <p>The scripts rebuild the packs exactly: <a href="https://github.com/GuinanNo1/CircuitGM/blob/main/rhythmgm/tools/make_rhythminstgm.py"><code>make_rhythminstgm.py</code></a> (names and root notes are a list at its top) and <a href="https://github.com/GuinanNo1/CircuitGM/blob/main/rhythmgm/tools/make_rhythmdrumgm.py"><code>make_rhythmdrumgm.py</code></a> (the roles and each kit's picks) and <a href="https://github.com/GuinanNo1/CircuitGM/blob/main/rhythmgm/tools/make_rhythmlatingm.py"><code>make_rhythmlatingm.py</code></a> (the Latin layout).</p>
+    <p>The scripts rebuild the packs exactly: <a href="https://github.com/GuinanNo1/RosettaGM/blob/main/rhythmgm/tools/make_rhythminstgm.py"><code>make_rhythminstgm.py</code></a> (names and root notes are a list at its top) and <a href="https://github.com/GuinanNo1/RosettaGM/blob/main/rhythmgm/tools/make_rhythmdrumgm.py"><code>make_rhythmdrumgm.py</code></a> (the roles and each kit's picks) and <a href="https://github.com/GuinanNo1/RosettaGM/blob/main/rhythmgm/tools/make_rhythmlatingm.py"><code>make_rhythmlatingm.py</code></a> (the Latin layout).</p>
   </section>
 
   <section class="panel" id="credits">
@@ -376,7 +382,7 @@
 </main>
 
 <footer class="wrap sitefoot">
-  <p>Not affiliated with Novation or Focusrite; "Circuit Tracks", "Circuit Rhythm" and "Components" are their trademarks. <a href="https://github.com/GuinanNo1/CircuitGM">Source on GitHub</a> · <a href="https://github.com/GuinanNo1/CircuitGM/issues">Report a problem</a></p>
+  <p>Not affiliated with Novation or Focusrite; "Circuit Tracks", "Circuit Rhythm" and "Components" are their trademarks. <a href="https://github.com/GuinanNo1/RosettaGM">Source on GitHub</a> · <a href="https://github.com/GuinanNo1/RosettaGM/issues">Report a problem</a></p>
 </footer>
 </body>
 </html>

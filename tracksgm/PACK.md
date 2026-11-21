@@ -1,10 +1,10 @@
 # TracksGM
 
-A General MIDI sound set for the Novation Circuit Tracks, as a Novation Components pack (`TracksGM_v1.circuittrackspack`): **128 synth patches in General MIDI order** and **64 drum samples** (8 kits of 8). It works as a general-purpose pack on its own, and it is the sound set the [CircuitGM MIDI to Circuit Converter (MIDI2Circuit)](https://guinanno1.github.io/CircuitGM/midi2circuit/) builds on. This is the master copy until it is revised.
+A General MIDI sound set for the Novation Circuit Tracks, as a Novation Components pack (`TracksGM_v1.circuittrackspack`): **128 synth patches in General MIDI order** and **64 drum samples** (8 kits of 8). It works as a general-purpose pack on its own, and it is the sound set the [CircuitGM MIDI to Circuit Converter (MIDI2Circuit)](https://guinanno1.github.io/RosettaGM/midi2circuit/) builds on. This is the master copy until it is revised.
 
-The final TracksGM pack will be further manually tuned to improve the patches. The final pack is used in the [CircuitGM MIDI to Circuit Converter (MIDI2Circuit)](https://guinanno1.github.io/CircuitGM/midi2circuit/) (though alternate packs can be uploaded into the converter).
+The final TracksGM pack will be further manually tuned to improve the patches. The final pack is used in the [CircuitGM MIDI to Circuit Converter (MIDI2Circuit)](https://guinanno1.github.io/RosettaGM/midi2circuit/) (though alternate packs can be uploaded into the converter).
 
-This file is the only copy of the pack in the repository: MIDI2Circuit loads it from here as its default base pack, so replacing it here updates the converter too. The pack's web page is <https://guinanno1.github.io/CircuitGM/tracksgm/>; after a patch or sample is renamed, run `python3 tracksgm/tools/make_site_lists.py` from the repository root to refresh its patch list and drum table.
+This file is the only copy of the pack in the repository: MIDI2Circuit loads it from here as its default base pack, so replacing it here updates the converter too. The pack's web page is <https://guinanno1.github.io/RosettaGM/tracksgm/>; after a patch or sample is renamed, run `python3 tracksgm/tools/make_site_lists.py` from the repository root to refresh its patch list and drum table.
 
 | | |
 |---|---|

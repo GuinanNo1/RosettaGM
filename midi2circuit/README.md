@@ -1,8 +1,8 @@
-# CircuitGM MIDI to Circuit Converter (MIDI2Circuit), alpha 0.14
+# CircuitGM MIDI to Circuit Converter (MIDI2Circuit), alpha 0.15
 
-**Try it:** https://guinanno1.github.io/CircuitGM/midi2circuit/
+**Try it:** https://guinanno1.github.io/RosettaGM/midi2circuit/
 
-**Help:** [Quickstart](https://guinanno1.github.io/CircuitGM/midi2circuit/help.html#quickstart) · [User guide](https://guinanno1.github.io/CircuitGM/midi2circuit/help.html)
+**Help:** [Quickstart](https://guinanno1.github.io/RosettaGM/midi2circuit/help.html#quickstart) · [User guide](https://guinanno1.github.io/RosettaGM/midi2circuit/help.html)
 
 A web page that turns a General MIDI file (`.mid`) into a Circuit Tracks pack (`.circuittrackspack`) you can load with Novation Components. It runs entirely in the browser: nothing is uploaded, and there is no server.
 

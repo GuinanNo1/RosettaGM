@@ -1,6 +1,22 @@
-# CircuitGM: notes for Claude sessions
+# RosettaGM: notes for Claude sessions
 
-## Check the official guides before reverse-engineering
+RosettaGM is the umbrella for Ian's General MIDI translation tools for
+grooveboxes. Device families keep their own names: **CircuitGM** (Novation
+Circuit Tracks and Rhythm) and **MoveGM** (Ableton Move: the MoveGM pack and
+MIDI2Move). The repo started from CircuitGM's history on 21 Nov 2026; the old
+GuinanNo1/CircuitGM repo only redirects here.
+
+Layout: tool folders sit at the top level (`tracksgm/`, `midi2circuit/`,
+… and, for Move, `movegm/`, `midi2move/`), so every page is one level deep
+and links to `../css/app.css` and `../js/…`. `index.html` is the RosettaGM
+home; `circuitgm/index.html` is the CircuitGM overview. New device families
+get their own overview folder and an entry in the menu's Devices group.
+
+The Move tools' research and handoff notes are in the claude.ai Project
+"Ableton Move" and in `~/Documents/Claude/Ableton Move Lab/` on Ian's Mac.
+
+## Circuit: check the official guides before reverse-engineering
+
 
 Ian keeps Novation's official documents on his Mac, in
 `~/Documents/Claude/CircuitGM-testdata/guides/` (a connected folder when the
@@ -35,5 +51,10 @@ hardware recordings stay local; the repo only describes the method.
 - Ian is red/green colour blind: refer to Components' pack/project colours by
   palette number 1–14, left to right (top row 1–7, bottom row 8–14), not
   by colour name.
-- The site menu is the same on every page (four dropdown groups); add a new
-  tool to it on all pages, including PatchWorker's `topnav`.
+- The site menu is the same on every page (five dropdown groups: Devices,
+  General MIDI Packs, MIDI Converters, Patch Editors, Pack Trimming); add a
+  new tool to it on all pages, including PatchWorker's `topnav` and the
+  RosettaGM home page.
+- Not affiliated with Novation, Focusrite or Ableton. GeneralUser GS (S.
+  Christian Collins) is credited wherever its samples are used; commercial
+  Move packs on Ian's Mac are research only, never copied.

@@ -18,7 +18,7 @@ General MIDI sample packs for the Novation Circuit Rhythm, in two packs that eac
 
 Sample time: RhythmInstGM 211.0 s, RhythmDrumGM 135.1 s, of the Circuit Rhythm's 228.1 s; every sample is 48 kHz, 16-bit, mono.
 
-**Page and sample lists:** https://guinanno1.github.io/CircuitGM/rhythmgm/
+**Page and sample lists:** https://guinanno1.github.io/RosettaGM/rhythmgm/
 
 Beta: built and checked in software (`tests/rhythm_packs.mjs`; pitch checked per instrument), not yet loaded in Components or on a Circuit Rhythm.
 
