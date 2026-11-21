@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../../css/app.css?v=20261116fx4">
-<link rel="stylesheet" href="../css/m2m.css?v=20261121m2m5">
+<link rel="stylesheet" href="../css/m2m.css?v=20261121m2m6">
 <script>(function(){var r=document.documentElement;try{if(localStorage.getItem('movegm-advanced-m2m')!=='1')r.classList.add('simple')}catch(e){r.classList.add('simple')}})();</script>
 </head>
 <body>
@@ -59,10 +59,10 @@
 </nav>
 <header class="masthead">
   <div class="wrap">
-    <h1>MIDI2Move <span>MIDI to Ableton Move converter</span> <em class="badge" title="Version of this page. If you expect a newer one, refresh with Shift-reload; GitHub Pages can take about 10 minutes to update.">alpha 0.5</em></h1>
+    <h1>MIDI2Move <span>MIDI to Ableton Move converter</span> <em class="badge" title="Version of this page. If you expect a newer one, refresh with Shift-reload; GitHub Pages can take about 10 minutes to update.">alpha 0.6</em></h1>
     <p class="helplinks"><a href="help.html#quickstart">Quickstart</a> · <a href="help.html#guide">User guide</a></p>
     <p class="lede">Turn a General MIDI file into an Ableton Move Set. Pick the parts you want, hear how they'll play, and download an <code>.ablbundle</code> for Move Manager, using the MoveGM sounds.</p>
-    <p class="alpha">Alpha 0.5, for testing. Sets open and play in Ableton Live 12; they have not yet been tested on Move hardware. Keep backups of your Move Sets.</p>
+    <p class="alpha">Alpha 0.6, for testing. Sets open and play in Ableton Live 12; they have not yet been tested on Move hardware. Keep backups of your Move Sets.</p>
   </div>
 </header>
 
@@ -82,13 +82,14 @@
     <div class="basepack" id="basepack">
       <div class="bp-info">
         <span class="k">Sound pack</span>
-        <b id="base-name">MoveGM</b>
-        <span class="status" id="base-status">Choose your MoveGM folder (the one holding "01 Piano" … "18 Drift Synths"). Don't have it? <a href="../pack/#download">Download MoveGM</a> and unzip it first.</span>
+        <b id="base-name">MoveGM v0.2</b>
+        <span class="status" id="base-status">Loading from this site…</span>
       </div>
       <div class="bp-actions">
-        <label class="btn small filebtn">Choose MoveGM folder…<input type="file" id="gmdir" webkitdirectory directory multiple></label>
+        <button class="btn small" id="gmsite" type="button" hidden>Use MoveGM from this site</button>
+        <label class="btn small filebtn">Use another pack folder…<input type="file" id="gmdir" webkitdirectory directory multiple></label>
       </div>
-      <p class="hint small">The Set uses the MoveGM presets and samples: they're needed for the preview sounds and for building the Set. Nothing is uploaded.</p>
+      <p class="hint small">MIDI2Move plays and builds with the <a href="../pack/">MoveGM</a> sounds from this site, so there's nothing to set up. To use another copy instead (your own edited MoveGM, or a newer or older build), choose its folder: it needs MoveGM's layout, "01 Piano" … "18 Drift Synths". Nothing is uploaded. Whichever pack you use, put the same presets on your Move.</p>
     </div>
     <label class="drop" id="drop">
       <input type="file" id="file" accept=".mid,.midi,.rmi,.kar,audio/midi">
@@ -166,8 +167,8 @@
   <p>Sounds: MoveGM, built from <a href="https://github.com/mrbumpy409/GeneralUser-GS">GeneralUser GS</a> by S. Christian Collins (GeneralUser GS licence). Layout follows <a href="../../circuitgm/midi2circuit/">MIDI2Circuit</a>. Part of <a href="../../">RosettaGM</a>. <a href="https://github.com/GuinanNo1/RosettaGM">Source on GitHub</a> · <a href="https://github.com/GuinanNo1/RosettaGM/issues">Report a problem</a> Move file format worked out from Move Sets; not affiliated with Ableton. "Ableton", "Move" and "Live" are Ableton's trademarks.</p>
 </footer>
 
-<script src="../js/m2m-core.js?v=20261121m2m5"></script>
-<script src="../js/m2m-manifest.js?v=20261121m2m5"></script>
-<script src="../js/m2m-app.js?v=20261121m2m5"></script>
+<script src="../js/m2m-core.js?v=20261121m2m6"></script>
+<script src="../js/m2m-manifest.js?v=20261121m2m6"></script>
+<script src="../js/m2m-app.js?v=20261121m2m6"></script>
 </body>
 </html>

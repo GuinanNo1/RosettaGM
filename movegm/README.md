@@ -6,7 +6,7 @@ General MIDI for the Ableton Move: a sound pack, and MIDI2Move, which turns MIDI
 | | What it is | Status | Links |
 |---|---|---|---|
 | **MoveGM** | 128 General MIDI instruments (Melodic Sampler), 12 drum kits and 23 Drift synths as Move presets, built from GeneralUser GS | v0.2, for testing | [Pack page](https://guinanno1.github.io/RosettaGM/movegm/pack/) · [Audition](https://guinanno1.github.io/RosettaGM/movegm/pack/audition.html) |
-| **MIDI2Move** | A General MIDI file to a Move Set (`.ablbundle`), using the MoveGM sounds | Alpha 0.5 | [Open](https://guinanno1.github.io/RosettaGM/movegm/midi2move/) · [Help](https://guinanno1.github.io/RosettaGM/movegm/midi2move/help.html) |
+| **MIDI2Move** | A General MIDI file to a Move Set (`.ablbundle`), using the MoveGM sounds | Alpha 0.6 | [Open](https://guinanno1.github.io/RosettaGM/movegm/midi2move/) · [Help](https://guinanno1.github.io/RosettaGM/movegm/midi2move/help.html) |
 
 Both open and play in Ableton Live 12 (including Lite). Neither has been tested on Move hardware yet.
 
@@ -18,6 +18,7 @@ Paths are relative to this folder. The menu and shared styles (`../css/app.css`)
 |---|---|
 | `index.html` | The MoveGM overview page. |
 | `pack/index.html` | The pack page: download, install, preset list, licence. |
+| `pack/MoveGM/` | The pack itself (163 `.ablpresetbundle` files, ≈130 MB): MIDI2Move loads its sounds from here. The same files are zipped as the release asset. |
 | `pack/audition.html` | Audition page with every preset as an embedded MP3 (built by `tools/make_page.py`). |
 | `pack/demos/` | Demo Sets (`.ablbundle`) and an offline render. |
 | `pack/README.txt`, `pack/LICENSE-GeneralUser-GS.txt` | The README and licence that ship inside the pack. |
@@ -31,7 +32,7 @@ Paths are relative to this folder. The menu and shared styles (`../css/app.css`)
 | `docs/` | `Move-File-Format-Notes.md`, `Move-Effects-Reference.md`, `MoveGM-build-notes.md`, `MIDI2Move-design.md`, `versions.md`. |
 | `tests/` | `test.js`, `test_pads.js` (Node builds of test songs), `uitest*.py` (Playwright), `alstest.py`. They still point at the paths used in the Ableton Move Lab (`/home/claude/out` for the built pack); set those before running. |
 
-The pack itself (≈135 MB of `.ablpresetbundle` files) isn't in the repository: it's attached to the GitHub release [`movegm-v0.2`](https://github.com/GuinanNo1/RosettaGM/releases/tag/movegm-v0.2) as `MoveGM-v0.2.zip`.
+The pack is in two places: unzipped in `pack/MoveGM/`, where MIDI2Move fetches each preset as it needs it, and zipped as `MoveGM-v0.2.zip` on the GitHub release [`movegm-v0.2`](https://github.com/GuinanNo1/RosettaGM/releases/tag/movegm-v0.2), for the download button. Update both together when the pack changes.
 
 ## Rebuilding the pack
 
@@ -42,6 +43,7 @@ python3 build_drift.py out/
 python3 validate.py out/
 python3 make_page.py out/                     # audition page (needs ffmpeg previews from preview.py)
 cp out/movegm-manifest.json ../data/ && cd .. && python3 tools/make_m2m_manifest.py
+# then replace pack/MoveGM/ with out/MoveGM/, and attach a new zip to a new release
 ```
 
 ## Credits and licences

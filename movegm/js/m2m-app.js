@@ -37,16 +37,44 @@ const mode = (() => {
 })();
 
 /* ---------- step 1: sound pack + MIDI ---------- */
+/* Where the sounds come from: MoveGM on this site by default, or a folder the user picks. */
+const SITE_PACK = location.protocol === 'file:' ? null : new URL('../pack/MoveGM/', location.href).href;
+const packStatus = (text, isError) => { $('#base-status').textContent = text; $('#base-status').classList.toggle('error', !!isError); };
+const usePack = (name, getBytes, fromSite) => {
+  lib = { manifest: MANIFEST, loadPreset: M2M.loadPresetFrom(getBytes) };
+  $('#base-name').textContent = name;
+  $('#gmsite').hidden = fromSite || !SITE_PACK;
+  buffers.clear(); updateBuild();
+};
+async function useSitePack() {
+  if (!SITE_PACK) { packStatus('Choose your MoveGM folder (the one holding "01 Piano" … "18 Drift Synths").'); return; }
+  gmFiles = null;
+  const url = rel => SITE_PACK + rel.split('/').map(encodeURIComponent).join('/');
+  usePack('MoveGM v0.2', async rel => {
+    const r = await fetch(url(rel));
+    if (!r.ok) throw new Error(`Couldn't load ${rel} from the site (${r.status})`);
+    return new Uint8Array(await r.arrayBuffer());
+  }, true);
+  packStatus('Loading from this site…');
+  try {
+    const r = await fetch(url(MANIFEST.programs[0].preset), { method: 'HEAD' });
+    if (!r.ok) throw new Error(String(r.status));
+    packStatus(`From this site: ${MANIFEST.programs.length} instruments, ${MANIFEST.kits.length} drum kits, ${(MANIFEST.drift || []).length} Drift synths. Sounds load as they're needed.`);
+  } catch (err) {
+    packStatus(`Couldn't reach the MoveGM sounds on this site. Check your connection, or choose a MoveGM folder.`, true);
+  }
+}
+$('#gmsite').addEventListener('click', () => { $('#gmdir').value = ''; useSitePack(); });
 $('#gmdir').addEventListener('change', e => {
-  const files = [...e.target.files]; gmFiles = new Map();
+  const files = [...e.target.files]; if (!files.length) return;
+  gmFiles = new Map();
   for (const f of files) { const rp = f.webkitRelativePath || f.name; gmFiles.set(rp.slice(rp.indexOf('/') + 1), f); }
+  const top = (files[0].webkitRelativePath || '').split('/')[0] || 'your folder';
   const need = MANIFEST.programs.map(p => p.preset).concat(MANIFEST.kits.map(k => k.preset));
   const found = need.filter(p => gmFiles.has(p)).length;
   const ok = found === need.length;
-  $('#base-status').textContent = ok ? `Loaded: ${MANIFEST.programs.length} programs, ${MANIFEST.kits.length} drum kits, ${(MANIFEST.drift || []).length} Drift synths.` : `Only ${found} of ${need.length} MoveGM presets found. Is this the MoveGM folder?`;
-  $('#base-status').classList.toggle('error', !ok);
-  lib = { manifest: MANIFEST, loadPreset: M2M.loadPresetFrom(async rel => { const f = gmFiles.get(rel); if (!f) throw new Error('Missing in MoveGM folder: ' + rel); return new Uint8Array(await f.arrayBuffer()); }) };
-  buffers.clear(); updateBuild();
+  packStatus(ok ? `From your folder "${top}": ${MANIFEST.programs.length} instruments, ${MANIFEST.kits.length} drum kits, ${(MANIFEST.drift || []).length} Drift synths.` : `Only ${found} of ${need.length} MoveGM presets found in "${top}". Is it a MoveGM folder (holding "01 Piano" … "18 Drift Synths")?`, !ok);
+  usePack(`Folder: ${top}`, async rel => { const f = gmFiles.get(rel); if (!f) throw new Error('Missing in the chosen folder: ' + rel); return new Uint8Array(await f.arrayBuffer()); }, false);
 });
 const drop = $('#drop');
 ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
@@ -488,4 +516,6 @@ async function patchAls(file) {
 /* ---------- site menu (as CircuitGM) ---------- */
 for (const g of document.querySelectorAll('.navgroup > button')) g.addEventListener('click', () => { const li = g.parentElement, open = !li.classList.contains('open'); for (const x of document.querySelectorAll('.navgroup.open')) x.classList.remove('open'); li.classList.toggle('open', open); });
 document.addEventListener('click', e => { if (!e.target.closest('.navgroup')) for (const x of document.querySelectorAll('.navgroup.open')) x.classList.remove('open'); });
+
+useSitePack();
 }

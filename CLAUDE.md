@@ -23,10 +23,14 @@ the menu's Devices group on every page.
 - Format research: `movegm/docs/Move-File-Format-Notes.md`,
   `Move-Effects-Reference.md`, `MoveGM-build-notes.md`, `MIDI2Move-design.md`.
   Read these before changing any Move file writer.
-- The MoveGM pack (≈135 MB) is not in the repo: it is the release asset
-  `MoveGM-v0.2.zip` (tag `movegm-v0.2`). Working copies, test Sets and the
-  commercial packs used for research live in `~/Documents/Claude/Ableton Move
-  Lab/` on Ian's Mac; the claude.ai Project "Ableton Move" has the handoff.
+- The MoveGM pack is in two places: unzipped in `movegm/pack/MoveGM/` (MIDI2Move
+  fetches presets from there by default) and as the release asset
+  `MoveGM-v0.2.zip` (tag `movegm-v0.2`, the pack page's download). Update both
+  together. Get a release asset with `gh api -H "Accept: application/octet-stream"
+  repos/GuinanNo1/RosettaGM/releases/assets/<id>` (gh release download uses
+  GraphQL, which is blocked). Working copies, test Sets and the commercial packs
+  used for research live in `~/Documents/Claude/Ableton Move Lab/` on Ian's
+  Mac; the claude.ai Project "Ableton Move" has the handoff.
 - After a MoveGM rebuild: copy `movegm-manifest.json` to `movegm/data/`, run
   `python3 movegm/tools/make_m2m_manifest.py`, bump MIDI2Move's version.
 - Moving large files from Ian's Mac into this container is slow; ask him to

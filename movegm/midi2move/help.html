@@ -58,7 +58,7 @@
 <header class="masthead">
   <div class="wrap">
     <p class="crumbs"><a href="./">← Back to MIDI2Move</a></p>
-    <h1>MIDI2Move help <span>MoveGM MIDI to Move Converter</span> <em class="badge" title="Version of this page. If you expect a newer one, refresh with Shift-reload; GitHub Pages can take about 10 minutes to update.">alpha 0.5</em></h1>
+    <h1>MIDI2Move help <span>MoveGM MIDI to Move Converter</span> <em class="badge" title="Version of this page. If you expect a newer one, refresh with Shift-reload; GitHub Pages can take about 10 minutes to update.">alpha 0.6</em></h1>
     <p class="lede">A Quickstart to get a song onto your Ableton Move, then a guide to how the converter fits a song into the Move's four tracks and eight scenes.</p>
   </div>
 </header>
@@ -69,6 +69,7 @@
     <ol>
       <li><a href="#quickstart">Quickstart</a></li>
       <li><a href="#need">What you need</a></li>
+      <li><a href="#packs">Using another sound pack</a></li>
       <li><a href="#modes">Simple and Advanced mode</a></li>
       <li><a href="#guide">The five steps in detail</a></li>
       <li><a href="#pads">Extra parts on drum pads</a></li>
@@ -83,9 +84,8 @@
   <section class="panel" id="quickstart">
     <h2>Quickstart</h2>
     <ol class="steps">
-      <li><b>Get the sounds.</b> <a href="../pack/#download">Download MoveGM</a>, unzip it, and upload the <b>MoveGM</b> folder to your Move in Move Manager (<b>move.local › Presets</b>). Keep the unzipped folder on your computer too.</li>
-      <li><b>Load the sound pack.</b> Open the <a href="./">converter</a> and press <b>Choose MoveGM folder…</b> in step 1. Pick the folder that holds "01 Piano" to "18 Drift Synths". The box confirms how many presets it found.</li>
-      <li><b>Load a song.</b> Drop a Standard MIDI file (<code>.mid</code>) onto step 1.</li>
+      <li><b>Put the sounds on your Move.</b> <a href="../pack/#download">Download MoveGM</a>, unzip it, and upload the <b>MoveGM</b> folder in Move Manager (<b>move.local › Presets</b>). You only need to do this once.</li>
+      <li><b>Load a song.</b> Open the <a href="./">converter</a> and drop a Standard MIDI file (<code>.mid</code>) onto step 1. The converter already uses the MoveGM sounds from this site, so there's nothing else to set up.</li>
       <li><b>Check the parts.</b> The converter has already put the drum part on the drum kit, the most important parts on Tracks 2 to 4, and some single-line parts on spare drum pads. Press ▶ next to a part to hear it, and use the <b>Drums</b>, <b>T1</b>–<b>T4</b> and <b>Pads</b> buttons to move it.</li>
       <li><b>Pick the sounds.</b> Each Move track gets the MoveGM sound for its first part's General MIDI instrument; change it if you like, and pick a drum kit.</li>
       <li><b>Preview.</b> Press <b>Play preview</b> in step 4. Click a row's dot to mute a part, or a box to mute some bars.</li>
@@ -97,10 +97,18 @@
     <h2>What you need</h2>
     <ul>
       <li>A recent Chrome, Edge, Safari or Firefox on a computer. Nothing is uploaded: the converter runs entirely in your browser.</li>
-      <li>The <b>MoveGM folder</b>, unzipped. The converter reads the sounds from it for the preview and copies the samples a Set needs into the download. The presets also need to be on your Move, so the Set finds its sounds there.</li>
+      <li>An internet connection while you work: the converter loads each MoveGM sound from this site as it needs it, for the preview and for the samples it puts in the Set. (Or a MoveGM folder on your computer: see <a href="#packs">using another sound pack</a>.)</li>
+      <li>The MoveGM presets on your Move, so the instruments in the Set match the presets you can browse there.</li>
       <li>A Standard MIDI file, type 0 or 1. General MIDI files work best, because the instrument numbers tell the converter which sound each part should use.</li>
       <li>An Ableton Move, or Ableton Live 12.4 or later (including Lite) to open the Set on a computer.</li>
     </ul>
+  </section>
+
+  <section class="panel" id="packs">
+    <h2>Using another sound pack</h2>
+    <p>The <b>Sound pack</b> box in step 1 shows where the sounds come from. By default that's <a href="../pack/">MoveGM v0.2</a> on this site: each sound is fetched the first time a part needs it, and kept while the page is open.</p>
+    <p>To use another copy instead, press <b>Use another pack folder…</b> and choose its folder. That could be your own edited MoveGM (with different levels or sample edits, say), a newer or older MoveGM build, or the unzipped pack for working offline. The folder needs MoveGM's layout, "01 Piano" to "18 Drift Synths" with the same preset names, because the converter looks each General MIDI instrument up by its file name. The box says how many presets it found. <b>Use MoveGM from this site</b> switches back.</p>
+    <p>Nothing is uploaded either way. Whichever pack you build with, the Set carries the samples it uses, so it plays on the Move even if the presets there differ; but put the same presets on your Move if you want to browse and swap the same sounds.</p>
   </section>
 
   <section class="panel" id="modes">
@@ -112,7 +120,7 @@
   <section class="panel" id="guide">
     <h2>The five steps in detail</h2>
     <h3>1. Load a MIDI file</h3>
-    <p>Choose the MoveGM folder first: the preview and the download both need it. Then drop or choose a MIDI file. The converter reads every channel's notes, instrument (program), tempo and pitch bends.</p>
+    <p>The Sound pack box shows that the MoveGM sounds are ready (or which folder you chose instead). Drop or choose a MIDI file. The converter reads every channel's notes, instrument (program), tempo and pitch bends.</p>
 
     <h3>2. Choose the parts</h3>
     <p>Each row is one part: its name (the MIDI track name), instrument and channel, number of notes, and a small roll showing where it plays. The buttons send it to:</p>
