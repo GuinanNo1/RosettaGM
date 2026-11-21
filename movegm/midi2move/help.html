@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MIDI2Move Help · MoveGM</title>
+<meta name="description" content="Quickstart and user guide for MIDI2Move, the MoveGM MIDI to Ableton Move converter.">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../css/app.css?v=20261116fx4">
+</head>
+<body>
+<nav class="sitenav" aria-label="RosettaGM">
+  <div class="wrap">
+    <a class="brand" href="../../" title="RosettaGM home: all devices, packs and tools">Rosetta<b>GM</b></a>
+    <ul class="navgroups">
+      <li class="navgroup">
+        <button type="button" aria-haspopup="true">Devices</button>
+        <ul>
+          <li><a href="../../circuitgm/">Novation Circuit (CircuitGM)</a></li>
+          <li><a href="../../movegm/">Ableton Move (MoveGM)</a></li>
+        </ul>
+      </li>
+      <li class="navgroup">
+        <button type="button" aria-haspopup="true">General MIDI Packs</button>
+        <ul>
+          <li><a href="../../circuitgm/tracksgm/">TracksGM</a></li>
+          <li><a href="../../circuitgm/rhythmgm/">RhythmGM</a></li>
+          <li><a href="../../movegm/pack/">MoveGM</a></li>
+        </ul>
+      </li>
+      <li class="navgroup current">
+        <button type="button" aria-haspopup="true">MIDI Converters</button>
+        <ul>
+          <li><a href="../../circuitgm/midi2circuit/">MIDI2Circuit</a></li>
+          <li><a href="../../circuitgm/midi2rhythm/">MIDI2Rhythm</a></li>
+          <li><a href="../../circuitgm/circuit2midi/">Circuit2MIDI</a></li>
+          <li><a href="./">MIDI2Move</a></li>
+        </ul>
+      </li>
+      <li class="navgroup">
+        <button type="button" aria-haspopup="true">Patch Editors</button>
+        <ul>
+          <li><a href="../../circuitgm/patchworker/">PatchWorker</a></li>
+        </ul>
+      </li>
+      <li class="navgroup">
+        <button type="button" aria-haspopup="true">Pack Trimming</button>
+        <ul>
+          <li><a href="../../circuitgm/circuittrim/">CircuitTrim</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</nav>
+<header class="masthead">
+  <div class="wrap">
+    <p class="crumbs"><a href="./">← Back to MIDI2Move</a></p>
+    <h1>MIDI2Move help <span>MoveGM MIDI to Move Converter</span> <em class="badge" title="Version of this page. If you expect a newer one, refresh with Shift-reload; GitHub Pages can take about 10 minutes to update.">alpha 0.5</em></h1>
+    <p class="lede">A Quickstart to get a song onto your Ableton Move, then a guide to how the converter fits a song into the Move's four tracks and eight scenes.</p>
+  </div>
+</header>
+
+<main class="wrap doc">
+  <nav class="panel toc" aria-label="Contents">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#quickstart">Quickstart</a></li>
+      <li><a href="#need">What you need</a></li>
+      <li><a href="#modes">Simple and Advanced mode</a></li>
+      <li><a href="#guide">The five steps in detail</a></li>
+      <li><a href="#pads">Extra parts on drum pads</a></li>
+      <li><a href="#scenes">Sections, scenes and several Sets</a></li>
+      <li><a href="#move">On the Move</a></li>
+      <li><a href="#live">Playing it as a song in Ableton Live</a></li>
+      <li><a href="#bends">Pitch bends</a></li>
+      <li><a href="#limits">Limits and alpha status</a></li>
+    </ol>
+  </nav>
+
+  <section class="panel" id="quickstart">
+    <h2>Quickstart</h2>
+    <ol class="steps">
+      <li><b>Get the sounds.</b> <a href="../pack/#download">Download MoveGM</a>, unzip it, and upload the <b>MoveGM</b> folder to your Move in Move Manager (<b>move.local › Presets</b>). Keep the unzipped folder on your computer too.</li>
+      <li><b>Load the sound pack.</b> Open the <a href="./">converter</a> and press <b>Choose MoveGM folder…</b> in step 1. Pick the folder that holds "01 Piano" to "18 Drift Synths". The box confirms how many presets it found.</li>
+      <li><b>Load a song.</b> Drop a Standard MIDI file (<code>.mid</code>) onto step 1.</li>
+      <li><b>Check the parts.</b> The converter has already put the drum part on the drum kit, the most important parts on Tracks 2 to 4, and some single-line parts on spare drum pads. Press ▶ next to a part to hear it, and use the <b>Drums</b>, <b>T1</b>–<b>T4</b> and <b>Pads</b> buttons to move it.</li>
+      <li><b>Pick the sounds.</b> Each Move track gets the MoveGM sound for its first part's General MIDI instrument; change it if you like, and pick a drum kit.</li>
+      <li><b>Preview.</b> Press <b>Play preview</b> in step 4. Click a row's dot to mute a part, or a box to mute some bars.</li>
+      <li><b>Download and upload.</b> Press <b>Download Move Set</b> in step 5, then upload the <code>.ablbundle</code> in Move Manager (<b>move.local › Sets</b>). On the Move, open the Set and launch its scenes in the play order shown in step 4.</li>
+    </ol>
+  </section>
+
+  <section class="panel" id="need">
+    <h2>What you need</h2>
+    <ul>
+      <li>A recent Chrome, Edge, Safari or Firefox on a computer. Nothing is uploaded: the converter runs entirely in your browser.</li>
+      <li>The <b>MoveGM folder</b>, unzipped. The converter reads the sounds from it for the preview and copies the samples a Set needs into the download. The presets also need to be on your Move, so the Set finds its sounds there.</li>
+      <li>A Standard MIDI file, type 0 or 1. General MIDI files work best, because the instrument numbers tell the converter which sound each part should use.</li>
+      <li>An Ableton Move, or Ableton Live 12.4 or later (including Lite) to open the Set on a computer.</li>
+    </ul>
+  </section>
+
+  <section class="panel" id="modes">
+    <h2>Simple and Advanced mode</h2>
+    <p>The converter opens in <b>simple mode</b>, with the main choices and settings that suit most songs. Switch on <b>Advanced</b> (the switch at the top of step 1) to see the rest: pad targets and pad counts (step 2), octave shifts and a sound per pad part (step 3), and the arrangement options, solo buttons and pitch-bend and drum-folding switches (step 4).</p>
+    <p>Hidden settings keep their values, so switching modes never changes the Set. If you changed a setting and switch back to simple mode, a line under the header says so. The page remembers your choice in this browser.</p>
+  </section>
+
+  <section class="panel" id="guide">
+    <h2>The five steps in detail</h2>
+    <h3>1. Load a MIDI file</h3>
+    <p>Choose the MoveGM folder first: the preview and the download both need it. Then drop or choose a MIDI file. The converter reads every channel's notes, instrument (program), tempo and pitch bends.</p>
+
+    <h3>2. Choose the parts</h3>
+    <p>Each row is one part: its name (the MIDI track name), instrument and channel, number of notes, and a small roll showing where it plays. The buttons send it to:</p>
+    <ul>
+      <li><b>Drums</b>: the Move's drum kit on Track 1. Only a drum part (MIDI channel 10) belongs here.</li>
+      <li><b>T1</b> to <b>T4</b>: a Move track playing one MoveGM instrument. When the song has drums, the kit takes Track 1, so T1 is unavailable.</li>
+      <li><b>Pads</b>: spare drum pads, played chromatically. See <a href="#pads">extra parts on drum pads</a>.</li>
+    </ul>
+    <p>A part with no button pressed isn't converted. Parts that duplicate another part note for note are flagged and left out. Several parts can share a track; their notes are merged.</p>
+
+    <h3>3. Pick the sounds</h3>
+    <p>Each Move track shows its sound by name: the drum kit (one of MoveGM's 12 kits), or a MoveGM instrument. The list has all 128 General MIDI instruments, and "(Drift synth)" versions where MoveGM has one. The default is the instrument of the track's first part. In Advanced mode you can also shift a track up or down by up to two octaves, and choose a sound for each pad part.</p>
+
+    <h3>4. Check the arrangement</h3>
+    <p>The converter cuts the song into sections (4, 8 or 16 bars) and gives each different section a scene. Sections that repeat reuse the same scene, so the play order can visit a scene more than once. The summary tiles show the number of scenes, Sets and the play order.</p>
+    <p>The grid has a row per Move track with its parts underneath, and a column per section. Each box shows the section's scene letter. Click a row's dot to mute that part, or a box to mute those bars; mutes apply to the preview and to the Set. Click a scene or bar heading to play from there; the column that's playing is outlined. In Advanced mode the S button solos a track.</p>
+    <p>Advanced options: <b>Section length</b> (Auto picks the fewest Sets), <b>Repeats</b> (how alike two sections must be to share a scene: exact, ignoring velocity, or at least 90% or 75% the same notes), <b>Quantise</b>, <b>Skip empty bars</b> at the start, <b>pitch bends</b> and <b>drum folding</b>.</p>
+
+    <h3>5. Build the Set</h3>
+    <p>Name the Set and press <b>Download Move Set</b>. Long songs download as several Sets (see below). Each <code>.ablbundle</code> holds the Set and only the MoveGM samples it uses.</p>
+  </section>
+
+  <section class="panel" id="pads">
+    <h2>Extra parts on drum pads</h2>
+    <p>The Move has four tracks, but a drum kit has 16 pads and a General MIDI drum part rarely uses them all. MIDI2Move puts extra parts on the spare pads: each pad plays the part's MoveGM sample, pitched note by note, so a bass line or a lead can live on the drum track alongside the drums.</p>
+    <ul>
+      <li><b>Voices:</b> a pad plays one note at a time. Give a part more pads (Advanced, 1 to 16) to play chords: each pad carries the same sound and takes one note.</li>
+      <li><b>Pad tracks:</b> in Advanced mode, send pad parts to Track 2, 3 or 4 instead of the drum track. That track becomes a 16-pad kit of pitched pads, so it can hold several parts. A track that also has a normal part ignores pad parts, and the page warns.</li>
+      <li>Pads sustain while a note is held and fade out after it (the pad's attack, hold and release envelope), which suits most General MIDI sounds.</li>
+    </ul>
+  </section>
+
+  <section class="panel" id="scenes">
+    <h2>Sections, scenes and several Sets</h2>
+    <p>A Move track has eight clip slots, so a Set has eight scenes. If a song needs more than eight different sections, MIDI2Move splits it into several Sets, named "Name (1 of 2)" and so on, each with its own play order. Longer sections (16 bars) and looser repeat matching both reduce the number of scenes.</p>
+  </section>
+
+  <section class="panel" id="move">
+    <h2>On the Move</h2>
+    <p>Upload the <code>.ablbundle</code> in Move Manager (<b>move.local › Sets</b>). Move Sets don't store follow actions, so the Move won't play from one scene to the next by itself: launch the scenes by hand in the play order shown in step 4. Scene names give the section letter and its first bar ("A bar 1", "B bar 17").</p>
+  </section>
+
+  <section class="panel" id="live">
+    <h2>Playing it as a song in Ableton Live</h2>
+    <p>To hear the whole song play through in Live: open the downloaded Set in Live, choose <i>File › Save Live Set As…</i>, and drop the saved <code>.als</code> onto the box at the end of step 5. You get back a copy whose scenes move on to the next one by themselves; launch the first scene. Sections that repeat can only be followed once, so the page warns when the play order revisits a scene.</p>
+  </section>
+
+  <section class="panel" id="bends">
+    <h2>Pitch bends</h2>
+    <p>Parts on pads keep the MIDI file's pitch bends exactly, as bends on each note. On instrument tracks a note that's bent by half a semitone or more on average is moved to the nearest semitone instead. You can turn bends off in step 4 (Advanced).</p>
+  </section>
+
+  <section class="panel" id="limits">
+    <h2>Limits and alpha status</h2>
+    <ul>
+      <li>Sets open and play in Ableton Live 12, including pitched pads, chords on pads and pitch bends. <b>They haven't been tested on Move hardware yet.</b> Keep backups of your Move Sets.</li>
+      <li>Each Move track holds one instrument, so a part's program changes aren't followed.</li>
+      <li>Controllers such as volume and expression are ignored for now.</li>
+      <li>General MIDI drum notes outside the kit's 16 pads are folded onto the nearest pad (Advanced: drum folding), or dropped.</li>
+      <li>Coming: effects, drum lanes in the grid, importing Ableton Live Sets and Circuit packs, and a Live Set download that plays as a song by itself.</li>
+    </ul>
+    <p>Found a problem? <a href="https://github.com/GuinanNo1/RosettaGM/issues">Report it on GitHub</a>.</p>
+  </section>
+</main>
+<footer class="wrap sitefoot">
+  <p>Sounds: MoveGM, built from <a href="https://github.com/mrbumpy409/GeneralUser-GS">GeneralUser GS</a> by S. Christian Collins. Not affiliated with Ableton; "Ableton", "Move" and "Live" are Ableton's trademarks. Part of <a href="../../">RosettaGM</a>.</p>
+</footer>
+</body>
+</html>

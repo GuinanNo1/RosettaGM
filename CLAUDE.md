@@ -9,7 +9,8 @@ GuinanNo1/CircuitGM repo only redirects here.
 Layout: one folder per device family, so new grooveboxes slot in without
 touching the others. `circuitgm/` holds the Circuit pages (`tracksgm/`,
 `midi2circuit/`, …), plus its own `js/`, `css/`, `data/`, `docs/` and
-`tests/`; `movegm/` will hold the Move pack page, `midi2move/` and theirs.
+`tests/`; `movegm/` holds the Move pack page (`pack/`), `midi2move/`, and
+its own `js/`, `css/`, `data/`, `docs/`, `tools/` and `tests/`.
 Tool pages are two levels deep: `../../css/app.css` (shared, at the root),
 `../js/…` and `../css/…` (the family's own). Only code used by more than one
 family goes at the root (`css/app.css`; a `js/shared/` when Move starts sharing
@@ -17,8 +18,19 @@ the MIDI reader). `index.html` is the RosettaGM home; each family's
 `index.html` is its overview. A new family gets `<device>gm/` and an entry in
 the menu's Devices group on every page.
 
-The Move tools' research and handoff notes are in the claude.ai Project
-"Ableton Move" and in `~/Documents/Claude/Ableton Move Lab/` on Ian's Mac.
+## Move: where things are
+
+- Format research: `movegm/docs/Move-File-Format-Notes.md`,
+  `Move-Effects-Reference.md`, `MoveGM-build-notes.md`, `MIDI2Move-design.md`.
+  Read these before changing any Move file writer.
+- The MoveGM pack (≈135 MB) is not in the repo: it is the release asset
+  `MoveGM-v0.2.zip` (tag `movegm-v0.2`). Working copies, test Sets and the
+  commercial packs used for research live in `~/Documents/Claude/Ableton Move
+  Lab/` on Ian's Mac; the claude.ai Project "Ableton Move" has the handoff.
+- After a MoveGM rebuild: copy `movegm-manifest.json` to `movegm/data/`, run
+  `python3 movegm/tools/make_m2m_manifest.py`, bump MIDI2Move's version.
+- Moving large files from Ian's Mac into this container is slow; ask him to
+  attach big binaries to a GitHub release instead.
 
 ## Circuit: check the official guides before reverse-engineering
 

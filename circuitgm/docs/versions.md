@@ -8,15 +8,16 @@ Each tool page shows its version next to its status badge, so you can tell which
 
 | Tool | Current | Shown as |
 |---|---|---|
-| MIDI2Circuit | 0.15 | alpha 0.15 |
-| MIDI2Rhythm | 0.20 | For testing · v0.20 |
-| Circuit2MIDI | 0.6 | alpha 0.6 |
-| CircuitTrim | 0.4 | alpha 0.4 |
-| PatchWorker | 0.7 | For testing · v0.7 (top bar) |
+| MIDI2Circuit | 0.16 | alpha 0.16 |
+| MIDI2Rhythm | 0.21 | For testing · v0.21 |
+| Circuit2MIDI | 0.7 | alpha 0.7 |
+| CircuitTrim | 0.5 | alpha 0.5 |
+| PatchWorker | 0.8 | For testing · v0.8 (top bar) |
 
 Numbering started on 14 Nov 2026. Earlier changes are grouped roughly:
 
 ## MIDI2Circuit
+- **0.16** (21 Nov 2026): menu lists the Ableton Move tools (Devices › Ableton Move, MoveGM, MIDI2Move). Tool unchanged.
 - **0.15** (21 Nov 2026): CircuitGM moved into RosettaGM (now guinanno1.github.io/RosettaGM/circuitgm/); menu brand RosettaGM, new Devices group, "Circuit MIDI Converters" renamed "MIDI Converters". Tool unchanged.
 - **0.14** (17 Nov 2026): PackTrim renamed CircuitTrim (button and links).
 - **0.13** (16 Nov 2026): A Circuit Tracks pack project as the song keeps its mix: reverb and delay (stored values), FX off, and each track's level, pan, sends and sidechain, moved with its part to the track it plays on (first part of each synth/MIDI track; the busiest part of each drum track). Step 5's sends and sidechain start from it.
@@ -34,9 +35,10 @@ Numbering started on 14 Nov 2026. Earlier changes are grouped roughly:
 - 0.1 (6 Nov 2026): first public alpha.
 
 ## MIDI2Rhythm
-See `midi2rhythm/help.html` (Versions). 0.1–0.6 on 14 Nov 2026; 0.7 (15 Nov): Circuit packs as the song; 0.8: pack projects keep their layout; 0.9: drum Pitch to Tune, project colours; 0.10: scale-root fix for Tracks notes, scene mute recall copied; 0.11: pack colour names (wrong guess); 0.12: Components' real colour names; 0.13: Pack colour setting removed; 0.14: effects (presets and sends); 0.15: preset names; 0.16: preset tables shared with MIDI2Circuit (`js/fx.js`), packs unchanged; 0.17: Effects as step 5 with send sliders; 0.18: sidechain for all 8 tracks; 0.19: a kept layout keeps the source project's mix (FX, levels, pans, sends, sidechain); 0.20 (21 Nov): moved into RosettaGM, menu changes only.
+See `midi2rhythm/help.html` (Versions). 0.1–0.6 on 14 Nov 2026; 0.7 (15 Nov): Circuit packs as the song; 0.8: pack projects keep their layout; 0.9: drum Pitch to Tune, project colours; 0.10: scale-root fix for Tracks notes, scene mute recall copied; 0.11: pack colour names (wrong guess); 0.12: Components' real colour names; 0.13: Pack colour setting removed; 0.14: effects (presets and sends); 0.15: preset names; 0.16: preset tables shared with MIDI2Circuit (`js/fx.js`), packs unchanged; 0.17: Effects as step 5 with send sliders; 0.18: sidechain for all 8 tracks; 0.19: a kept layout keeps the source project's mix (FX, levels, pans, sends, sidechain); 0.20 (21 Nov): moved into RosettaGM, menu changes only; 0.21: Move tools in the menu.
 
 ## Circuit2MIDI
+- **0.7** (21 Nov 2026): menu lists the Ableton Move tools (Devices › Ableton Move, MoveGM, MIDI2Move). Tool unchanged.
 - **0.6** (21 Nov 2026): CircuitGM moved into RosettaGM (now guinanno1.github.io/RosettaGM/circuitgm/); menu brand RosettaGM, new Devices group, "Circuit MIDI Converters" renamed "MIDI Converters". Tool unchanged.
 - **0.5** (17 Nov 2026): PackTrim renamed CircuitTrim (button and links).
 - **0.4** (15 Nov 2026): Circuit Tracks synth and MIDI notes are read relative to the project's scale root (exports were off by the root, e.g. a whole tone flat with root D).
@@ -45,12 +47,14 @@ See `midi2rhythm/help.html` (Versions). 0.1–0.6 on 14 Nov 2026; 0.7 (15 Nov): 
 - 0.1 (8 Nov 2026): first alpha.
 
 ## CircuitTrim (was PackTrim)
+- **0.5** (21 Nov 2026): menu lists the Ableton Move tools (Devices › Ableton Move, MoveGM, MIDI2Move). Tool unchanged.
 - **0.4** (21 Nov 2026): CircuitGM moved into RosettaGM (now guinanno1.github.io/RosettaGM/circuitgm/); menu brand RosettaGM, new Devices group, "Circuit MIDI Converters" renamed "MIDI Converters". Tool unchanged.
 - **0.3** (17 Nov 2026): renamed from PackTrim to CircuitTrim, at `circuittrim/` (the old `packtrim/` address redirects). Still under the menu's Pack Trimming group, which leaves room for trimmers for other devices.
 - **0.2** (14 Nov 2026): version shown; "Keep: only project N" (Advanced); takes packs handed over from the other tools.
 - 0.1 (10 Nov 2026): first alpha.
 
 ## PatchWorker
+- **0.8** (21 Nov 2026): menu lists the Ableton Move tools (Devices › Ableton Move, MoveGM, MIDI2Move). Tool unchanged.
 - **0.7** (21 Nov 2026): CircuitGM moved into RosettaGM (now guinanno1.github.io/RosettaGM/circuitgm/); menu brand RosettaGM, new Devices group, "Circuit MIDI Converters" renamed "MIDI Converters". Tool unchanged.
 - **0.6** (14 Nov 2026): version shown in the top bar. Includes the Tracks panel, preset view, mixer panel, follow-the-Tracks, patches from the Tracks, Save to Tracks and the clearer button names.
 - 0.1 (12 Nov 2026): first test version (synth patch editor).

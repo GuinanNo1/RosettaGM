@@ -1,0 +1,4351 @@
+{
+ "source": "GeneralUser GS 2.0.3 BETA",
+ "programs": [
+  {
+   "program": 0,
+   "name": "Acoustic Grand Piano",
+   "preset": "01 Piano/001 Acoustic Grand Piano.ablpresetbundle",
+   "sample": "MGM_001_AcousticGrandPiano.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -15.33,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 18.6465,
+    "sustain": 0.0003,
+    "release": 1.0582,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.04
+   },
+   "gu_name": "Grand Piano"
+  },
+  {
+   "program": 1,
+   "name": "Bright Acoustic Piano",
+   "preset": "01 Piano/002 Bright Acoustic Piano.ablpresetbundle",
+   "sample": "MGM_002_BrightAcousticPiano.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -15.48,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 16.9514,
+    "sustain": 0.0003,
+    "release": 1.088,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.04
+   },
+   "gu_name": "Bright Grand Piano"
+  },
+  {
+   "program": 2,
+   "name": "Electric Grand Piano",
+   "preset": "01 Piano/003 Electric Grand Piano.ablpresetbundle",
+   "sample": "MGM_003_ElectricGrandPiano.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -12.29,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 29.9953,
+    "sustain": 0.0003,
+    "release": 1.0503,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.12
+   },
+   "gu_name": "Electric Grand Piano"
+  },
+  {
+   "program": 3,
+   "name": "Honky-tonk Piano",
+   "preset": "01 Piano/004 Honky-tonk Piano.ablpresetbundle",
+   "sample": "MGM_004_HonkyTonkPiano.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -15.19,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 16.9514,
+    "sustain": 0.0003,
+    "release": 1.088,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.06
+   },
+   "gu_name": "Honky-Tonk Piano"
+  },
+  {
+   "program": 4,
+   "name": "Electric Piano 1",
+   "preset": "01 Piano/005 Electric Piano 1.ablpresetbundle",
+   "sample": "MGM_005_ElectricPiano1.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -17.82,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 29.9953,
+    "sustain": 0.0003,
+    "release": 0.2,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Tine Electric Piano"
+  },
+  {
+   "program": 5,
+   "name": "Electric Piano 2",
+   "preset": "01 Piano/006 Electric Piano 2.ablpresetbundle",
+   "sample": "MGM_006_ElectricPiano2.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.47,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 19.9964,
+    "sustain": 0.0003,
+    "release": 0.5,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.14
+   },
+   "gu_name": "FM Electric Piano"
+  },
+  {
+   "program": 6,
+   "name": "Harpsichord",
+   "preset": "01 Piano/007 Harpsichord.ablpresetbundle",
+   "sample": "MGM_007_Harpsichord.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -14.22,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 12.0003,
+    "sustain": 0.0003,
+    "release": 1.0,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.14
+   },
+   "gu_name": "Harpsichord"
+  },
+  {
+   "program": 7,
+   "name": "Clavinet",
+   "preset": "01 Piano/008 Clavinet.ablpresetbundle",
+   "sample": "MGM_008_Clavinet.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -15.52,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 9.9982,
+    "sustain": 0.0003,
+    "release": 0.1,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Clavinet"
+  },
+  {
+   "program": 8,
+   "name": "Celesta",
+   "preset": "02 Chromatic Percussion/009 Celesta.ablpresetbundle",
+   "sample": "MGM_009_Celesta.wav",
+   "render_key": 72,
+   "transpose": -12,
+   "volume_db": -13.38,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 7.899,
+    "sustain": 0.0003,
+    "release": 3.2509,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Celeste"
+  },
+  {
+   "program": 9,
+   "name": "Glockenspiel",
+   "preset": "02 Chromatic Percussion/010 Glockenspiel.ablpresetbundle",
+   "sample": "MGM_010_Glockenspiel.wav",
+   "render_key": 84,
+   "transpose": -24,
+   "volume_db": -11.19,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 5.0689,
+    "sustain": 0.0003,
+    "release": 4.7789,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Glockenspiel"
+  },
+  {
+   "program": 10,
+   "name": "Music Box",
+   "preset": "02 Chromatic Percussion/011 Music Box.ablpresetbundle",
+   "sample": "MGM_011_MusicBox.wav",
+   "render_key": 72,
+   "transpose": -12,
+   "volume_db": -7.76,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 4.6941,
+    "sustain": 0.0003,
+    "release": 3.5004,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.3
+   },
+   "gu_name": "Music Box"
+  },
+  {
+   "program": 11,
+   "name": "Vibraphone",
+   "preset": "02 Chromatic Percussion/012 Vibraphone.ablpresetbundle",
+   "sample": "MGM_012_Vibraphone.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -12.93,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 13.0035,
+    "sustain": 0.0003,
+    "release": 1.5,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Vibraphone"
+  },
+  {
+   "program": 12,
+   "name": "Marimba",
+   "preset": "02 Chromatic Percussion/013 Marimba.ablpresetbundle",
+   "sample": "MGM_013_Marimba.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.17,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 7.2017,
+    "sustain": 0.0003,
+    "release": 7.2017,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Marimba"
+  },
+  {
+   "program": 13,
+   "name": "Xylophone",
+   "preset": "02 Chromatic Percussion/014 Xylophone.ablpresetbundle",
+   "sample": "MGM_014_Xylophone.wav",
+   "render_key": 72,
+   "transpose": -12,
+   "volume_db": -12.53,
+   "stereo": false,
+   "looped": false,
+   "seconds": 0.56,
+   "env": {
+    "attack": 0.0001,
+    "decay": 2.3702,
+    "sustain": 1.0,
+    "release": 2.3702,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Xylophone"
+  },
+  {
+   "program": 14,
+   "name": "Tubular Bells",
+   "preset": "02 Chromatic Percussion/015 Tubular Bells.ablpresetbundle",
+   "sample": "MGM_015_TubularBells.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.71,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 23.5067,
+    "sustain": 0.0003,
+    "release": 5.461,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Tubular Bells"
+  },
+  {
+   "program": 15,
+   "name": "Dulcimer",
+   "preset": "02 Chromatic Percussion/016 Dulcimer.ablpresetbundle",
+   "sample": "MGM_016_Dulcimer.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -15.29,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 11.7533,
+    "sustain": 0.0003,
+    "release": 7.8899,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Dulcimer"
+  },
+  {
+   "program": 16,
+   "name": "Drawbar Organ",
+   "preset": "03 Organ/017 Drawbar Organ.ablpresetbundle",
+   "sample": "MGM_017_DrawbarOrgan.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -17.34,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.15,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Tonewheel Organ"
+  },
+  {
+   "program": 17,
+   "name": "Percussive Organ",
+   "preset": "03 Organ/018 Percussive Organ.ablpresetbundle",
+   "sample": "MGM_018_PercussiveOrgan.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -12.22,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 2.4396,
+    "sustain": 0.0003,
+    "release": 0.084,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Percussive Organ"
+  },
+  {
+   "program": 18,
+   "name": "Rock Organ",
+   "preset": "03 Organ/019 Rock Organ.ablpresetbundle",
+   "sample": "MGM_019_RockOrgan.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -14.11,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.084,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Rock Organ"
+  },
+  {
+   "program": 19,
+   "name": "Church Organ",
+   "preset": "03 Organ/020 Church Organ.ablpresetbundle",
+   "sample": "MGM_020_ChurchOrgan.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -14.94,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.006,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 1.0601,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Pipe Organ"
+  },
+  {
+   "program": 20,
+   "name": "Reed Organ",
+   "preset": "03 Organ/021 Reed Organ.ablpresetbundle",
+   "sample": "MGM_021_ReedOrgan.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -15.3,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.2155,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.12
+   },
+   "gu_name": "Reed Organ"
+  },
+  {
+   "program": 21,
+   "name": "Accordion",
+   "preset": "03 Organ/022 Accordion.ablpresetbundle",
+   "sample": "MGM_022_Accordion.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -14.73,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 1.0,
+    "sustain": 0.5012,
+    "release": 0.2155,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Accordion"
+  },
+  {
+   "program": 22,
+   "name": "Harmonica",
+   "preset": "03 Organ/023 Harmonica.ablpresetbundle",
+   "sample": "MGM_023_Harmonica.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -11.81,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.006,
+    "decay": 2.0801,
+    "sustain": 0.7079,
+    "release": 0.2821,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Harmonica"
+  },
+  {
+   "program": 23,
+   "name": "Tango Accordion",
+   "preset": "03 Organ/024 Tango Accordion.ablpresetbundle",
+   "sample": "MGM_024_TangoAccordion.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.55,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.3018,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Bandoneon"
+  },
+  {
+   "program": 24,
+   "name": "Nylon Guitar",
+   "preset": "04 Guitar/025 Nylon Guitar.ablpresetbundle",
+   "sample": "MGM_025_NylonGuitar.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -11.81,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 10.5013,
+    "sustain": 0.0003,
+    "release": 0.7203,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Nylon Guitar"
+  },
+  {
+   "program": 25,
+   "name": "Steel Guitar",
+   "preset": "04 Guitar/026 Steel Guitar.ablpresetbundle",
+   "sample": "MGM_026_SteelGuitar.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -14.89,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 12.4955,
+    "sustain": 0.0003,
+    "release": 0.4501,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Steel Guitar"
+  },
+  {
+   "program": 26,
+   "name": "Jazz Guitar",
+   "preset": "04 Guitar/027 Jazz Guitar.ablpresetbundle",
+   "sample": "MGM_027_JazzGuitar.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -11.07,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 13.2615,
+    "sustain": 0.0003,
+    "release": 0.384,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Jazz Guitar"
+  },
+  {
+   "program": 27,
+   "name": "Clean Guitar",
+   "preset": "04 Guitar/028 Clean Guitar.ablpresetbundle",
+   "sample": "MGM_028_CleanGuitar.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -10.13,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 16.9612,
+    "sustain": 0.0003,
+    "release": 0.4001,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Clean Guitar"
+  },
+  {
+   "program": 28,
+   "name": "Muted Guitar",
+   "preset": "04 Guitar/029 Muted Guitar.ablpresetbundle",
+   "sample": "MGM_029_MutedGuitar.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -8.25,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 1.7532,
+    "sustain": 0.0003,
+    "release": 0.16,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Muted Guitar"
+  },
+  {
+   "program": 29,
+   "name": "Overdriven Guitar",
+   "preset": "04 Guitar/030 Overdriven Guitar.ablpresetbundle",
+   "sample": "MGM_030_OverdrivenGuitar.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -12.21,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.006,
+    "decay": 22.303,
+    "sustain": 0.0003,
+    "release": 0.3431,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Overdrive Guitar"
+  },
+  {
+   "program": 30,
+   "name": "Distortion Guitar",
+   "preset": "04 Guitar/031 Distortion Guitar.ablpresetbundle",
+   "sample": "MGM_031_DistortionGuitar.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -12.91,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 60.0,
+    "sustain": 0.0003,
+    "release": 0.3601,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Distortion Guitar"
+  },
+  {
+   "program": 31,
+   "name": "Guitar Harmonics",
+   "preset": "04 Guitar/032 Guitar Harmonics.ablpresetbundle",
+   "sample": "MGM_032_GuitarHarmonics.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -14.03,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 28.1976,
+    "sustain": 0.0003,
+    "release": 0.243,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Guitar Harmonics"
+  },
+  {
+   "program": 32,
+   "name": "Acoustic Bass",
+   "preset": "05 Bass/033 Acoustic Bass.ablpresetbundle",
+   "sample": "MGM_033_AcousticBass.wav",
+   "render_key": 36,
+   "transpose": 24,
+   "volume_db": -9.72,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 7.4341,
+    "sustain": 0.0003,
+    "release": 0.8062,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Acoustic Bass"
+  },
+  {
+   "program": 33,
+   "name": "Fingered Bass",
+   "preset": "05 Bass/034 Fingered Bass.ablpresetbundle",
+   "sample": "MGM_034_FingeredBass.wav",
+   "render_key": 36,
+   "transpose": 24,
+   "volume_db": -13.5,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 60.0,
+    "sustain": 0.0003,
+    "release": 0.2581,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Finger Bass"
+  },
+  {
+   "program": 34,
+   "name": "Picked Bass",
+   "preset": "05 Bass/035 Picked Bass.ablpresetbundle",
+   "sample": "MGM_035_PickedBass.wav",
+   "render_key": 36,
+   "transpose": 24,
+   "volume_db": -11.02,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 60.0,
+    "sustain": 0.0003,
+    "release": 0.486,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Pick Bass"
+  },
+  {
+   "program": 35,
+   "name": "Fretless Bass",
+   "preset": "05 Bass/036 Fretless Bass.ablpresetbundle",
+   "sample": "MGM_036_FretlessBass.wav",
+   "render_key": 36,
+   "transpose": 24,
+   "volume_db": -10.94,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 16.9808,
+    "sustain": 0.0003,
+    "release": 0.25,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Fretless Bass"
+  },
+  {
+   "program": 36,
+   "name": "Slap Bass 1",
+   "preset": "05 Bass/037 Slap Bass 1.ablpresetbundle",
+   "sample": "MGM_037_SlapBass1.wav",
+   "render_key": 36,
+   "transpose": 24,
+   "volume_db": -10.18,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 44.8644,
+    "sustain": 0.0003,
+    "release": 0.1,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Slap Bass 1"
+  },
+  {
+   "program": 37,
+   "name": "Slap Bass 2",
+   "preset": "05 Bass/038 Slap Bass 2.ablpresetbundle",
+   "sample": "MGM_038_SlapBass2.wav",
+   "render_key": 36,
+   "transpose": 24,
+   "volume_db": -11.76,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 44.8644,
+    "sustain": 0.0003,
+    "release": 0.1,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Slap Bass 2"
+  },
+  {
+   "program": 38,
+   "name": "Synth Bass 1",
+   "preset": "05 Bass/039 Synth Bass 1.ablpresetbundle",
+   "sample": "MGM_039_SynthBass1.wav",
+   "render_key": 36,
+   "transpose": 24,
+   "volume_db": -8.11,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.001,
+    "decay": 22.706,
+    "sustain": 0.0003,
+    "release": 0.5,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.3
+   },
+   "gu_name": "Synth Bass 1"
+  },
+  {
+   "program": 39,
+   "name": "Synth Bass 2",
+   "preset": "05 Bass/040 Synth Bass 2.ablpresetbundle",
+   "sample": "MGM_040_SynthBass2.wav",
+   "render_key": 36,
+   "transpose": 24,
+   "volume_db": -13.81,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.002,
+    "decay": 9.6131,
+    "sustain": 0.0003,
+    "release": 0.6001,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Synth Bass 2"
+  },
+  {
+   "program": 40,
+   "name": "Violin",
+   "preset": "06 Strings/041 Violin.ablpresetbundle",
+   "sample": "MGM_041_Violin.wav",
+   "render_key": 72,
+   "transpose": -12,
+   "volume_db": -10.76,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.01,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.4501,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Violin"
+  },
+  {
+   "program": 41,
+   "name": "Viola",
+   "preset": "06 Strings/042 Viola.ablpresetbundle",
+   "sample": "MGM_042_Viola.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.62,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.03,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.5,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Viola"
+  },
+  {
+   "program": 42,
+   "name": "Cello",
+   "preset": "06 Strings/043 Cello.ablpresetbundle",
+   "sample": "MGM_043_Cello.wav",
+   "render_key": 48,
+   "transpose": 12,
+   "volume_db": -10.82,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.05,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.6001,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Cello"
+  },
+  {
+   "program": 43,
+   "name": "Contrabass",
+   "preset": "06 Strings/044 Contrabass.ablpresetbundle",
+   "sample": "MGM_044_Contrabass.wav",
+   "render_key": 36,
+   "transpose": 24,
+   "volume_db": -12.72,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.06,
+    "decay": 9.9982,
+    "sustain": 0.7079,
+    "release": 0.7203,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Double Bass"
+  },
+  {
+   "program": 44,
+   "name": "Tremolo Strings",
+   "preset": "06 Strings/045 Tremolo Strings.ablpresetbundle",
+   "sample": "MGM_045_TremoloStrings.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -15.54,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.112,
+    "decay": 23.3039,
+    "sustain": 0.8318,
+    "release": 0.862,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.38
+   },
+   "gu_name": "Tremolo Strings"
+  },
+  {
+   "program": 45,
+   "name": "Pizzicato Strings",
+   "preset": "06 Strings/046 Pizzicato Strings.ablpresetbundle",
+   "sample": "MGM_046_PizzicatoStrings.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -10.98,
+   "stereo": false,
+   "looped": false,
+   "seconds": 0.66,
+   "env": {
+    "attack": 0.0001,
+    "decay": 4.0,
+    "sustain": 0.0003,
+    "release": 4.0,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.1
+   },
+   "gu_name": "Pizzicato Strings"
+  },
+  {
+   "program": 46,
+   "name": "Orchestral Harp",
+   "preset": "06 Strings/047 Orchestral Harp.ablpresetbundle",
+   "sample": "MGM_047_OrchestralHarp.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -14.01,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 9.9982,
+    "sustain": 0.0003,
+    "release": 4.9991,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.12
+   },
+   "gu_name": "Orchestral Harp"
+  },
+  {
+   "program": 47,
+   "name": "Timpani",
+   "preset": "06 Strings/048 Timpani.ablpresetbundle",
+   "sample": "MGM_048_Timpani.wav",
+   "render_key": 48,
+   "transpose": 12,
+   "volume_db": -9.7,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 7.3573,
+    "sustain": 0.0003,
+    "release": 2.0,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.06
+   },
+   "gu_name": "Timpani"
+  },
+  {
+   "program": 48,
+   "name": "String Ensemble 1",
+   "preset": "07 Ensemble/049 String Ensemble 1.ablpresetbundle",
+   "sample": "MGM_049_StringEnsemble1.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.06,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.096,
+    "decay": 23.3039,
+    "sustain": 0.8318,
+    "release": 1.4456,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.26
+   },
+   "gu_name": "Fast Strings"
+  },
+  {
+   "program": 49,
+   "name": "String Ensemble 2",
+   "preset": "07 Ensemble/050 String Ensemble 2.ablpresetbundle",
+   "sample": "MGM_050_StringEnsemble2.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.06,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.2,
+    "decay": 23.3039,
+    "sustain": 0.8318,
+    "release": 1.7004,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.26
+   },
+   "gu_name": "Slow Strings"
+  },
+  {
+   "program": 50,
+   "name": "Synth Strings 1",
+   "preset": "07 Ensemble/051 Synth Strings 1.ablpresetbundle",
+   "sample": "MGM_051_SynthStrings1.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.36,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.25,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 3.0001,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Synth Strings 1"
+  },
+  {
+   "program": 51,
+   "name": "Synth Strings 2",
+   "preset": "07 Ensemble/052 Synth Strings 2.ablpresetbundle",
+   "sample": "MGM_052_SynthStrings2.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -16.03,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.2,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 4.0,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 1.0
+   },
+   "gu_name": "Synth Strings 2"
+  },
+  {
+   "program": 52,
+   "name": "Choir Aahs",
+   "preset": "07 Ensemble/053 Choir Aahs.ablpresetbundle",
+   "sample": "MGM_053_ChoirAahs.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -12.13,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.1801,
+    "decay": 0.1,
+    "sustain": 1.0,
+    "release": 1.5,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.5
+   },
+   "gu_name": "Concert Choir"
+  },
+  {
+   "program": 53,
+   "name": "Voice Oohs",
+   "preset": "07 Ensemble/054 Voice Oohs.ablpresetbundle",
+   "sample": "MGM_054_VoiceOohs.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -11.94,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 28.1976,
+    "sustain": 0.861,
+    "release": 0.8341,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Voice Oohs"
+  },
+  {
+   "program": 54,
+   "name": "Synth Voice",
+   "preset": "07 Ensemble/055 Synth Voice.ablpresetbundle",
+   "sample": "MGM_055_SynthVoice.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -17.16,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.001,
+    "decay": 6.4012,
+    "sustain": 0.9226,
+    "release": 1.8998,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Synth Voice"
+  },
+  {
+   "program": 55,
+   "name": "Orchestra Hit",
+   "preset": "07 Ensemble/056 Orchestra Hit.ablpresetbundle",
+   "sample": "MGM_056_OrchestraHit.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -6.85,
+   "stereo": true,
+   "looped": false,
+   "seconds": 2.82,
+   "env": {
+    "attack": 0.0001,
+    "decay": 5.6995,
+    "sustain": 0.0003,
+    "release": 1.5,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -1.0
+   },
+   "gu_name": "Orchestra Hit"
+  },
+  {
+   "program": 56,
+   "name": "Trumpet",
+   "preset": "08 Brass/057 Trumpet.ablpresetbundle",
+   "sample": "MGM_057_Trumpet.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -11.86,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.01,
+    "decay": 1.0,
+    "sustain": 1.0,
+    "release": 0.2401,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Trumpet"
+  },
+  {
+   "program": 57,
+   "name": "Trombone",
+   "preset": "08 Brass/058 Trombone.ablpresetbundle",
+   "sample": "MGM_058_Trombone.wav",
+   "render_key": 48,
+   "transpose": 12,
+   "volume_db": -12.73,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.01,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.4001,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Trombone"
+  },
+  {
+   "program": 58,
+   "name": "Tuba",
+   "preset": "08 Brass/059 Tuba.ablpresetbundle",
+   "sample": "MGM_059_Tuba.wav",
+   "render_key": 48,
+   "transpose": 12,
+   "volume_db": -11.0,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0735,
+    "decay": 60.0,
+    "sustain": 0.4786,
+    "release": 0.27,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Tuba"
+  },
+  {
+   "program": 59,
+   "name": "Muted Trumpet",
+   "preset": "08 Brass/060 Muted Trumpet.ablpresetbundle",
+   "sample": "MGM_060_MutedTrumpet.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -16.45,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.01,
+    "decay": 1.0,
+    "sustain": 1.0,
+    "release": 0.2401,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Muted Trumpet"
+  },
+  {
+   "program": 60,
+   "name": "French Horn",
+   "preset": "08 Brass/061 French Horn.ablpresetbundle",
+   "sample": "MGM_061_FrenchHorn.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -8.51,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.008,
+    "decay": 38.9891,
+    "sustain": 0.5623,
+    "release": 0.55,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.3
+   },
+   "gu_name": "French Horns"
+  },
+  {
+   "program": 61,
+   "name": "Brass Section",
+   "preset": "08 Brass/062 Brass Section.ablpresetbundle",
+   "sample": "MGM_062_BrassSection.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -8.91,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.008,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.523,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.3
+   },
+   "gu_name": "Brass Section"
+  },
+  {
+   "program": 62,
+   "name": "Synth Brass 1",
+   "preset": "08 Brass/063 Synth Brass 1.ablpresetbundle",
+   "sample": "MGM_063_SynthBrass1.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -6.65,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.025,
+    "decay": 4.9703,
+    "sustain": 0.4786,
+    "release": 0.2,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.1
+   },
+   "gu_name": "Synth Brass 1"
+  },
+  {
+   "program": 63,
+   "name": "Synth Brass 2",
+   "preset": "08 Brass/064 Synth Brass 2.ablpresetbundle",
+   "sample": "MGM_064_SynthBrass2.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -10.49,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.015,
+    "decay": 48.2236,
+    "sustain": 0.4786,
+    "release": 1.0,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.5
+   },
+   "gu_name": "Synth Brass 2"
+  },
+  {
+   "program": 64,
+   "name": "Soprano Sax",
+   "preset": "09 Reed/065 Soprano Sax.ablpresetbundle",
+   "sample": "MGM_065_SopranoSax.wav",
+   "render_key": 72,
+   "transpose": -12,
+   "volume_db": -13.05,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 17.7429,
+    "sustain": 0.5012,
+    "release": 0.432,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Soprano Sax"
+  },
+  {
+   "program": 65,
+   "name": "Alto Sax",
+   "preset": "09 Reed/066 Alto Sax.ablpresetbundle",
+   "sample": "MGM_066_AltoSax.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -11.71,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.008,
+    "decay": 60.0,
+    "sustain": 0.4898,
+    "release": 0.204,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Alto Sax"
+  },
+  {
+   "program": 66,
+   "name": "Tenor Sax",
+   "preset": "09 Reed/067 Tenor Sax.ablpresetbundle",
+   "sample": "MGM_067_TenorSax.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -12.27,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 21.996,
+    "sustain": 0.5012,
+    "release": 0.309,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Tenor Sax"
+  },
+  {
+   "program": 67,
+   "name": "Baritone Sax",
+   "preset": "09 Reed/068 Baritone Sax.ablpresetbundle",
+   "sample": "MGM_068_BaritoneSax.wav",
+   "render_key": 48,
+   "transpose": 12,
+   "volume_db": -12.91,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.008,
+    "decay": 14.6975,
+    "sustain": 0.5012,
+    "release": 0.3431,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Baritone Sax"
+  },
+  {
+   "program": 68,
+   "name": "Oboe",
+   "preset": "09 Reed/069 Oboe.ablpresetbundle",
+   "sample": "MGM_069_Oboe.wav",
+   "render_key": 72,
+   "transpose": -12,
+   "volume_db": -10.64,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 60.0,
+    "sustain": 0.7943,
+    "release": 0.2915,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Oboe"
+  },
+  {
+   "program": 69,
+   "name": "English Horn",
+   "preset": "09 Reed/070 English Horn.ablpresetbundle",
+   "sample": "MGM_070_EnglishHorn.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -16.52,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.2401,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "English Horn"
+  },
+  {
+   "program": 70,
+   "name": "Bassoon",
+   "preset": "09 Reed/071 Bassoon.ablpresetbundle",
+   "sample": "MGM_071_Bassoon.wav",
+   "render_key": 48,
+   "transpose": 12,
+   "volume_db": -13.06,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0059,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.2,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Bassoon"
+  },
+  {
+   "program": 71,
+   "name": "Clarinet",
+   "preset": "09 Reed/072 Clarinet.ablpresetbundle",
+   "sample": "MGM_072_Clarinet.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.62,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.001,
+    "decay": 60.0,
+    "sustain": 0.7079,
+    "release": 0.38,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Clarinet"
+  },
+  {
+   "program": 72,
+   "name": "Piccolo",
+   "preset": "10 Pipe/073 Piccolo.ablpresetbundle",
+   "sample": "MGM_073_Piccolo.wav",
+   "render_key": 84,
+   "transpose": -24,
+   "volume_db": -12.06,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 60.0,
+    "sustain": 0.4027,
+    "release": 0.4889,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Piccolo"
+  },
+  {
+   "program": 73,
+   "name": "Flute",
+   "preset": "10 Pipe/074 Flute.ablpresetbundle",
+   "sample": "MGM_074_Flute.wav",
+   "render_key": 72,
+   "transpose": -12,
+   "volume_db": -10.51,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.008,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.25,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Flute"
+  },
+  {
+   "program": 74,
+   "name": "Recorder",
+   "preset": "10 Pipe/075 Recorder.ablpresetbundle",
+   "sample": "MGM_075_Recorder.wav",
+   "render_key": 72,
+   "transpose": -12,
+   "volume_db": -15.74,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.1,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Recorder"
+  },
+  {
+   "program": 75,
+   "name": "Pan Flute",
+   "preset": "10 Pipe/076 Pan Flute.ablpresetbundle",
+   "sample": "MGM_076_PanFlute.wav",
+   "render_key": 72,
+   "transpose": -12,
+   "volume_db": -11.22,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.008,
+    "decay": 0.001,
+    "sustain": 1.0,
+    "release": 0.3001,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Pan Flute"
+  },
+  {
+   "program": 76,
+   "name": "Blown Bottle",
+   "preset": "10 Pipe/077 Blown Bottle.ablpresetbundle",
+   "sample": "MGM_077_BlownBottle.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -16.54,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.04,
+    "decay": 29.9953,
+    "sustain": 0.3548,
+    "release": 0.4501,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Bottle Blow"
+  },
+  {
+   "program": 77,
+   "name": "Shakuhachi",
+   "preset": "10 Pipe/078 Shakuhachi.ablpresetbundle",
+   "sample": "MGM_078_Shakuhachi.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -11.26,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.008,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.8404,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Shakuhachi"
+  },
+  {
+   "program": 78,
+   "name": "Whistle",
+   "preset": "10 Pipe/079 Whistle.ablpresetbundle",
+   "sample": "MGM_079_Whistle.wav",
+   "render_key": 72,
+   "transpose": -12,
+   "volume_db": -8.63,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.1,
+    "decay": 13.0035,
+    "sustain": 0.6683,
+    "release": 0.4001,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Whistle"
+  },
+  {
+   "program": 79,
+   "name": "Ocarina",
+   "preset": "10 Pipe/080 Ocarina.ablpresetbundle",
+   "sample": "MGM_080_Ocarina.wav",
+   "render_key": 72,
+   "transpose": -12,
+   "volume_db": -11.76,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.001,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.08,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Ocarina"
+  },
+  {
+   "program": 80,
+   "name": "Square Lead",
+   "preset": "11 Synth Lead/081 Square Lead.ablpresetbundle",
+   "sample": "MGM_081_SquareLead.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.74,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.001,
+    "decay": 12.0003,
+    "sustain": 0.5623,
+    "release": 0.3001,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Square Lead"
+  },
+  {
+   "program": 81,
+   "name": "Saw Lead",
+   "preset": "11 Synth Lead/082 Saw Lead.ablpresetbundle",
+   "sample": "MGM_082_SawLead.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -12.62,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.001,
+    "decay": 25.0054,
+    "sustain": 0.5623,
+    "release": 0.5,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.2
+   },
+   "gu_name": "Saw Lead"
+  },
+  {
+   "program": 82,
+   "name": "Calliope Lead",
+   "preset": "11 Synth Lead/083 Calliope Lead.ablpresetbundle",
+   "sample": "MGM_083_CalliopeLead.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -9.22,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0511,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.3001,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.2
+   },
+   "gu_name": "Synth Calliope"
+  },
+  {
+   "program": 83,
+   "name": "Chiff Lead",
+   "preset": "11 Synth Lead/084 Chiff Lead.ablpresetbundle",
+   "sample": "MGM_084_ChiffLead.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -7.75,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.02,
+    "decay": 0.9234,
+    "sustain": 0.631,
+    "release": 0.25,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Chiffer Lead"
+  },
+  {
+   "program": 84,
+   "name": "Charang Lead",
+   "preset": "11 Synth Lead/085 Charang Lead.ablpresetbundle",
+   "sample": "MGM_085_CharangLead.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -8.95,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0064,
+    "decay": 0.1,
+    "sustain": 0.631,
+    "release": 0.2,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Charang"
+  },
+  {
+   "program": 85,
+   "name": "Voice Lead",
+   "preset": "11 Synth Lead/086 Voice Lead.ablpresetbundle",
+   "sample": "MGM_086_VoiceLead.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -9.98,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.001,
+    "decay": 0.001,
+    "sustain": 1.0,
+    "release": 0.143,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.2
+   },
+   "gu_name": "Solo Vox"
+  },
+  {
+   "program": 86,
+   "name": "Fifths Lead",
+   "preset": "11 Synth Lead/087 Fifths Lead.ablpresetbundle",
+   "sample": "MGM_087_FifthsLead.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -9.36,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 9.9982,
+    "sustain": 0.3162,
+    "release": 1.0,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.4
+   },
+   "gu_name": "5th Saw Wave"
+  },
+  {
+   "program": 87,
+   "name": "Bass + Lead",
+   "preset": "11 Synth Lead/088 Bass + Lead.ablpresetbundle",
+   "sample": "MGM_088_BassLead.wav",
+   "render_key": 36,
+   "transpose": 24,
+   "volume_db": -2.72,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.001,
+    "decay": 19.9964,
+    "sustain": 0.2512,
+    "release": 0.1,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.2
+   },
+   "gu_name": "Bass & Lead"
+  },
+  {
+   "program": 88,
+   "name": "New Age Pad",
+   "preset": "12 Synth Pad/089 New Age Pad.ablpresetbundle",
+   "sample": "MGM_089_NewAgePad.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -7.05,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.007,
+    "decay": 25.0054,
+    "sustain": 0.0003,
+    "release": 4.0,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Fantasia"
+  },
+  {
+   "program": 89,
+   "name": "Warm Pad",
+   "preset": "12 Synth Pad/090 Warm Pad.ablpresetbundle",
+   "sample": "MGM_090_WarmPad.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.91,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.8001,
+    "decay": 23.3039,
+    "sustain": 0.8318,
+    "release": 4.5315,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.04
+   },
+   "gu_name": "Warm Pad"
+  },
+  {
+   "program": 90,
+   "name": "Polysynth Pad",
+   "preset": "12 Synth Pad/091 Polysynth Pad.ablpresetbundle",
+   "sample": "MGM_091_PolysynthPad.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -8.94,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.04,
+    "decay": 3.0001,
+    "sustain": 0.2512,
+    "release": 1.2002,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.14
+   },
+   "gu_name": "Polysynth"
+  },
+  {
+   "program": 91,
+   "name": "Choir Pad",
+   "preset": "12 Synth Pad/092 Choir Pad.ablpresetbundle",
+   "sample": "MGM_092_ChoirPad.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -9.84,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.12,
+    "decay": 8.0,
+    "sustain": 0.1778,
+    "release": 4.4691,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Space Voice"
+  },
+  {
+   "program": 92,
+   "name": "Bowed Pad",
+   "preset": "12 Synth Pad/093 Bowed Pad.ablpresetbundle",
+   "sample": "MGM_093_BowedPad.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.06,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.8001,
+    "decay": 29.9953,
+    "sustain": 0.1585,
+    "release": 6.0002,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Bowed Glass"
+  },
+  {
+   "program": 93,
+   "name": "Metallic Pad",
+   "preset": "12 Synth Pad/094 Metallic Pad.ablpresetbundle",
+   "sample": "MGM_094_MetallicPad.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -3.81,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.3064,
+    "decay": 8.0,
+    "sustain": 0.0398,
+    "release": 3.6008,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Metal Pad"
+  },
+  {
+   "program": 94,
+   "name": "Halo Pad",
+   "preset": "12 Synth Pad/095 Halo Pad.ablpresetbundle",
+   "sample": "MGM_095_HaloPad.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.04,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.03,
+    "decay": 0.01,
+    "sustain": 1.0,
+    "release": 2.271,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Halo Pad"
+  },
+  {
+   "program": 95,
+   "name": "Sweep Pad",
+   "preset": "12 Synth Pad/096 Sweep Pad.ablpresetbundle",
+   "sample": "MGM_096_SweepPad.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -12.57,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.1,
+    "decay": 0.01,
+    "sustain": 1.0,
+    "release": 6.9523,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.6
+   },
+   "gu_name": "Sweep Pad"
+  },
+  {
+   "program": 96,
+   "name": "Rain FX",
+   "preset": "13 Synth Effects/097 Rain FX.ablpresetbundle",
+   "sample": "MGM_097_RainFx.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -8.96,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.005,
+    "decay": 14.9977,
+    "sustain": 0.0003,
+    "release": 2.8382,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Ice Rain"
+  },
+  {
+   "program": 97,
+   "name": "Soundtrack FX",
+   "preset": "13 Synth Effects/098 Soundtrack FX.ablpresetbundle",
+   "sample": "MGM_098_SoundtrackFx.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -3.85,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.4501,
+    "decay": 0.01,
+    "sustain": 1.0,
+    "release": 2.2,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.6
+   },
+   "gu_name": "Soundtrack"
+  },
+  {
+   "program": 98,
+   "name": "Crystal FX",
+   "preset": "13 Synth Effects/099 Crystal FX.ablpresetbundle",
+   "sample": "MGM_099_CrystalFx.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -10.04,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 6.0002,
+    "sustain": 0.0003,
+    "release": 3.7494,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.06
+   },
+   "gu_name": "Crystal"
+  },
+  {
+   "program": 99,
+   "name": "Atmosphere FX",
+   "preset": "13 Synth Effects/100 Atmosphere FX.ablpresetbundle",
+   "sample": "MGM_100_AtmosphereFx.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -7.88,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.06,
+    "decay": 14.0014,
+    "sustain": 0.5012,
+    "release": 6.0002,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Atmosphere"
+  },
+  {
+   "program": 100,
+   "name": "Brightness FX",
+   "preset": "13 Synth Effects/101 Brightness FX.ablpresetbundle",
+   "sample": "MGM_101_BrightnessFx.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -6.37,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.008,
+    "decay": 9.9982,
+    "sustain": 0.0003,
+    "release": 4.0,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.4
+   },
+   "gu_name": "Brightness"
+  },
+  {
+   "program": 101,
+   "name": "Goblins FX",
+   "preset": "13 Synth Effects/102 Goblins FX.ablpresetbundle",
+   "sample": "MGM_102_GoblinsFx.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.93,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.7671,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 5.0107,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Goblin"
+  },
+  {
+   "program": 102,
+   "name": "Echoes FX",
+   "preset": "13 Synth Effects/103 Echoes FX.ablpresetbundle",
+   "sample": "MGM_103_EchoesFx.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -11.93,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.001,
+    "decay": 2.817,
+    "sustain": 0.4121,
+    "release": 3.7996,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Echo Drops"
+  },
+  {
+   "program": 103,
+   "name": "Sci-fi FX",
+   "preset": "13 Synth Effects/104 Sci-fi FX.ablpresetbundle",
+   "sample": "MGM_104_SciFiFx.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -6.76,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.05,
+    "decay": 1.0,
+    "sustain": 1.0,
+    "release": 4.0,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Star Theme"
+  },
+  {
+   "program": 104,
+   "name": "Sitar",
+   "preset": "14 Ethnic/105 Sitar.ablpresetbundle",
+   "sample": "MGM_105_Sitar.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.16,
+   "stereo": false,
+   "looped": false,
+   "seconds": 1.56,
+   "env": {
+    "attack": 0.0001,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 4.5002,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Sitar"
+  },
+  {
+   "program": 105,
+   "name": "Banjo",
+   "preset": "14 Ethnic/106 Banjo.ablpresetbundle",
+   "sample": "MGM_106_Banjo.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -8.15,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 4.1989,
+    "sustain": 0.0003,
+    "release": 0.75,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Banjo"
+  },
+  {
+   "program": 106,
+   "name": "Shamisen",
+   "preset": "14 Ethnic/107 Shamisen.ablpresetbundle",
+   "sample": "MGM_107_Shamisen.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -8.58,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 1.9873,
+    "sustain": 0.0003,
+    "release": 1.9873,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Shamisen"
+  },
+  {
+   "program": 107,
+   "name": "Koto",
+   "preset": "14 Ethnic/108 Koto.ablpresetbundle",
+   "sample": "MGM_108_Koto.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -8.12,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 9.9982,
+    "sustain": 0.0003,
+    "release": 2.2501,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Koto"
+  },
+  {
+   "program": 108,
+   "name": "Kalimba",
+   "preset": "14 Ethnic/109 Kalimba.ablpresetbundle",
+   "sample": "MGM_109_Kalimba.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -10.39,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 3.5206,
+    "sustain": 0.0003,
+    "release": 1.6702,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Kalimba"
+  },
+  {
+   "program": 109,
+   "name": "Bagpipe",
+   "preset": "14 Ethnic/110 Bagpipe.ablpresetbundle",
+   "sample": "MGM_110_Bagpipe.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -10.53,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.006,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.6001,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.2
+   },
+   "gu_name": "Bagpipes"
+  },
+  {
+   "program": 110,
+   "name": "Fiddle",
+   "preset": "14 Ethnic/111 Fiddle.ablpresetbundle",
+   "sample": "MGM_111_Fiddle.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -11.93,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.01,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.4501,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Fiddle"
+  },
+  {
+   "program": 111,
+   "name": "Shanai",
+   "preset": "14 Ethnic/112 Shanai.ablpresetbundle",
+   "sample": "MGM_112_Shanai.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -10.36,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.012,
+    "decay": 1.6702,
+    "sustain": 0.7674,
+    "release": 0.243,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Shenai"
+  },
+  {
+   "program": 112,
+   "name": "Tinkle Bell",
+   "preset": "15 Percussive/113 Tinkle Bell.ablpresetbundle",
+   "sample": "MGM_113_TinkleBell.wav",
+   "render_key": 84,
+   "transpose": -24,
+   "volume_db": -6.69,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 3.8106,
+    "sustain": 0.0003,
+    "release": 2.7195,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Tinker Bell"
+  },
+  {
+   "program": 113,
+   "name": "Agogo",
+   "preset": "15 Percussive/114 Agogo.ablpresetbundle",
+   "sample": "MGM_114_Agogo.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -8.5,
+   "stereo": false,
+   "looped": false,
+   "seconds": 0.29,
+   "env": {
+    "attack": 0.0001,
+    "decay": 1.5,
+    "sustain": 0.0003,
+    "release": 1.5,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Agogo"
+  },
+  {
+   "program": 114,
+   "name": "Steel Drums",
+   "preset": "15 Percussive/115 Steel Drums.ablpresetbundle",
+   "sample": "MGM_115_SteelDrums.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -12.24,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 3.0001,
+    "sustain": 0.0003,
+    "release": 4.0,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Steel Drums"
+  },
+  {
+   "program": 115,
+   "name": "Woodblock",
+   "preset": "15 Percussive/116 Woodblock.ablpresetbundle",
+   "sample": "MGM_116_Woodblock.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -8.16,
+   "stereo": false,
+   "looped": false,
+   "seconds": 0.19,
+   "env": {
+    "attack": 0.0001,
+    "decay": 1.2198,
+    "sustain": 0.0003,
+    "release": 1.2198,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Wood Block"
+  },
+  {
+   "program": 116,
+   "name": "Taiko Drum",
+   "preset": "15 Percussive/117 Taiko Drum.ablpresetbundle",
+   "sample": "MGM_117_TaikoDrum.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -11.1,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 5.0107,
+    "sustain": 0.0003,
+    "release": 7.3488,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Taiko Drum"
+  },
+  {
+   "program": 117,
+   "name": "Melodic Tom",
+   "preset": "15 Percussive/118 Melodic Tom.ablpresetbundle",
+   "sample": "MGM_118_MelodicTom.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.7,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0001,
+    "decay": 10.004,
+    "sustain": 0.0003,
+    "release": 10.004,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Melodic Tom"
+  },
+  {
+   "program": 118,
+   "name": "Synth Drum",
+   "preset": "15 Percussive/119 Synth Drum.ablpresetbundle",
+   "sample": "MGM_119_SynthDrum.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -11.74,
+   "stereo": false,
+   "looped": false,
+   "seconds": 0.34,
+   "env": {
+    "attack": 0.0001,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 1.0,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Synth Drum"
+  },
+  {
+   "program": 119,
+   "name": "Reverse Cymbal",
+   "preset": "15 Percussive/120 Reverse Cymbal.ablpresetbundle",
+   "sample": "MGM_120_ReverseCymbal.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -12.65,
+   "stereo": false,
+   "looped": false,
+   "seconds": 1.41,
+   "env": {
+    "attack": 0.127,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 0.005,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Reverse Cymbal"
+  },
+  {
+   "program": 120,
+   "name": "Guitar Fret Noise",
+   "preset": "16 Sound Effects/121 Guitar Fret Noise.ablpresetbundle",
+   "sample": "MGM_121_GuitarFretNoise.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -18.05,
+   "stereo": false,
+   "looped": false,
+   "seconds": 0.23,
+   "env": {
+    "attack": 0.001,
+    "decay": 0.001,
+    "sustain": 1.0,
+    "release": 0.6799,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Fret Noise"
+  },
+  {
+   "program": 121,
+   "name": "Breath Noise",
+   "preset": "16 Sound Effects/122 Breath Noise.ablpresetbundle",
+   "sample": "MGM_122_BreathNoise.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.89,
+   "stereo": false,
+   "looped": false,
+   "seconds": 0.28,
+   "env": {
+    "attack": 0.008,
+    "decay": 0.5,
+    "sustain": 0.0003,
+    "release": 0.5,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Breath Noise"
+  },
+  {
+   "program": 122,
+   "name": "Seashore",
+   "preset": "16 Sound Effects/123 Seashore.ablpresetbundle",
+   "sample": "MGM_123_Seashore.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -9.54,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 1.4199,
+    "decay": 20.5942,
+    "sustain": 0.0003,
+    "release": 8.51,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.148
+   },
+   "gu_name": "Seashore"
+  },
+  {
+   "program": 123,
+   "name": "Bird Tweet",
+   "preset": "16 Sound Effects/124 Bird Tweet.ablpresetbundle",
+   "sample": "MGM_124_BirdTweet.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -13.58,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.01,
+    "decay": 14.9977,
+    "sustain": 0.0003,
+    "release": 0.58,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.5
+   },
+   "gu_name": "Birds"
+  },
+  {
+   "program": 124,
+   "name": "Telephone Ring",
+   "preset": "16 Sound Effects/125 Telephone Ring.ablpresetbundle",
+   "sample": "MGM_125_TelephoneRing.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -15.06,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.0062,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 9.9982,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Telephone 1"
+  },
+  {
+   "program": 125,
+   "name": "Helicopter",
+   "preset": "16 Sound Effects/126 Helicopter.ablpresetbundle",
+   "sample": "MGM_126_Helicopter.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -11.47,
+   "stereo": false,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 4.9502,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 5.461,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Helicopter"
+  },
+  {
+   "program": 126,
+   "name": "Applause",
+   "preset": "16 Sound Effects/127 Applause.ablpresetbundle",
+   "sample": "MGM_127_Applause.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -12.5,
+   "stereo": true,
+   "looped": true,
+   "seconds": 8.0,
+   "env": {
+    "attack": 0.006,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 7.0007,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": -0.6
+   },
+   "gu_name": "Applause"
+  },
+  {
+   "program": 127,
+   "name": "Gunshot",
+   "preset": "16 Sound Effects/128 Gunshot.ablpresetbundle",
+   "sample": "MGM_128_Gunshot.wav",
+   "render_key": 60,
+   "transpose": 0,
+   "volume_db": -10.02,
+   "stereo": false,
+   "looped": false,
+   "seconds": 0.53,
+   "env": {
+    "attack": 0.0001,
+    "decay": 60.0,
+    "sustain": 1.0,
+    "release": 48.3072,
+    "cutoff": 22000.0,
+    "resonance": 0.0,
+    "exclusive": 0,
+    "pan": 0.0
+   },
+   "gu_name": "Gun Shot"
+  }
+ ],
+ "kits": [
+  {
+   "name": "GM Kit Standard",
+   "preset": "17 Drum Kits/01 GM Kit Standard.ablpresetbundle",
+   "gu_kit": 0,
+   "pads": [
+    {
+     "pad": 36,
+     "gm_note": 36,
+     "sample": "MGM_K000_36_BassDrum1.wav",
+     "choke": null
+    },
+    {
+     "pad": 37,
+     "gm_note": 37,
+     "sample": "MGM_K000_37_SideStick.wav",
+     "choke": null
+    },
+    {
+     "pad": 38,
+     "gm_note": 38,
+     "sample": "MGM_K000_38_AcousticSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 39,
+     "gm_note": 39,
+     "sample": "MGM_K000_39_HandClap.wav",
+     "choke": null
+    },
+    {
+     "pad": 40,
+     "gm_note": 40,
+     "sample": "MGM_K000_40_ElectricSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 41,
+     "gm_note": 41,
+     "sample": "MGM_K000_41_LowFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 42,
+     "gm_note": 42,
+     "sample": "MGM_K000_42_ClosedHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 43,
+     "gm_note": 43,
+     "sample": "MGM_K000_43_HighFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 44,
+     "gm_note": 44,
+     "sample": "MGM_K000_44_PedalHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 45,
+     "gm_note": 45,
+     "sample": "MGM_K000_45_LowTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 46,
+     "gm_note": 46,
+     "sample": "MGM_K000_46_OpenHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 47,
+     "gm_note": 47,
+     "sample": "MGM_K000_47_LowMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 48,
+     "gm_note": 48,
+     "sample": "MGM_K000_48_HiMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 49,
+     "gm_note": 49,
+     "sample": "MGM_K000_49_CrashCymbal1.wav",
+     "choke": null
+    },
+    {
+     "pad": 50,
+     "gm_note": 50,
+     "sample": "MGM_K000_50_HighTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 51,
+     "gm_note": 51,
+     "sample": "MGM_K000_51_RideCymbal1.wav",
+     "choke": null
+    }
+   ]
+  },
+  {
+   "name": "GM Kit Room",
+   "preset": "17 Drum Kits/02 GM Kit Room.ablpresetbundle",
+   "gu_kit": 8,
+   "pads": [
+    {
+     "pad": 36,
+     "gm_note": 36,
+     "sample": "MGM_K008_36_BassDrum1.wav",
+     "choke": null
+    },
+    {
+     "pad": 37,
+     "gm_note": 37,
+     "sample": "MGM_K008_37_SideStick.wav",
+     "choke": null
+    },
+    {
+     "pad": 38,
+     "gm_note": 38,
+     "sample": "MGM_K008_38_AcousticSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 39,
+     "gm_note": 39,
+     "sample": "MGM_K008_39_HandClap.wav",
+     "choke": null
+    },
+    {
+     "pad": 40,
+     "gm_note": 40,
+     "sample": "MGM_K008_40_ElectricSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 41,
+     "gm_note": 41,
+     "sample": "MGM_K008_41_LowFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 42,
+     "gm_note": 42,
+     "sample": "MGM_K008_42_ClosedHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 43,
+     "gm_note": 43,
+     "sample": "MGM_K008_43_HighFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 44,
+     "gm_note": 44,
+     "sample": "MGM_K008_44_PedalHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 45,
+     "gm_note": 45,
+     "sample": "MGM_K008_45_LowTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 46,
+     "gm_note": 46,
+     "sample": "MGM_K008_46_OpenHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 47,
+     "gm_note": 47,
+     "sample": "MGM_K008_47_LowMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 48,
+     "gm_note": 48,
+     "sample": "MGM_K008_48_HiMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 49,
+     "gm_note": 49,
+     "sample": "MGM_K008_49_CrashCymbal1.wav",
+     "choke": null
+    },
+    {
+     "pad": 50,
+     "gm_note": 50,
+     "sample": "MGM_K008_50_HighTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 51,
+     "gm_note": 51,
+     "sample": "MGM_K008_51_RideCymbal1.wav",
+     "choke": null
+    }
+   ]
+  },
+  {
+   "name": "GM Kit Power",
+   "preset": "17 Drum Kits/03 GM Kit Power.ablpresetbundle",
+   "gu_kit": 16,
+   "pads": [
+    {
+     "pad": 36,
+     "gm_note": 36,
+     "sample": "MGM_K016_36_BassDrum1.wav",
+     "choke": null
+    },
+    {
+     "pad": 37,
+     "gm_note": 37,
+     "sample": "MGM_K016_37_SideStick.wav",
+     "choke": null
+    },
+    {
+     "pad": 38,
+     "gm_note": 38,
+     "sample": "MGM_K016_38_AcousticSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 39,
+     "gm_note": 39,
+     "sample": "MGM_K016_39_HandClap.wav",
+     "choke": null
+    },
+    {
+     "pad": 40,
+     "gm_note": 40,
+     "sample": "MGM_K016_40_ElectricSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 41,
+     "gm_note": 41,
+     "sample": "MGM_K016_41_LowFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 42,
+     "gm_note": 42,
+     "sample": "MGM_K016_42_ClosedHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 43,
+     "gm_note": 43,
+     "sample": "MGM_K016_43_HighFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 44,
+     "gm_note": 44,
+     "sample": "MGM_K016_44_PedalHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 45,
+     "gm_note": 45,
+     "sample": "MGM_K016_45_LowTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 46,
+     "gm_note": 46,
+     "sample": "MGM_K016_46_OpenHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 47,
+     "gm_note": 47,
+     "sample": "MGM_K016_47_LowMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 48,
+     "gm_note": 48,
+     "sample": "MGM_K016_48_HiMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 49,
+     "gm_note": 49,
+     "sample": "MGM_K016_49_CrashCymbal1.wav",
+     "choke": null
+    },
+    {
+     "pad": 50,
+     "gm_note": 50,
+     "sample": "MGM_K016_50_HighTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 51,
+     "gm_note": 51,
+     "sample": "MGM_K016_51_RideCymbal1.wav",
+     "choke": null
+    }
+   ]
+  },
+  {
+   "name": "GM Kit Electronic",
+   "preset": "17 Drum Kits/04 GM Kit Electronic.ablpresetbundle",
+   "gu_kit": 24,
+   "pads": [
+    {
+     "pad": 36,
+     "gm_note": 36,
+     "sample": "MGM_K024_36_BassDrum1.wav",
+     "choke": null
+    },
+    {
+     "pad": 37,
+     "gm_note": 37,
+     "sample": "MGM_K024_37_SideStick.wav",
+     "choke": null
+    },
+    {
+     "pad": 38,
+     "gm_note": 38,
+     "sample": "MGM_K024_38_AcousticSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 39,
+     "gm_note": 39,
+     "sample": "MGM_K024_39_HandClap.wav",
+     "choke": null
+    },
+    {
+     "pad": 40,
+     "gm_note": 40,
+     "sample": "MGM_K024_40_ElectricSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 41,
+     "gm_note": 41,
+     "sample": "MGM_K024_41_LowFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 42,
+     "gm_note": 42,
+     "sample": "MGM_K024_42_ClosedHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 43,
+     "gm_note": 43,
+     "sample": "MGM_K024_43_HighFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 44,
+     "gm_note": 44,
+     "sample": "MGM_K024_44_PedalHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 45,
+     "gm_note": 45,
+     "sample": "MGM_K024_45_LowTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 46,
+     "gm_note": 46,
+     "sample": "MGM_K024_46_OpenHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 47,
+     "gm_note": 47,
+     "sample": "MGM_K024_47_LowMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 48,
+     "gm_note": 48,
+     "sample": "MGM_K024_48_HiMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 49,
+     "gm_note": 49,
+     "sample": "MGM_K024_49_CrashCymbal1.wav",
+     "choke": null
+    },
+    {
+     "pad": 50,
+     "gm_note": 50,
+     "sample": "MGM_K024_50_HighTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 51,
+     "gm_note": 51,
+     "sample": "MGM_K024_51_RideCymbal1.wav",
+     "choke": null
+    }
+   ]
+  },
+  {
+   "name": "GM Kit 808-909",
+   "preset": "17 Drum Kits/05 GM Kit 808-909.ablpresetbundle",
+   "gu_kit": 25,
+   "pads": [
+    {
+     "pad": 36,
+     "gm_note": 36,
+     "sample": "MGM_K025_36_BassDrum1.wav",
+     "choke": null
+    },
+    {
+     "pad": 37,
+     "gm_note": 37,
+     "sample": "MGM_K025_37_SideStick.wav",
+     "choke": null
+    },
+    {
+     "pad": 38,
+     "gm_note": 38,
+     "sample": "MGM_K025_38_AcousticSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 39,
+     "gm_note": 39,
+     "sample": "MGM_K025_39_HandClap.wav",
+     "choke": null
+    },
+    {
+     "pad": 40,
+     "gm_note": 40,
+     "sample": "MGM_K025_40_ElectricSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 41,
+     "gm_note": 41,
+     "sample": "MGM_K025_41_LowFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 42,
+     "gm_note": 42,
+     "sample": "MGM_K025_42_ClosedHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 43,
+     "gm_note": 43,
+     "sample": "MGM_K025_43_HighFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 44,
+     "gm_note": 44,
+     "sample": "MGM_K025_44_PedalHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 45,
+     "gm_note": 45,
+     "sample": "MGM_K025_45_LowTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 46,
+     "gm_note": 46,
+     "sample": "MGM_K025_46_OpenHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 47,
+     "gm_note": 47,
+     "sample": "MGM_K025_47_LowMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 48,
+     "gm_note": 48,
+     "sample": "MGM_K025_48_HiMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 49,
+     "gm_note": 49,
+     "sample": "MGM_K025_49_CrashCymbal1.wav",
+     "choke": null
+    },
+    {
+     "pad": 50,
+     "gm_note": 50,
+     "sample": "MGM_K025_50_HighTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 51,
+     "gm_note": 51,
+     "sample": "MGM_K025_51_RideCymbal1.wav",
+     "choke": null
+    }
+   ]
+  },
+  {
+   "name": "GM Kit Dance",
+   "preset": "17 Drum Kits/06 GM Kit Dance.ablpresetbundle",
+   "gu_kit": 26,
+   "pads": [
+    {
+     "pad": 36,
+     "gm_note": 36,
+     "sample": "MGM_K026_36_BassDrum1.wav",
+     "choke": null
+    },
+    {
+     "pad": 37,
+     "gm_note": 37,
+     "sample": "MGM_K026_37_SideStick.wav",
+     "choke": null
+    },
+    {
+     "pad": 38,
+     "gm_note": 38,
+     "sample": "MGM_K026_38_AcousticSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 39,
+     "gm_note": 39,
+     "sample": "MGM_K026_39_HandClap.wav",
+     "choke": null
+    },
+    {
+     "pad": 40,
+     "gm_note": 40,
+     "sample": "MGM_K026_40_ElectricSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 41,
+     "gm_note": 41,
+     "sample": "MGM_K026_41_LowFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 42,
+     "gm_note": 42,
+     "sample": "MGM_K026_42_ClosedHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 43,
+     "gm_note": 43,
+     "sample": "MGM_K026_43_HighFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 44,
+     "gm_note": 44,
+     "sample": "MGM_K026_44_PedalHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 45,
+     "gm_note": 45,
+     "sample": "MGM_K026_45_LowTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 46,
+     "gm_note": 46,
+     "sample": "MGM_K026_46_OpenHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 47,
+     "gm_note": 47,
+     "sample": "MGM_K026_47_LowMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 48,
+     "gm_note": 48,
+     "sample": "MGM_K026_48_HiMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 49,
+     "gm_note": 49,
+     "sample": "MGM_K026_49_CrashCymbal1.wav",
+     "choke": null
+    },
+    {
+     "pad": 50,
+     "gm_note": 50,
+     "sample": "MGM_K026_50_HighTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 51,
+     "gm_note": 51,
+     "sample": "MGM_K026_51_RideCymbal1.wav",
+     "choke": null
+    }
+   ]
+  },
+  {
+   "name": "GM Kit Jazz",
+   "preset": "17 Drum Kits/07 GM Kit Jazz.ablpresetbundle",
+   "gu_kit": 32,
+   "pads": [
+    {
+     "pad": 36,
+     "gm_note": 36,
+     "sample": "MGM_K032_36_BassDrum1.wav",
+     "choke": null
+    },
+    {
+     "pad": 37,
+     "gm_note": 37,
+     "sample": "MGM_K032_37_SideStick.wav",
+     "choke": null
+    },
+    {
+     "pad": 38,
+     "gm_note": 38,
+     "sample": "MGM_K032_38_AcousticSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 39,
+     "gm_note": 39,
+     "sample": "MGM_K032_39_HandClap.wav",
+     "choke": null
+    },
+    {
+     "pad": 40,
+     "gm_note": 40,
+     "sample": "MGM_K032_40_ElectricSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 41,
+     "gm_note": 41,
+     "sample": "MGM_K032_41_LowFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 42,
+     "gm_note": 42,
+     "sample": "MGM_K032_42_ClosedHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 43,
+     "gm_note": 43,
+     "sample": "MGM_K032_43_HighFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 44,
+     "gm_note": 44,
+     "sample": "MGM_K032_44_PedalHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 45,
+     "gm_note": 45,
+     "sample": "MGM_K032_45_LowTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 46,
+     "gm_note": 46,
+     "sample": "MGM_K032_46_OpenHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 47,
+     "gm_note": 47,
+     "sample": "MGM_K032_47_LowMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 48,
+     "gm_note": 48,
+     "sample": "MGM_K032_48_HiMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 49,
+     "gm_note": 49,
+     "sample": "MGM_K032_49_CrashCymbal1.wav",
+     "choke": null
+    },
+    {
+     "pad": 50,
+     "gm_note": 50,
+     "sample": "MGM_K032_50_HighTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 51,
+     "gm_note": 51,
+     "sample": "MGM_K032_51_RideCymbal1.wav",
+     "choke": null
+    }
+   ]
+  },
+  {
+   "name": "GM Kit Brush",
+   "preset": "17 Drum Kits/08 GM Kit Brush.ablpresetbundle",
+   "gu_kit": 40,
+   "pads": [
+    {
+     "pad": 36,
+     "gm_note": 36,
+     "sample": "MGM_K040_36_BassDrum1.wav",
+     "choke": null
+    },
+    {
+     "pad": 37,
+     "gm_note": 37,
+     "sample": "MGM_K040_37_SideStick.wav",
+     "choke": null
+    },
+    {
+     "pad": 38,
+     "gm_note": 38,
+     "sample": "MGM_K040_38_AcousticSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 39,
+     "gm_note": 39,
+     "sample": "MGM_K040_39_HandClap.wav",
+     "choke": null
+    },
+    {
+     "pad": 40,
+     "gm_note": 40,
+     "sample": "MGM_K040_40_ElectricSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 41,
+     "gm_note": 41,
+     "sample": "MGM_K040_41_LowFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 42,
+     "gm_note": 42,
+     "sample": "MGM_K040_42_ClosedHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 43,
+     "gm_note": 43,
+     "sample": "MGM_K040_43_HighFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 44,
+     "gm_note": 44,
+     "sample": "MGM_K040_44_PedalHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 45,
+     "gm_note": 45,
+     "sample": "MGM_K040_45_LowTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 46,
+     "gm_note": 46,
+     "sample": "MGM_K040_46_OpenHiHat.wav",
+     "choke": 1
+    },
+    {
+     "pad": 47,
+     "gm_note": 47,
+     "sample": "MGM_K040_47_LowMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 48,
+     "gm_note": 48,
+     "sample": "MGM_K040_48_HiMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 49,
+     "gm_note": 49,
+     "sample": "MGM_K040_49_CrashCymbal1.wav",
+     "choke": null
+    },
+    {
+     "pad": 50,
+     "gm_note": 50,
+     "sample": "MGM_K040_50_HighTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 51,
+     "gm_note": 51,
+     "sample": "MGM_K040_51_RideCymbal1.wav",
+     "choke": null
+    }
+   ]
+  },
+  {
+   "name": "GM Kit Orchestral",
+   "preset": "17 Drum Kits/09 GM Kit Orchestral.ablpresetbundle",
+   "gu_kit": 48,
+   "pads": [
+    {
+     "pad": 36,
+     "gm_note": 36,
+     "sample": "MGM_K048_36_BassDrum1.wav",
+     "choke": null
+    },
+    {
+     "pad": 37,
+     "gm_note": 37,
+     "sample": "MGM_K048_37_SideStick.wav",
+     "choke": null
+    },
+    {
+     "pad": 38,
+     "gm_note": 38,
+     "sample": "MGM_K048_38_AcousticSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 39,
+     "gm_note": 39,
+     "sample": "MGM_K048_39_HandClap.wav",
+     "choke": null
+    },
+    {
+     "pad": 40,
+     "gm_note": 40,
+     "sample": "MGM_K048_40_ElectricSnare.wav",
+     "choke": null
+    },
+    {
+     "pad": 41,
+     "gm_note": 41,
+     "sample": "MGM_K048_41_LowFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 42,
+     "gm_note": 42,
+     "sample": "MGM_K048_42_ClosedHiHat.wav",
+     "choke": null
+    },
+    {
+     "pad": 43,
+     "gm_note": 43,
+     "sample": "MGM_K048_43_HighFloorTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 44,
+     "gm_note": 44,
+     "sample": "MGM_K048_44_PedalHiHat.wav",
+     "choke": null
+    },
+    {
+     "pad": 45,
+     "gm_note": 45,
+     "sample": "MGM_K048_45_LowTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 46,
+     "gm_note": 46,
+     "sample": "MGM_K048_46_OpenHiHat.wav",
+     "choke": null
+    },
+    {
+     "pad": 47,
+     "gm_note": 47,
+     "sample": "MGM_K048_47_LowMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 48,
+     "gm_note": 48,
+     "sample": "MGM_K048_48_HiMidTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 49,
+     "gm_note": 49,
+     "sample": "MGM_K048_49_CrashCymbal1.wav",
+     "choke": null
+    },
+    {
+     "pad": 50,
+     "gm_note": 50,
+     "sample": "MGM_K048_50_HighTom.wav",
+     "choke": null
+    },
+    {
+     "pad": 51,
+     "gm_note": 51,
+     "sample": "MGM_K048_51_RideCymbal1.wav",
+     "choke": null
+    }
+   ]
+  },
+  {
+   "name": "GM Perc 52-67",
+   "preset": "17 Drum Kits/10 GM Perc 52-67.ablpresetbundle",
+   "gu_kit": 0,
+   "pads": [
+    {
+     "pad": 36,
+     "gm_note": 52,
+     "sample": "MGM_K000_52_ChineseCymbal.wav",
+     "choke": null
+    },
+    {
+     "pad": 37,
+     "gm_note": 53,
+     "sample": "MGM_K000_53_RideBell.wav",
+     "choke": null
+    },
+    {
+     "pad": 38,
+     "gm_note": 54,
+     "sample": "MGM_K000_54_Tambourine.wav",
+     "choke": null
+    },
+    {
+     "pad": 39,
+     "gm_note": 55,
+     "sample": "MGM_K000_55_SplashCymbal.wav",
+     "choke": null
+    },
+    {
+     "pad": 40,
+     "gm_note": 56,
+     "sample": "MGM_K000_56_Cowbell.wav",
+     "choke": null
+    },
+    {
+     "pad": 41,
+     "gm_note": 57,
+     "sample": "MGM_K000_57_CrashCymbal2.wav",
+     "choke": null
+    },
+    {
+     "pad": 42,
+     "gm_note": 58,
+     "sample": "MGM_K000_58_Vibraslap.wav",
+     "choke": null
+    },
+    {
+     "pad": 43,
+     "gm_note": 59,
+     "sample": "MGM_K000_59_RideCymbal2.wav",
+     "choke": null
+    },
+    {
+     "pad": 44,
+     "gm_note": 60,
+     "sample": "MGM_K000_60_HiBongo.wav",
+     "choke": null
+    },
+    {
+     "pad": 45,
+     "gm_note": 61,
+     "sample": "MGM_K000_61_LowBongo.wav",
+     "choke": null
+    },
+    {
+     "pad": 46,
+     "gm_note": 62,
+     "sample": "MGM_K000_62_MuteHiConga.wav",
+     "choke": null
+    },
+    {
+     "pad": 47,
+     "gm_note": 63,
+     "sample": "MGM_K000_63_OpenHiConga.wav",
+     "choke": null
+    },
+    {
+     "pad": 48,
+     "gm_note": 64,
+     "sample": "MGM_K000_64_LowConga.wav",
+     "choke": null
+    },
+    {
+     "pad": 49,
+     "gm_note": 65,
+     "sample": "MGM_K000_65_HighTimbale.wav",
+     "choke": null
+    },
+    {
+     "pad": 50,
+     "gm_note": 66,
+     "sample": "MGM_K000_66_LowTimbale.wav",
+     "choke": null
+    },
+    {
+     "pad": 51,
+     "gm_note": 67,
+     "sample": "MGM_K000_67_HighAgogo.wav",
+     "choke": null
+    }
+   ]
+  },
+  {
+   "name": "GM Perc 68-83",
+   "preset": "17 Drum Kits/11 GM Perc 68-83.ablpresetbundle",
+   "gu_kit": 0,
+   "pads": [
+    {
+     "pad": 36,
+     "gm_note": 68,
+     "sample": "MGM_K000_68_LowAgogo.wav",
+     "choke": null
+    },
+    {
+     "pad": 37,
+     "gm_note": 69,
+     "sample": "MGM_K000_69_Cabasa.wav",
+     "choke": null
+    },
+    {
+     "pad": 38,
+     "gm_note": 70,
+     "sample": "MGM_K000_70_Maracas.wav",
+     "choke": null
+    },
+    {
+     "pad": 39,
+     "gm_note": 71,
+     "sample": "MGM_K000_71_ShortWhistle.wav",
+     "choke": null
+    },
+    {
+     "pad": 40,
+     "gm_note": 72,
+     "sample": "MGM_K000_72_LongWhistle.wav",
+     "choke": null
+    },
+    {
+     "pad": 41,
+     "gm_note": 73,
+     "sample": "MGM_K000_73_ShortGuiro.wav",
+     "choke": 1
+    },
+    {
+     "pad": 42,
+     "gm_note": 74,
+     "sample": "MGM_K000_74_LongGuiro.wav",
+     "choke": 1
+    },
+    {
+     "pad": 43,
+     "gm_note": 75,
+     "sample": "MGM_K000_75_Claves.wav",
+     "choke": null
+    },
+    {
+     "pad": 44,
+     "gm_note": 76,
+     "sample": "MGM_K000_76_HiWoodBlock.wav",
+     "choke": null
+    },
+    {
+     "pad": 45,
+     "gm_note": 77,
+     "sample": "MGM_K000_77_LowWoodBlock.wav",
+     "choke": null
+    },
+    {
+     "pad": 46,
+     "gm_note": 78,
+     "sample": "MGM_K000_78_MuteCuica.wav",
+     "choke": 2
+    },
+    {
+     "pad": 47,
+     "gm_note": 79,
+     "sample": "MGM_K000_79_OpenCuica.wav",
+     "choke": 2
+    },
+    {
+     "pad": 48,
+     "gm_note": 80,
+     "sample": "MGM_K000_80_MuteTriangle.wav",
+     "choke": null
+    },
+    {
+     "pad": 49,
+     "gm_note": 81,
+     "sample": "MGM_K000_81_OpenTriangle.wav",
+     "choke": null
+    },
+    {
+     "pad": 50,
+     "gm_note": 82,
+     "sample": "MGM_K000_82_Shaker.wav",
+     "choke": null
+    },
+    {
+     "pad": 51,
+     "gm_note": 83,
+     "sample": "MGM_K000_83_JingleBell.wav",
+     "choke": null
+    }
+   ]
+  },
+  {
+   "name": "GM Perc 20-35",
+   "preset": "17 Drum Kits/12 GM Perc 20-35.ablpresetbundle",
+   "gu_kit": 0,
+   "pads": [
+    {
+     "pad": 36,
+     "gm_note": 20,
+     "sample": null,
+     "choke": null
+    },
+    {
+     "pad": 37,
+     "gm_note": 21,
+     "sample": null,
+     "choke": null
+    },
+    {
+     "pad": 38,
+     "gm_note": 22,
+     "sample": null,
+     "choke": null
+    },
+    {
+     "pad": 39,
+     "gm_note": 23,
+     "sample": null,
+     "choke": null
+    },
+    {
+     "pad": 40,
+     "gm_note": 24,
+     "sample": null,
+     "choke": null
+    },
+    {
+     "pad": 41,
+     "gm_note": 25,
+     "sample": null,
+     "choke": null
+    },
+    {
+     "pad": 42,
+     "gm_note": 26,
+     "sample": null,
+     "choke": null
+    },
+    {
+     "pad": 43,
+     "gm_note": 27,
+     "sample": "MGM_K000_27_HighQ.wav",
+     "choke": null
+    },
+    {
+     "pad": 44,
+     "gm_note": 28,
+     "sample": "MGM_K000_28_Slap.wav",
+     "choke": null
+    },
+    {
+     "pad": 45,
+     "gm_note": 29,
+     "sample": "MGM_K000_29_ScratchPush.wav",
+     "choke": 1
+    },
+    {
+     "pad": 46,
+     "gm_note": 30,
+     "sample": "MGM_K000_30_ScratchPull.wav",
+     "choke": 1
+    },
+    {
+     "pad": 47,
+     "gm_note": 31,
+     "sample": "MGM_K000_31_Sticks.wav",
+     "choke": null
+    },
+    {
+     "pad": 48,
+     "gm_note": 32,
+     "sample": "MGM_K000_32_SquareClick.wav",
+     "choke": null
+    },
+    {
+     "pad": 49,
+     "gm_note": 33,
+     "sample": "MGM_K000_33_MetronomeClick.wav",
+     "choke": null
+    },
+    {
+     "pad": 50,
+     "gm_note": 34,
+     "sample": "MGM_K000_34_MetronomeBell.wav",
+     "choke": null
+    },
+    {
+     "pad": 51,
+     "gm_note": 35,
+     "sample": "MGM_K000_35_AcousticBassDrum.wav",
+     "choke": null
+    }
+   ]
+  }
+ ],
+ "fold_to_core": {
+  "35": 36,
+  "27": 37,
+  "28": 37,
+  "31": 37,
+  "32": 37,
+  "33": 37,
+  "34": 51,
+  "52": 49,
+  "53": 51,
+  "54": 44,
+  "55": 49,
+  "56": 37,
+  "57": 49,
+  "58": 46,
+  "59": 51,
+  "60": 50,
+  "61": 48,
+  "62": 48,
+  "63": 47,
+  "64": 45,
+  "65": 50,
+  "66": 47,
+  "67": 37,
+  "68": 37,
+  "69": 44,
+  "70": 44,
+  "71": 37,
+  "72": 37,
+  "73": 42,
+  "74": 46,
+  "75": 37,
+  "76": 37,
+  "77": 37,
+  "78": 39,
+  "79": 39,
+  "80": 42,
+  "81": 46,
+  "82": 44,
+  "83": 44,
+  "84": 46,
+  "85": 37,
+  "86": 45,
+  "87": 43,
+  "29": 39,
+  "30": 39
+ },
+ "drift": [
+  {
+   "program": 38,
+   "name": "Synth Bass 1 (Drift)",
+   "preset": "18 Drift Synths/039 Synth Bass 1 (Drift).ablpresetbundle"
+  },
+  {
+   "program": 39,
+   "name": "Synth Bass 2 (Drift)",
+   "preset": "18 Drift Synths/040 Synth Bass 2 (Drift).ablpresetbundle"
+  },
+  {
+   "program": 50,
+   "name": "Synth Strings 1 (Drift)",
+   "preset": "18 Drift Synths/051 Synth Strings 1 (Drift).ablpresetbundle"
+  },
+  {
+   "program": 51,
+   "name": "Synth Strings 2 (Drift)",
+   "preset": "18 Drift Synths/052 Synth Strings 2 (Drift).ablpresetbundle"
+  },
+  {
+   "program": 54,
+   "name": "Synth Voice (Drift)",
+   "preset": "18 Drift Synths/055 Synth Voice (Drift).ablpresetbundle"
+  },
+  {
+   "program": 62,
+   "name": "Synth Brass 1 (Drift)",
+   "preset": "18 Drift Synths/063 Synth Brass 1 (Drift).ablpresetbundle"
+  },
+  {
+   "program": 63,
+   "name": "Synth Brass 2 (Drift)",
+   "preset": "18 Drift Synths/064 Synth Brass 2 (Drift).ablpresetbundle"
+  },
+  {
+   "program": 80,
+   "name": "Square Lead (Drift)",
+   "preset": "18 Drift Synths/081 Square Lead (Drift).ablpresetbundle"
+  },
+  {
+   "program": 81,
+   "name": "Saw Lead (Drift)",
+   "preset": "18 Drift Synths/082 Saw Lead (Drift).ablpresetbundle"
+  },
+  {
+   "program": 82,
+   "name": "Calliope Lead (Drift)",
+   "preset": "18 Drift Synths/083 Calliope Lead (Drift).ablpresetbundle"
+  },
+  {
+   "program": 83,
+   "name": "Chiff Lead (Drift)",
+   "preset": "18 Drift Synths/084 Chiff Lead (Drift).ablpresetbundle"
+  },
+  {
+   "program": 84,
+   "name": "Charang Lead (Drift)",
+   "preset": "18 Drift Synths/085 Charang Lead (Drift).ablpresetbundle"
+  },
+  {
+   "program": 85,
+   "name": "Voice Lead (Drift)",
+   "preset": "18 Drift Synths/086 Voice Lead (Drift).ablpresetbundle"
+  },
+  {
+   "program": 86,
+   "name": "Fifths Lead (Drift)",
+   "preset": "18 Drift Synths/087 Fifths Lead (Drift).ablpresetbundle"
+  },
+  {
+   "program": 87,
+   "name": "Bass + Lead (Drift)",
+   "preset": "18 Drift Synths/088 Bass + Lead (Drift).ablpresetbundle"
+  },
+  {
+   "program": 88,
+   "name": "New Age Pad (Drift)",
+   "preset": "18 Drift Synths/089 New Age Pad (Drift).ablpresetbundle"
+  },
+  {
+   "program": 89,
+   "name": "Warm Pad (Drift)",
+   "preset": "18 Drift Synths/090 Warm Pad (Drift).ablpresetbundle"
+  },
+  {
+   "program": 90,
+   "name": "Polysynth Pad (Drift)",
+   "preset": "18 Drift Synths/091 Polysynth Pad (Drift).ablpresetbundle"
+  },
+  {
+   "program": 91,
+   "name": "Choir Pad (Drift)",
+   "preset": "18 Drift Synths/092 Choir Pad (Drift).ablpresetbundle"
+  },
+  {
+   "program": 92,
+   "name": "Bowed Pad (Drift)",
+   "preset": "18 Drift Synths/093 Bowed Pad (Drift).ablpresetbundle"
+  },
+  {
+   "program": 93,
+   "name": "Metallic Pad (Drift)",
+   "preset": "18 Drift Synths/094 Metallic Pad (Drift).ablpresetbundle"
+  },
+  {
+   "program": 94,
+   "name": "Halo Pad (Drift)",
+   "preset": "18 Drift Synths/095 Halo Pad (Drift).ablpresetbundle"
+  },
+  {
+   "program": 95,
+   "name": "Sweep Pad (Drift)",
+   "preset": "18 Drift Synths/096 Sweep Pad (Drift).ablpresetbundle"
+  }
+ ]
+}

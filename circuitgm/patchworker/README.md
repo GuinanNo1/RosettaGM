@@ -1,4 +1,4 @@
-# CircuitGM Patch Editor (PatchWorker), for testing, v0.7
+# CircuitGM Patch Editor (PatchWorker), for testing, v0.8
 
 **Try it:** https://guinanno1.github.io/RosettaGM/circuitgm/patchworker/
 

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MoveGM: General MIDI sound pack for the Ableton Move</title>
+<meta name="description" content="MoveGM v0.2: 128 General MIDI instruments, 12 drum kits and 23 Drift synths as Ableton Move presets, built from GeneralUser GS.">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../css/app.css?v=20261116fx4">
+<style>
+.presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px 22px; }
+.presets h3, .kitlist h3 { font: 600 1rem var(--head); margin: 0 0 6px; }
+.presets ul, .kitlist ul { list-style: none; margin: 0; padding: 0; font-size: 0.92rem; }
+.presets li, .kitlist li { padding: 1px 0; }
+.presets .n, .kitlist .n { font-family: var(--mono, monospace); color: var(--muted); font-size: 0.85em; margin-right: 4px; }
+.presets .tag { color: var(--muted); font-size: 0.82em; }
+.kitlist { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px 22px; }
+.steps li { margin: 4px 0; }
+</style>
+</head>
+<body>
+<nav class="sitenav" aria-label="RosettaGM">
+  <div class="wrap">
+    <a class="brand" href="../../" title="RosettaGM home: all devices, packs and tools">Rosetta<b>GM</b></a>
+    <ul class="navgroups">
+      <li class="navgroup">
+        <button type="button" aria-haspopup="true">Devices</button>
+        <ul>
+          <li><a href="../../circuitgm/">Novation Circuit (CircuitGM)</a></li>
+          <li><a href="../../movegm/">Ableton Move (MoveGM)</a></li>
+        </ul>
+      </li>
+      <li class="navgroup current">
+        <button type="button" aria-haspopup="true">General MIDI Packs</button>
+        <ul>
+          <li><a href="../../circuitgm/tracksgm/">TracksGM</a></li>
+          <li><a href="../../circuitgm/rhythmgm/">RhythmGM</a></li>
+          <li><a href="./" aria-current="page">MoveGM</a></li>
+        </ul>
+      </li>
+      <li class="navgroup">
+        <button type="button" aria-haspopup="true">MIDI Converters</button>
+        <ul>
+          <li><a href="../../circuitgm/midi2circuit/">MIDI2Circuit</a></li>
+          <li><a href="../../circuitgm/midi2rhythm/">MIDI2Rhythm</a></li>
+          <li><a href="../../circuitgm/circuit2midi/">Circuit2MIDI</a></li>
+          <li><a href="../../movegm/midi2move/">MIDI2Move</a></li>
+        </ul>
+      </li>
+      <li class="navgroup">
+        <button type="button" aria-haspopup="true">Patch Editors</button>
+        <ul>
+          <li><a href="../../circuitgm/patchworker/">PatchWorker</a></li>
+        </ul>
+      </li>
+      <li class="navgroup">
+        <button type="button" aria-haspopup="true">Pack Trimming</button>
+        <ul>
+          <li><a href="../../circuitgm/circuittrim/">CircuitTrim</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<header class="masthead">
+  <div class="wrap">
+    <h1>MoveGM <span>General MIDI sound pack for the Ableton Move</span> <em class="badge">v0.2</em></h1>
+    <p class="lede">All 128 General MIDI instruments as Move presets, 12 drum kits laid out so General MIDI drum parts play the right pads, and 23 Drift synths as alternatives for the synth sounds. It's the sound set behind <a href="../midi2move/">MIDI2Move</a>, and you can play it like any other preset pack.</p>
+    <p class="alpha">v0.2, for testing. The presets load and play in Ableton Live 12, but haven't been tried on Move hardware yet. Uploading presets doesn't change your Sets, but keep a backup of your Move anyway.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="panel" id="download">
+    <h2>Download and install</h2>
+    <p><a class="btn primary big" href="https://github.com/GuinanNo1/RosettaGM/releases/download/movegm-v0.2/MoveGM-v0.2.zip">Download MoveGM v0.2</a> <span class="hint">Zip, 118 MB. Unzip it to get the <b>MoveGM</b> folder.</span></p>
+    <ol class="steps">
+      <li>On a computer on the same network as your Move, open <b>move.local</b> in a browser and go to the <b>Presets</b> tab.</li>
+      <li>Drag the whole <b>MoveGM</b> folder onto the page and confirm <b>Upload</b>.</li>
+      <li>On the Move, browse <b>User Presets › MoveGM</b>. The presets are in 18 folders, one per General MIDI family plus Drum Kits and Drift Synths.</li>
+    </ol>
+    <p class="hint">Move keeps all preset samples in one shared folder, so MoveGM's sample files start with <code>MGM_</code> to keep them apart from your own. MIDI2Move also needs the unzipped folder: it reads the sounds from it while you work.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Listen first</h2>
+    <p><a href="audition.html">Audition every preset</a>: press a pad to hear each one (about 6 MB, plays in the browser). There's also a short demo song as a Move Set, and an offline render of it:</p>
+    <ul>
+      <li><a href="demos/MoveGM-Demo.ablbundle" download>MoveGM Demo.ablbundle</a> (instruments and drums; upload in Move Manager › Sets, or open in Live 12)</li>
+      <li><a href="demos/MoveGM-Drift-Demo.ablbundle" download>MoveGM Drift Demo.ablbundle</a> (the Drift synths)</li>
+      <li><a href="demos/MoveGM-Demo-offline-render.mp3">Demo, offline render (MP3)</a></li>
+    </ul>
+  </section>
+
+  <section class="panel">
+    <h2>What's in it</h2>
+    <p>128 instruments, numbered as in General MIDI (001 Acoustic Grand Piano to 128 Gunshot), each a Melodic Sampler preset with one sample. 34 of them are stereo. "+ Drift" marks the instruments that also have a Drift synth version.</p>
+    <div class="presets"><section class="fam"><h3>001–008 Piano</h3><ul><li><span class="n">001</span> Acoustic Grand Piano</li><li><span class="n">002</span> Bright Acoustic Piano</li><li><span class="n">003</span> Electric Grand Piano <span class="tag">stereo</span></li><li><span class="n">004</span> Honky-tonk Piano <span class="tag">stereo</span></li><li><span class="n">005</span> Electric Piano 1</li><li><span class="n">006</span> Electric Piano 2 <span class="tag">stereo</span></li><li><span class="n">007</span> Harpsichord <span class="tag">stereo</span></li><li><span class="n">008</span> Clavinet</li></ul></section><section class="fam"><h3>009–016 Chromatic Percussion</h3><ul><li><span class="n">009</span> Celesta</li><li><span class="n">010</span> Glockenspiel</li><li><span class="n">011</span> Music Box <span class="tag">stereo</span></li><li><span class="n">012</span> Vibraphone</li><li><span class="n">013</span> Marimba</li><li><span class="n">014</span> Xylophone</li><li><span class="n">015</span> Tubular Bells</li><li><span class="n">016</span> Dulcimer</li></ul></section><section class="fam"><h3>017–024 Organ</h3><ul><li><span class="n">017</span> Drawbar Organ</li><li><span class="n">018</span> Percussive Organ</li><li><span class="n">019</span> Rock Organ</li><li><span class="n">020</span> Church Organ</li><li><span class="n">021</span> Reed Organ <span class="tag">stereo</span></li><li><span class="n">022</span> Accordion</li><li><span class="n">023</span> Harmonica</li><li><span class="n">024</span> Tango Accordion</li></ul></section><section class="fam"><h3>025–032 Guitar</h3><ul><li><span class="n">025</span> Nylon Guitar</li><li><span class="n">026</span> Steel Guitar</li><li><span class="n">027</span> Jazz Guitar</li><li><span class="n">028</span> Clean Guitar</li><li><span class="n">029</span> Muted Guitar</li><li><span class="n">030</span> Overdriven Guitar</li><li><span class="n">031</span> Distortion Guitar</li><li><span class="n">032</span> Guitar Harmonics</li></ul></section><section class="fam"><h3>033–040 Bass</h3><ul><li><span class="n">033</span> Acoustic Bass</li><li><span class="n">034</span> Fingered Bass</li><li><span class="n">035</span> Picked Bass</li><li><span class="n">036</span> Fretless Bass</li><li><span class="n">037</span> Slap Bass 1</li><li><span class="n">038</span> Slap Bass 2</li><li><span class="n">039</span> Synth Bass 1 <span class="tag">stereo, + Drift</span></li><li><span class="n">040</span> Synth Bass 2 <span class="tag">+ Drift</span></li></ul></section><section class="fam"><h3>041–048 Strings</h3><ul><li><span class="n">041</span> Violin</li><li><span class="n">042</span> Viola</li><li><span class="n">043</span> Cello</li><li><span class="n">044</span> Contrabass</li><li><span class="n">045</span> Tremolo Strings <span class="tag">stereo</span></li><li><span class="n">046</span> Pizzicato Strings</li><li><span class="n">047</span> Orchestral Harp</li><li><span class="n">048</span> Timpani <span class="tag">stereo</span></li></ul></section><section class="fam"><h3>049–056 Ensemble</h3><ul><li><span class="n">049</span> String Ensemble 1 <span class="tag">stereo</span></li><li><span class="n">050</span> String Ensemble 2 <span class="tag">stereo</span></li><li><span class="n">051</span> Synth Strings 1 <span class="tag">+ Drift</span></li><li><span class="n">052</span> Synth Strings 2 <span class="tag">stereo, + Drift</span></li><li><span class="n">053</span> Choir Aahs <span class="tag">stereo</span></li><li><span class="n">054</span> Voice Oohs</li><li><span class="n">055</span> Synth Voice <span class="tag">+ Drift</span></li><li><span class="n">056</span> Orchestra Hit <span class="tag">stereo</span></li></ul></section><section class="fam"><h3>057–064 Brass</h3><ul><li><span class="n">057</span> Trumpet</li><li><span class="n">058</span> Trombone</li><li><span class="n">059</span> Tuba</li><li><span class="n">060</span> Muted Trumpet</li><li><span class="n">061</span> French Horn <span class="tag">stereo</span></li><li><span class="n">062</span> Brass Section <span class="tag">stereo</span></li><li><span class="n">063</span> Synth Brass 1 <span class="tag">stereo, + Drift</span></li><li><span class="n">064</span> Synth Brass 2 <span class="tag">stereo, + Drift</span></li></ul></section><section class="fam"><h3>065–072 Reed</h3><ul><li><span class="n">065</span> Soprano Sax</li><li><span class="n">066</span> Alto Sax</li><li><span class="n">067</span> Tenor Sax</li><li><span class="n">068</span> Baritone Sax</li><li><span class="n">069</span> Oboe</li><li><span class="n">070</span> English Horn</li><li><span class="n">071</span> Bassoon</li><li><span class="n">072</span> Clarinet</li></ul></section><section class="fam"><h3>073–080 Pipe</h3><ul><li><span class="n">073</span> Piccolo</li><li><span class="n">074</span> Flute</li><li><span class="n">075</span> Recorder</li><li><span class="n">076</span> Pan Flute</li><li><span class="n">077</span> Blown Bottle</li><li><span class="n">078</span> Shakuhachi</li><li><span class="n">079</span> Whistle</li><li><span class="n">080</span> Ocarina</li></ul></section><section class="fam"><h3>081–088 Synth Lead</h3><ul><li><span class="n">081</span> Square Lead <span class="tag">+ Drift</span></li><li><span class="n">082</span> Saw Lead <span class="tag">stereo, + Drift</span></li><li><span class="n">083</span> Calliope Lead <span class="tag">stereo, + Drift</span></li><li><span class="n">084</span> Chiff Lead <span class="tag">+ Drift</span></li><li><span class="n">085</span> Charang Lead <span class="tag">+ Drift</span></li><li><span class="n">086</span> Voice Lead <span class="tag">stereo, + Drift</span></li><li><span class="n">087</span> Fifths Lead <span class="tag">stereo, + Drift</span></li><li><span class="n">088</span> Bass + Lead <span class="tag">stereo, + Drift</span></li></ul></section><section class="fam"><h3>089–096 Synth Pad</h3><ul><li><span class="n">089</span> New Age Pad <span class="tag">stereo, + Drift</span></li><li><span class="n">090</span> Warm Pad <span class="tag">+ Drift</span></li><li><span class="n">091</span> Polysynth Pad <span class="tag">stereo, + Drift</span></li><li><span class="n">092</span> Choir Pad <span class="tag">+ Drift</span></li><li><span class="n">093</span> Bowed Pad <span class="tag">+ Drift</span></li><li><span class="n">094</span> Metallic Pad <span class="tag">+ Drift</span></li><li><span class="n">095</span> Halo Pad <span class="tag">+ Drift</span></li><li><span class="n">096</span> Sweep Pad <span class="tag">stereo, + Drift</span></li></ul></section><section class="fam"><h3>097–104 Synth Effects</h3><ul><li><span class="n">097</span> Rain FX</li><li><span class="n">098</span> Soundtrack FX <span class="tag">stereo</span></li><li><span class="n">099</span> Crystal FX <span class="tag">stereo</span></li><li><span class="n">100</span> Atmosphere FX</li><li><span class="n">101</span> Brightness FX <span class="tag">stereo</span></li><li><span class="n">102</span> Goblins FX</li><li><span class="n">103</span> Echoes FX <span class="tag">stereo</span></li><li><span class="n">104</span> Sci-fi FX</li></ul></section><section class="fam"><h3>105–112 Ethnic</h3><ul><li><span class="n">105</span> Sitar</li><li><span class="n">106</span> Banjo</li><li><span class="n">107</span> Shamisen</li><li><span class="n">108</span> Koto</li><li><span class="n">109</span> Kalimba</li><li><span class="n">110</span> Bagpipe <span class="tag">stereo</span></li><li><span class="n">111</span> Fiddle</li><li><span class="n">112</span> Shanai</li></ul></section><section class="fam"><h3>113–120 Percussive</h3><ul><li><span class="n">113</span> Tinkle Bell</li><li><span class="n">114</span> Agogo</li><li><span class="n">115</span> Steel Drums</li><li><span class="n">116</span> Woodblock</li><li><span class="n">117</span> Taiko Drum</li><li><span class="n">118</span> Melodic Tom</li><li><span class="n">119</span> Synth Drum</li><li><span class="n">120</span> Reverse Cymbal</li></ul></section><section class="fam"><h3>121–128 Sound Effects</h3><ul><li><span class="n">121</span> Guitar Fret Noise</li><li><span class="n">122</span> Breath Noise</li><li><span class="n">123</span> Seashore <span class="tag">stereo</span></li><li><span class="n">124</span> Bird Tweet <span class="tag">stereo</span></li><li><span class="n">125</span> Telephone Ring</li><li><span class="n">126</span> Helicopter</li><li><span class="n">127</span> Applause <span class="tag">stereo</span></li><li><span class="n">128</span> Gunshot</li></ul></section></div>
+  </section>
+
+  <section class="panel">
+    <h2>Drum kits and Drift synths</h2>
+    <div class="kitlist">
+      <section><h3>17 Drum Kits</h3><ul><li><span class="n">01</span> GM Kit Standard</li><li><span class="n">02</span> GM Kit Room</li><li><span class="n">03</span> GM Kit Power</li><li><span class="n">04</span> GM Kit Electronic</li><li><span class="n">05</span> GM Kit 808-909</li><li><span class="n">06</span> GM Kit Dance</li><li><span class="n">07</span> GM Kit Jazz</li><li><span class="n">08</span> GM Kit Brush</li><li><span class="n">09</span> GM Kit Orchestral</li><li><span class="n">10</span> GM Perc 52-67</li><li><span class="n">11</span> GM Perc 68-83</li><li><span class="n">12</span> GM Perc 20-35</li></ul>
+        <p class="hint">Kits 01–09: pads 1–16 play General MIDI drum notes 36–51 (kick, side stick, snare, clap, toms, hi-hats, crash, ride). Move's pads use the same note numbers, so General MIDI drum parts play the right pads unchanged. Kits 10–12 hold the rest of the General MIDI and GS percussion, 16 notes per kit.</p></section>
+      <section><h3>18 Drift Synths</h3><ul><li><span class="n">039</span> Synth Bass 1</li><li><span class="n">040</span> Synth Bass 2</li><li><span class="n">051</span> Synth Strings 1</li><li><span class="n">052</span> Synth Strings 2</li><li><span class="n">055</span> Synth Voice</li><li><span class="n">063</span> Synth Brass 1</li><li><span class="n">064</span> Synth Brass 2</li><li><span class="n">081</span> Square Lead</li><li><span class="n">082</span> Saw Lead</li><li><span class="n">083</span> Calliope Lead</li><li><span class="n">084</span> Chiff Lead</li><li><span class="n">085</span> Charang Lead</li><li><span class="n">086</span> Voice Lead</li><li><span class="n">087</span> Fifths Lead</li><li><span class="n">088</span> Bass + Lead</li><li><span class="n">089</span> New Age Pad</li><li><span class="n">090</span> Warm Pad</li><li><span class="n">091</span> Polysynth Pad</li><li><span class="n">092</span> Choir Pad</li><li><span class="n">093</span> Bowed Pad</li><li><span class="n">094</span> Metallic Pad</li><li><span class="n">095</span> Halo Pad</li><li><span class="n">096</span> Sweep Pad</li></ul>
+        <p class="hint">Synthesised stand-ins for the General MIDI synth sounds, named "NNN Name (Drift)". Macros: Filter Freq, Filter Reso, Filter Env, Osc 2 Level, Attack, Decay, Release, Glide.</p></section>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>How it was made</h2>
+    <ul>
+      <li>The Move's Melodic Sampler plays one sample per preset, so each instrument is recorded at one key (C1 to C5, depending on its range) and the preset's transpose puts it back in tune. Notes far from that key sound stretched, most noticeably at the ends of the piano.</li>
+      <li>The Move has no sample loop mode, so looped sounds are unrolled into 8-second samples with a fade.</li>
+      <li>GeneralUser's filter envelopes are baked into the samples at velocity 100, and the Move's filter is left fully open for you to use.</li>
+      <li>Samples are 44.1 kHz, 16-bit WAV. Levels follow GeneralUser's balance through each preset's volume.</li>
+      <li>Known issues: Flute is 11 cents sharp and Rock Organ 12 cents sharp (from GeneralUser's own tuning); these will be fixed in v0.3.</li>
+    </ul>
+    <p>The build scripts and format notes are in the <a href="https://github.com/GuinanNo1/RosettaGM/tree/main/movegm">repository</a>.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Licence and credits</h2>
+    <p>The samples come from <a href="https://github.com/mrbumpy409/GeneralUser-GS">GeneralUser GS 2.0.3</a> by S. Christian Collins. Its licence allows free use and changes, including in other software, with credit; the pack may not be sold. The licence is in the pack as <a href="LICENSE-GeneralUser-GS.txt">LICENSE-GeneralUser-GS.txt</a>, along with a <a href="README.txt">README</a>. MoveGM is free and isn't affiliated with Ableton.</p>
+  </section>
+</main>
+<footer class="wrap sitefoot">
+  <p>Sounds built from <a href="https://github.com/mrbumpy409/GeneralUser-GS">GeneralUser GS</a> by S. Christian Collins, under its licence (free to use and modify, credit required, not for sale). The Move file format was worked out from Move Sets.</p>
+  <p>Not affiliated with Ableton; "Ableton", "Move" and "Live" are Ableton's trademarks. Part of <a href="../../">RosettaGM</a>. <a href="https://github.com/GuinanNo1/RosettaGM">Source on GitHub</a> · <a href="https://github.com/GuinanNo1/RosettaGM/issues">Report a problem</a></p>
+</footer>
+</body>
+</html>

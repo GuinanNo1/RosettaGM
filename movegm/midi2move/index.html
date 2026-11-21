@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MoveGM MIDI to Move Converter (MIDI2Move)</title>
+<meta name="description" content="MIDI2Move turns a General MIDI file into an Ableton Move Set (.ablbundle), using the MoveGM sounds. Runs in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../css/app.css?v=20261116fx4">
+<link rel="stylesheet" href="../css/m2m.css?v=20261121m2m5">
+<script>(function(){var r=document.documentElement;try{if(localStorage.getItem('movegm-advanced-m2m')!=='1')r.classList.add('simple')}catch(e){r.classList.add('simple')}})();</script>
+</head>
+<body>
+<nav class="sitenav" aria-label="RosettaGM">
+  <div class="wrap">
+    <a class="brand" href="../../" title="RosettaGM home: all devices, packs and tools">Rosetta<b>GM</b></a>
+    <ul class="navgroups">
+      <li class="navgroup">
+        <button type="button" aria-haspopup="true">Devices</button>
+        <ul>
+          <li><a href="../../circuitgm/">Novation Circuit (CircuitGM)</a></li>
+          <li><a href="../../movegm/">Ableton Move (MoveGM)</a></li>
+        </ul>
+      </li>
+      <li class="navgroup">
+        <button type="button" aria-haspopup="true">General MIDI Packs</button>
+        <ul>
+          <li><a href="../../circuitgm/tracksgm/">TracksGM</a></li>
+          <li><a href="../../circuitgm/rhythmgm/">RhythmGM</a></li>
+          <li><a href="../../movegm/pack/">MoveGM</a></li>
+        </ul>
+      </li>
+      <li class="navgroup current">
+        <button type="button" aria-haspopup="true">MIDI Converters</button>
+        <ul>
+          <li><a href="../../circuitgm/midi2circuit/">MIDI2Circuit</a></li>
+          <li><a href="../../circuitgm/midi2rhythm/">MIDI2Rhythm</a></li>
+          <li><a href="../../circuitgm/circuit2midi/">Circuit2MIDI</a></li>
+          <li><a href="./" aria-current="page">MIDI2Move</a></li>
+        </ul>
+      </li>
+      <li class="navgroup">
+        <button type="button" aria-haspopup="true">Patch Editors</button>
+        <ul>
+          <li><a href="../../circuitgm/patchworker/">PatchWorker</a></li>
+        </ul>
+      </li>
+      <li class="navgroup">
+        <button type="button" aria-haspopup="true">Pack Trimming</button>
+        <ul>
+          <li><a href="../../circuitgm/circuittrim/">CircuitTrim</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</nav>
+<header class="masthead">
+  <div class="wrap">
+    <h1>MIDI2Move <span>MIDI to Ableton Move converter</span> <em class="badge" title="Version of this page. If you expect a newer one, refresh with Shift-reload; GitHub Pages can take about 10 minutes to update.">alpha 0.5</em></h1>
+    <p class="helplinks"><a href="help.html#quickstart">Quickstart</a> · <a href="help.html#guide">User guide</a></p>
+    <p class="lede">Turn a General MIDI file into an Ableton Move Set. Pick the parts you want, hear how they'll play, and download an <code>.ablbundle</code> for Move Manager, using the MoveGM sounds.</p>
+    <p class="alpha">Alpha 0.5, for testing. Sets open and play in Ableton Live 12; they have not yet been tested on Move hardware. Keep backups of your Move Sets.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="panel" id="step-load">
+    <h2><span class="num">1</span> Load a MIDI file</h2>
+    <div class="modebar">
+      <label class="modeswitch big" title="Simple shows the main choices; Advanced shows every setting">
+        <span class="ms-simple">Simple</span>
+        <input type="checkbox" id="advanced" role="switch" aria-label="Advanced mode">
+        <span class="ms-adv">Advanced</span>
+      </label>
+      <p class="modenote simple-only">You're in <b>simple mode</b>: the main choices, with settings that suit most songs. Switch on <b>Advanced</b> for detailed control over how the song is laid out, drum pads, pitch bends and warnings.</p>
+      <p class="modenote adv">You're in <b>Advanced mode</b>: every setting is shown. Switch back to Simple at any time; your settings are kept and still applied.</p>
+      <p class="modenote changed" id="mode-changed" hidden></p>
+    </div>
+    <div class="basepack" id="basepack">
+      <div class="bp-info">
+        <span class="k">Sound pack</span>
+        <b id="base-name">MoveGM</b>
+        <span class="status" id="base-status">Choose your MoveGM folder (the one holding "01 Piano" … "18 Drift Synths"). Don't have it? <a href="../pack/#download">Download MoveGM</a> and unzip it first.</span>
+      </div>
+      <div class="bp-actions">
+        <label class="btn small filebtn">Choose MoveGM folder…<input type="file" id="gmdir" webkitdirectory directory multiple></label>
+      </div>
+      <p class="hint small">The Set uses the MoveGM presets and samples: they're needed for the preview sounds and for building the Set. Nothing is uploaded.</p>
+    </div>
+    <label class="drop" id="drop">
+      <input type="file" id="file" accept=".mid,.midi,.rmi,.kar,audio/midi">
+      <span class="drop-main">Drop a song here, or <u>choose one</u></span>
+      <span class="drop-sub">A Standard MIDI file (type 0 or 1). Nothing is uploaded; everything runs in your browser.</span>
+    </label>
+    <div class="fileinfo" id="fileinfo" hidden></div>
+  </section>
+
+  <section class="panel" id="step-tracks" hidden>
+    <h2><span class="num">2</span> Choose the parts</h2>
+    <p class="hint">Give each part a Move track. <b>Drums</b> is a 16-pad drum kit for the GM drum part (channel 10); <b>T1–T4</b> are the Move's four tracks (with drums, the drum kit is Track 1). <b>Pads</b> plays a part on spare drum pads, played chromatically: each pad plays one note at a time, so pads suit bass lines and leads, and extend the four tracks. Send several parts to one track to combine them. ▶ plays a single part.</p>
+    <div class="tablewrap">
+      <table class="tracks" id="tracks">
+        <thead><tr><th class="c-play"></th><th>Part</th><th class="c-num">Notes</th><th class="c-roll">Activity</th><th class="c-roles">Move track</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="step-sounds" hidden>
+    <h2><span class="num">3</span> Pick the sounds</h2>
+    <div class="sounds" id="sounds"></div>
+    <div class="transpose adv" id="transpose"></div>
+    <div class="adv" id="padsounds-wrap" hidden>
+      <p class="hint small">Sounds for parts played on pads (each pad uses the MoveGM sample with a simple attack, hold and release):</p>
+      <div class="packsounds" id="padsounds"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="step-arrange" hidden>
+    <h2><span class="num">4</span> Check the arrangement</h2>
+    <div class="options adv" id="arrange-options">
+      <div class="field"><label for="section-bars">Section length</label>
+        <select id="section-bars"><option value="auto" selected>Auto (fewest Sets)</option><option value="4">4 bars</option><option value="8">8 bars</option><option value="16">16 bars</option></select></div>
+      <div class="field"><label for="match">Repeats</label>
+        <select id="match"><option value="exact">Match exactly</option><option value="loose" selected>Match ignoring velocity</option><option value="0.9">Treat ≥90% similar as a repeat</option><option value="0.75">Treat ≥75% similar as a repeat</option></select></div>
+      <div class="field"><label for="quantize">Quantise</label>
+        <select id="quantize"><option value="0" selected>Off</option><option value="0.25">1/16</option><option value="0.5">1/8</option><option value="0.16666666666666666">1/16 triplet</option></select></div>
+      <div class="field check"><label><input type="checkbox" id="trim" checked> Skip empty bars at the start</label></div>
+      <div class="field check"><label><input type="checkbox" id="bends" checked> Apply MIDI pitch bends</label></div>
+      <div class="field check"><label><input type="checkbox" id="fold" checked> Fold other GM drums onto the 16 pads</label></div>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div class="transport">
+      <button class="btn primary" id="play" type="button">Play preview</button>
+      <span class="time" id="time">0:00</span>
+      <span class="hint inline" id="pvnote">The preview plays the converted parts with the MoveGM samples (Drift tracks use their MoveGM sample).</span>
+    </div>
+    <p class="hint">Click a dot to mute or unmute a whole row, or a box to mute or unmute those bars. Mutes change the preview and the Set. The letters are the scene each section plays (a Move Set holds 8 scenes, so long songs need more than one Set); the rows under each track are the MIDI parts feeding it. Click a scene · bar heading to play from there. <span class="adv">S solos a track in the preview only.</span></p>
+    <div class="gridwrap" id="gridwrap"><div class="grid" id="grid"></div></div>
+    <ul class="warnings adv" id="warnings"></ul>
+  </section>
+
+  <section class="panel" id="step-build" hidden>
+    <h2><span class="num">5</span> Build the Set</h2>
+    <div class="options">
+      <div class="field grow"><label for="setname">Set name</label><input id="setname" maxlength="40" autocomplete="off"></div>
+    </div>
+    <div class="buildrow">
+      <button class="btn primary big" id="build" type="button" disabled>Download Move Set</button>
+      <span class="status" id="build-status"></span>
+    </div>
+    <p class="hint">Upload the <code>.ablbundle</code> in Move Manager (move.local › Sets). On the Move you launch the scenes by hand, in the play order shown above. You can also open it in Ableton Live 12.4 or later.</p>
+    <div class="livebox">
+      <h3>Play it as a song in Ableton Live (optional)</h3>
+      <p class="hint">To hear the whole song play through in Live: <b>1.</b> open the downloaded Set in Live, <b>2.</b> choose <i>File › Save Live Set As…</i>, <b>3.</b> drop that <code>.als</code> file here. You get back a copy where every scene moves on to the next by itself; launch the first scene.</p>
+      <label class="drop" id="alsdrop"><input type="file" id="alsfile" accept=".als"><span class="drop-main">Drop the saved .als here, or <u>choose it</u></span></label>
+      <p class="status" id="alsinfo" role="status"></p>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <p>Sounds: MoveGM, built from <a href="https://github.com/mrbumpy409/GeneralUser-GS">GeneralUser GS</a> by S. Christian Collins (GeneralUser GS licence). Layout follows <a href="../../circuitgm/midi2circuit/">MIDI2Circuit</a>. Part of <a href="../../">RosettaGM</a>. <a href="https://github.com/GuinanNo1/RosettaGM">Source on GitHub</a> · <a href="https://github.com/GuinanNo1/RosettaGM/issues">Report a problem</a> Move file format worked out from Move Sets; not affiliated with Ableton. "Ableton", "Move" and "Live" are Ableton's trademarks.</p>
+</footer>
+
+<script src="../js/m2m-core.js?v=20261121m2m5"></script>
+<script src="../js/m2m-manifest.js?v=20261121m2m5"></script>
+<script src="../js/m2m-app.js?v=20261121m2m5"></script>
+</body>
+</html>

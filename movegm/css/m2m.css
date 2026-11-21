@@ -1,0 +1,16 @@
+/* MIDI2Move additions: Move track roles (labelled, colour is secondary) */
+:root { --t1: var(--s1); --t2: var(--s2); --t3: var(--m1); --t4: var(--m2); --pd: #c0569e; }
+.role[data-role="T1"][aria-pressed="true"] { background: var(--t1); }
+.role[data-role="T2"][aria-pressed="true"] { background: var(--t2); }
+.role[data-role="T3"][aria-pressed="true"] { background: var(--t3); }
+.role[data-role="T4"][aria-pressed="true"] { background: var(--t4); }
+.role[data-role="PD"][aria-pressed="true"] { background: var(--pd); }
+.sounds .role-t1 { border-color: var(--t1); } .sounds .role-t2 { border-color: var(--t2); }
+.sounds .role-t3 { border-color: var(--t3); } .sounds .role-t4 { border-color: var(--t4); }
+.padopts { display: inline-flex; gap: 6px; align-items: center; margin-left: 6px; font-size: 0.82rem; color: var(--muted); }
+.padopts select, .padopts input { padding: 3px 5px; font-size: 0.82rem; }
+.padopts input { width: 3.6em; }
+.col .hd.click { cursor: pointer; text-decoration: underline dotted; }
+.livebox { border-top: 1px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+.livebox h3 { font: 600 1.05rem var(--head); margin: 0; }
+.packsounds { display: flex; flex-wrap: wrap; gap: 8px 16px; }

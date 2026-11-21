@@ -6,7 +6,7 @@ General MIDI as a common language for grooveboxes. Like the Rosetta Stone, every
 | Device family | Packs and tools | Status |
 |---|---|---|
 | **CircuitGM**: Novation Circuit Tracks and Circuit Rhythm | TracksGM, RhythmGM, MIDI2Circuit, MIDI2Rhythm, Circuit2MIDI, PatchWorker, CircuitTrim: see [`circuitgm/README.md`](circuitgm/README.md) | Ready / alpha |
-| **MoveGM**: Ableton Move | MoveGM sound pack, MIDI2Move converter | In development |
+| **MoveGM**: Ableton Move | MoveGM sound pack, MIDI2Move converter: see [`movegm/README.md`](movegm/README.md) | For testing |
 
 RosettaGM grew out of the CircuitGM repository (21 Nov 2026) and keeps its full history. The old CircuitGM addresses redirect to their new places under `circuitgm/`.
 
@@ -34,7 +34,7 @@ Each device family has its own folder with its pages, code, data, docs and tests
 | `index.html` | The RosettaGM home page (all device families). |
 | `css/app.css`, `favicon.svg` | Styles shared by every page, including the site menu, and the icon. |
 | `circuitgm/` | CircuitGM: Novation Circuit Tracks and Circuit Rhythm packs and tools ([README](circuitgm/README.md)). |
-| `movegm/` | MoveGM: Ableton Move pack and MIDI2Move (coming). |
+| `movegm/` | MoveGM: Ableton Move sound pack and MIDI2Move ([README](movegm/README.md)). |
 
 A new groovebox gets its own `<device>gm/` folder with an `index.html` overview, and an entry in the menu's Devices group on every page.
 
