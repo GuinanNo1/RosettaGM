@@ -6,11 +6,16 @@ Circuit Tracks and Rhythm) and **MoveGM** (Ableton Move: the MoveGM pack and
 MIDI2Move). The repo started from CircuitGM's history on 21 Nov 2026; the old
 GuinanNo1/CircuitGM repo only redirects here.
 
-Layout: tool folders sit at the top level (`tracksgm/`, `midi2circuit/`,
-… and, for Move, `movegm/`, `midi2move/`), so every page is one level deep
-and links to `../css/app.css` and `../js/…`. `index.html` is the RosettaGM
-home; `circuitgm/index.html` is the CircuitGM overview. New device families
-get their own overview folder and an entry in the menu's Devices group.
+Layout: one folder per device family, so new grooveboxes slot in without
+touching the others. `circuitgm/` holds the Circuit pages (`tracksgm/`,
+`midi2circuit/`, …), plus its own `js/`, `css/`, `data/`, `docs/` and
+`tests/`; `movegm/` will hold the Move pack page, `midi2move/` and theirs.
+Tool pages are two levels deep: `../../css/app.css` (shared, at the root),
+`../js/…` and `../css/…` (the family's own). Only code used by more than one
+family goes at the root (`css/app.css`; a `js/shared/` when Move starts sharing
+the MIDI reader). `index.html` is the RosettaGM home; each family's
+`index.html` is its overview. A new family gets `<device>gm/` and an entry in
+the menu's Devices group on every page.
 
 The Move tools' research and handoff notes are in the claude.ai Project
 "Ableton Move" and in `~/Documents/Claude/Ableton Move Lab/` on Ian's Mac.
@@ -39,10 +44,12 @@ hardware recordings stay local; the repo only describes the method.
 
 ## Where things are documented in the repo
 
-- `docs/circuit-tracks-file-formats.md`, `docs/circuit-rhythm-format.md`: file
-  formats, byte offsets, what has been confirmed on the hardware.
-- `docs/versions.md`: the version shown on each tool page.
-- `README.md`: repository layout and the test commands.
+- `circuitgm/docs/circuit-tracks-file-formats.md`,
+  `circuitgm/docs/circuit-rhythm-format.md`: file formats, byte offsets, what
+  has been confirmed on the hardware.
+- `<family>/docs/versions.md`: the version shown on each tool page of that family.
+- `README.md`: RosettaGM layout; `circuitgm/README.md`: Circuit files and test
+  commands (run from `circuitgm/`, with the repo root served on port 8765).
 
 ## Conventions
 
