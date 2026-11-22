@@ -13,7 +13,7 @@ const { chromium } = require('playwright');
   const p = await b.newPage({ viewport: { width: 1400, height: 950 } });
   p.on('pageerror', (e) => errs.push(e.message));
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
-  await p.goto('http://localhost:8765/circuitgm/patchworker/');
+  await p.goto('http://localhost:8765/circuitgm/patchworker/?tracksmode');
   await p.waitForFunction(() => window.patchworker?.S.pack && document.querySelectorAll('#patchlist li[data-slot]').length === 128);
 
   // A fake Tracks: Synth 1 plays pack slot 10, Synth 2 slot 20; sent messages are recorded.
@@ -146,13 +146,13 @@ const { chromium } = require('playwright');
   check('Load puts the Tracks\' patch into slot 50', await p.evaluate(() => { const w = window.patchworker; return w.S.slot === 49 && w.S.pack.patches[49].every((v, i) => v === window.tracks[0][i]); }));
 
   // Synth 2 button: edits what Synth 2 plays (slot 20).
-  await p.click('#hw [data-synth="1"]');
+  await p.click('#synth-seg [data-synth="1"]');
   await p.waitForTimeout(300);
   s = await st();
   check(`Synth 2 follows Synth 2's patch (slot ${s.slot + 1})`, s.slot === 19 && /Synth 2 is playing this patch/.test(s.hw));
   // Something not in the pack: status says so, no dialog.
   await p.evaluate(() => { window.tracks[0] = new Uint8Array(window.patchworker.S.pack.patches[0]); window.tracks[0][0] = 'Z'.charCodeAt(0); window.tracks[0][20] ^= 1; });
-  await p.click('#hw [data-synth="0"]');
+  await p.click('#synth-seg [data-synth="0"]');
   await p.waitForTimeout(300);
   s = await st();
   check(`a patch not in the pack is named in the status (${s.hw})`, /not in this pack/.test(s.hw) && !s.dlg);
@@ -221,7 +221,7 @@ const { chromium } = require('playwright');
   {
     const r = await b.newPage({ viewport: { width: 1400, height: 950 } });
     r.on('pageerror', (e) => errs.push(e.message));
-    await r.goto('http://localhost:8765/circuitgm/patchworker/');
+    await r.goto('http://localhost:8765/circuitgm/patchworker/?tracksmode');
     await r.waitForFunction(() => window.patchworker?.S.pack && document.querySelectorAll('#patchlist li[data-slot]').length === 128);
     await r.evaluate(() => {
       const w = window.patchworker, L = w.link;
@@ -241,7 +241,7 @@ const { chromium } = require('playwright');
   {
     const r = await b.newPage({ viewport: { width: 1400, height: 950 } });
     r.on('pageerror', (e) => errs.push(e.message));
-    await r.goto('http://localhost:8765/circuitgm/patchworker/');
+    await r.goto('http://localhost:8765/circuitgm/patchworker/?tracksmode');
     await r.waitForFunction(() => window.patchworker?.S.pack && document.querySelectorAll('#patchlist li[data-slot]').length === 128);
     const knob = await r.evaluate(async () => {
       const w = window.patchworker, L = w.link;
@@ -264,7 +264,7 @@ const { chromium } = require('playwright');
 
   // ?midilog shows what the Tracks sends.
   const q = await b.newPage();
-  await q.goto('http://localhost:8765/circuitgm/patchworker/?midilog');
+  await q.goto('http://localhost:8765/circuitgm/patchworker/?tracksmode&midilog');
   await q.waitForFunction(() => window.patchworker?.S.pack);
   await q.evaluate(() => window.patchworker.link.receive({ name: 'Circuit Tracks' }, new Uint8Array([0xf0, 0x00, 0x20, 0x29, 0x01, 0x64, 0x7f, 0xf7])));
   check('?midilog lists messages from the Tracks', /← f0 00 20 29 01 64 7f f7/.test(await q.textContent('.midilog')));

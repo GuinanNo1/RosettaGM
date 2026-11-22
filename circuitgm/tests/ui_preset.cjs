@@ -39,14 +39,12 @@ const { chromium } = require('playwright');
     // An edit marks the pad.
     await p.evaluate(() => { const w = window.patchworker; w.setByte(20, (w.S.bytes[20] + 1) & 127); });
     check(`${name}: an edited patch gets its mark`, await p.evaluate(() => document.querySelector('.pad[data-slot="100"]').classList.contains('edited')));
-    // Copy to pad 102 (not empty: asks first).
+    // Copy to pad 102 (not empty: since 0.9 it doesn't ask; undo brings it back).
     await p.click('.pad-tools .btn >> text=Duplicate to pad…');
     check(`${name}: Copy to pad makes the other pads targets`, await p.evaluate(() => document.querySelectorAll('.pad.preset.target').length === 31));
     await p.click('.pad[data-slot="101"]');
-    const dlg = await p.waitForSelector('dialog[open]');
-    check(`${name}: copying onto a patch asks first`, (await dlg.textContent()).includes('replaces 102'));
-    await p.click('#dlg-ok');
-    await p.waitForTimeout(100);
+    await p.waitForTimeout(150);
+    check(`${name}: copying onto a patch asks nothing`, !(await p.evaluate(() => document.querySelector('#dlg').open)));
     check(`${name}: the copy lands in slot 102 and is edited there`, await p.evaluate(() => {
       const w = window.patchworker;
       return w.S.slot === 101 && w.S.pack.patches[101].every((v, i) => v === w.S.pack.patches[100][i]) && document.querySelector('.pad[data-slot="101"]').classList.contains('lit');
@@ -59,7 +57,6 @@ const { chromium } = require('playwright');
     // Revert slot 101 from the panel.
     await p.evaluate(() => window.patchworker.selectSlot(100));
     await p.click('.pad-tools .btn >> text=Revert');
-    await p.click('#dlg-ok');
     await p.waitForTimeout(100);
     check(`${name}: Revert clears the mark`, await p.evaluate(() => !document.querySelector('.pad[data-slot="100"]').classList.contains('edited')));
     // Drum track: 2 pages of samples; a pad picks the sample.

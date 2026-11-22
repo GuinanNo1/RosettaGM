@@ -1,10 +1,12 @@
-# CircuitGM Patch Editor (PatchWorker), for testing, v0.8
+# CircuitGM Patch Editor (PatchWorker), for testing, v0.9
 
 **Try it:** https://guinanno1.github.io/RosettaGM/circuitgm/patchworker/
 
 **Help:** https://guinanno1.github.io/RosettaGM/circuitgm/patchworker/help.html
 
-A web page that edits the synth patches of a Novation Circuit Tracks. It opens with the [TracksGM](../tracksgm/) pack, plays patches in the browser, links to a Circuit Tracks over Web MIDI when one is connected, and saves single `.syx` patches or a complete `.circuittrackspack`. Nothing is uploaded, and there is no server.
+A web page that edits the synth patches of a Novation Circuit Tracks, without the hardware. It opens with the [TracksGM](../tracksgm/) pack, plays patches in the browser (from the page, the computer keyboard or a MIDI keyboard, including a Circuit Tracks), and saves single `.syx` patches or a complete `.circuittrackspack` for Novation Components. Nothing is uploaded, and there is no server.
+
+Since v0.9 PatchWorker is **Offline only** (see the claude.ai Project note `plan-patchworker-tracks-first.md`): the Circuit Tracks link below is hidden and only shows with `?tracksmode` at the end of the address, for development of a later Tracks mode.
 
 ## What it does
 
@@ -12,9 +14,11 @@ A web page that edits the synth patches of a Novation Circuit Tracks. It opens w
 - **Every parameter of the 340-byte patch** is editable, and bytes the page does not show are kept as they are.
 - **Hardware units:** cutoff in Hz, envelope times, LFO rate, EQ and levels are shown using CircuitGM's measurements of a real Circuit Tracks.
 - **Browser synth** for working without the hardware (an approximation, see below).
-- **Circuit Tracks link:** sends the patch to Synth 1 or 2, sends each edit live (CC / NRPN for single parameters, the whole patch for mod matrix and macro assignments), plays notes on the hardware, follows the hardware's macro knobs, fetches a synth's current patch, and can write a patch to a slot on the Circuit Tracks.
+- **MIDI keyboard (Offline):** any Web MIDI keyboard plays the browser synth, with velocity and sustain pedal. Channel 3 chooses Synth 1 and channel 4 Synth 2 (the Circuit Tracks' MIDI 1 / MIDI 2 tracks, which don't sound its own synths); other channels play the synth chosen on the page. Nothing is sent out, and no SysEx access is asked for.
+- **Saved / unsaved:** a status tag (Saved, Edited · not saved) with Save .syx and Download pack, and an Unsaved edits tray listing every changed patch not downloaded since (Open, .syx, Discard, Save all as .syx bank). Only replacing the pack with unsaved edits asks first.
+- **Circuit Tracks link (`?tracksmode` only):** sends the patch to Synth 1 or 2, sends each edit live (CC / NRPN for single parameters, the whole patch for mod matrix and macro assignments), plays notes on the hardware, follows the hardware's macro knobs, fetches a synth's current patch, and can write a patch to a slot on the Circuit Tracks.
 - **Files:** open and download `.circuittrackspack` packs, single patches and banks as `.syx`. Samples and projects pass through untouched; a project's own copy of an edited patch can be updated when it still matched the pack.
-- **Undo / redo per patch**, hold-to-compare with the original, revert, copy to another slot, and a session that survives closing the tab.
+- **Undo / redo per patch**, hold-to-compare with the original, revert, copy to another slot, and a session (including what is unsaved) that survives closing the tab.
 - **TRACKS / EDITOR switch (in progress):** TRACKS shows a panel laid out like the Circuit Tracks (track buttons, views, 32 pads, transport), modelled on [Web Tracks](https://webtracks.namirsab.dev/). So far the track buttons choose Synth 1 or 2 and Note view plays the patch from the pads; the other views come in later steps.
 
 ## How it is built
@@ -26,12 +30,14 @@ A web page that edits the synth patches of a Novation Circuit Tracks. It opens w
 | `js/patchworker.js` | The page: controls, pack list, files, keyboard, Circuit Tracks link. |
 | `js/pw/params.js` | The patch as a parameter table: addresses, ranges, defaults, CC / NRPN numbers, display units, SysEx. |
 | `js/pw/engine.js` | The browser synth (Web Audio). |
-| `js/pw/midi.js` | Web MIDI link to the Circuit Tracks. |
+| `js/pw/keys.js` | MIDI keyboard input for Offline mode (notes, sustain; channels 3 / 4 choose Synth 1 / 2). |
+| `js/pw/midi.js` | Web MIDI link to the Circuit Tracks (Tracks mode, `?tracksmode`). |
 | `js/pw/packio.js` | Reading and writing packs and `.syx` files, and the saved session. |
 | `js/pw/panel.js` | The TRACKS face: the Circuit Tracks style panel. |
 | `js/pw/mixlaws.js` | The Circuit Tracks project controls as numbers, from calibration set 7: mixer levels and pans, reverb, delay, master filter, drum pitch / decay / distortion / EQ, sidechain. |
 | `js/pw/mixer.js` | The project mixer in Web Audio, built from `mixlaws.js`; `js/player.js` plays through it. |
-| `tests/ui_patchworker.cjs` | Browser test: renders all 128 TracksGM patches, edits, saves, reloads, and drives a stand-in MIDI port. |
+| `tests/ui_offline.cjs` | Browser test of Offline mode: no link controls, status tag, Unsaved edits tray, the load-pack warning and bank, and a stand-in MIDI keyboard on channels 1, 3 and 4. |
+| `tests/ui_patchworker.cjs` | Browser test: renders all 128 TracksGM patches, edits, saves, reloads, and (with `?tracksmode`) drives a stand-in Circuit Tracks. `tests/ui_follow.cjs` also runs in `?tracksmode`. |
 | `tests/ui_panel.cjs` | Browser test of the TRACKS face. |
 | `tests/mixlaws.mjs`, `tests/ui_mixer.cjs` | The set 7 laws against the measurements, in Node and as offline renders in a browser. |
 
@@ -56,8 +62,12 @@ Not emulated: Q normalise, pitch-bend range, LFO slew and common sync, and mod m
 ## Testing
 
 ```sh
-python3 -m http.server 8765 &
+python3 -m http.server 8765 &      # from the RosettaGM root
+node tests/ui_offline.cjs tests/out
 node tests/ui_patchworker.cjs tests/out
+node tests/ui_panel.cjs && node tests/ui_preset.cjs && node tests/ui_follow.cjs
 ```
+
+Still to check with a Circuit Tracks (Offline): notes from its MIDI 1 / MIDI 2 tracks arrive on channels 3 / 4 and choose Synth 1 / 2.
 
 Not yet checked on hardware: the live CC / NRPN stream, Get, and Save to Tracks (Store). They follow the Programmer's Reference Guide.

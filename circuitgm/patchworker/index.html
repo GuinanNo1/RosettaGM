@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>CircuitGM Patch Editor (PatchWorker)</title>
-<meta name="description" content="PatchWorker: a browser synth patch editor for the Novation Circuit Tracks. Edit patches with or without the hardware, hear them in the browser, and save .syx patches and complete .circuittrackspack packs.">
+<meta name="description" content="PatchWorker: a browser synth patch editor for the Novation Circuit Tracks. Edit patches in the browser, play them from a MIDI keyboard or a Circuit Tracks, and save .syx patches and complete .circuittrackspack packs.">
 <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="../css/patchworker.css?v=20261116nav">
+<link rel="stylesheet" href="../css/patchworker.css?v=20261122a">
 </head>
 <body>
 <nav class="topnav" aria-label="RosettaGM">
@@ -53,9 +53,14 @@
     </li>
   </ul>
   <span class="navfill"></span>
-  <span class="navver" title="Version of this page. If you expect a newer one, refresh with Shift-reload; GitHub Pages can take about 10 minutes to update."><span class="nv-long">For testing · </span>v0.8</span>
+  <span class="navver" title="Version of this page. If you expect a newer one, refresh with Shift-reload; GitHub Pages can take about 10 minutes to update."><span class="nv-long">For testing · </span>v0.9</span>
   <a class="navhelp" href="help.html">Help</a>
-  <div class="link" id="link">
+  <div class="link" id="kb" title="Play the browser synth from a MIDI keyboard. A Circuit Tracks works too: play from its MIDI 1 track (channel 3, Synth 1) or MIDI 2 track (channel 4, Synth 2).">
+    <span class="led" id="kb-led"></span>
+    <span id="kb-text">No MIDI keyboard</span>
+    <button type="button" id="kb-btn" class="btn small">Use MIDI keyboard</button>
+  </div>
+  <div class="link" id="link" hidden>
     <span class="led" id="link-led"></span>
     <span id="link-text">Circuit Tracks not linked</span>
     <button type="button" id="link-btn" class="btn small">Link Circuit Tracks</button>
@@ -81,6 +86,15 @@
         <button type="button" class="btn" id="pack-tracks" title="Read the 128 patches of a pack on the linked Circuit Tracks into this pack">Patches from the Circuit Tracks…</button>
       </div>
     </div>
+    <details class="tray" id="tray">
+      <summary title="Patches you have changed and not yet downloaded, as a pack or as .syx">Unsaved edits <span class="badge" id="tray-count">0</span></summary>
+      <p class="hint" id="tray-empty">Nothing unsaved. Patches you change appear here until you download them.</p>
+      <ol class="tray-list" id="tray-list"></ol>
+      <div class="row" id="tray-all" hidden>
+        <button type="button" class="btn small" id="tray-bank" title="Download every unsaved patch as one .syx bank">Save all as .syx bank</button>
+        <button type="button" class="btn small quiet" id="tray-clear" title="Put back every unsaved patch as it was last saved (undo brings each back)">Discard all</button>
+      </div>
+    </details>
     <div class="listhead">
       <input id="search" type="search" placeholder="Search patches" aria-label="Search patches">
       <select id="filter" aria-label="Show"></select>
@@ -93,6 +107,10 @@
       <span class="seg face" id="face" role="radiogroup" aria-label="Panel or editor">
         <button type="button" role="radio" data-face="tracks" aria-checked="false" title="The Circuit Tracks panel: tracks, views and pads">TRACKS</button>
         <button type="button" role="radio" data-face="editor" aria-checked="true" class="on" title="The patch editor">EDITOR</button>
+      </span>
+      <span class="seg synthsel" id="synth-seg" role="radiogroup" aria-label="Synth">
+        <button type="button" data-synth="0" class="on" title="Synth 1. A MIDI keyboard on channel 3 (the Circuit Tracks' MIDI 1 track) chooses it.">Synth 1</button>
+        <button type="button" data-synth="1" title="Synth 2. A MIDI keyboard on channel 4 (the Circuit Tracks' MIDI 2 track) chooses it.">Synth 2</button>
       </span>
       <button type="button" class="icon" id="undo" title="Undo (Ctrl/Cmd+Z)" aria-label="Undo">↶</button>
       <button type="button" class="icon" id="redo" title="Redo (Ctrl/Cmd+Shift+Z)" aria-label="Redo">↷</button>
@@ -114,18 +132,21 @@
         </div>
       </div>
       <div class="hw" id="hw" hidden>
-        <span class="hwlabel" id="hw-label">Edit</span>
-        <span class="seg" role="radiogroup" aria-labelledby="hw-label">
-          <button type="button" data-synth="0" class="on" title="Edit and play Synth 1 on the Circuit Tracks. This page can't change which track the Circuit Tracks itself shows.">Synth 1</button>
-          <button type="button" data-synth="1" title="Edit and play Synth 2 on the Circuit Tracks. This page can't change which track the Circuit Tracks itself shows.">Synth 2</button>
-        </span>
         <button type="button" class="btn primary" id="hw-send" title="Play this patch on the chosen synth now, without saving it on the Circuit Tracks. Only needed with Live off: Live sends every edit by itself." hidden>Play on Tracks</button>
         <button type="button" class="btn" id="hw-get" title="Fetch the patch the chosen synth is playing into a pack slot, to edit it here">Get</button>
         <button type="button" class="btn quiet" id="hw-store" title="Save this patch into a patch slot on the Circuit Tracks itself">Save to Tracks…</button>
         <label class="check" title="Send every edit, and each patch you choose, to the Circuit Tracks as you go, and follow patch changes made on the Circuit Tracks. Ticking this sends the patch you are editing."><input type="checkbox" id="hw-live" checked> Live</label>
       </div>
     </header>
-    <p class="editing" id="editing" role="status"><span id="ed-what"></span><span id="ed-hw" data-state="off"></span></p>
+    <p class="editing" id="editing" role="status">
+      <span class="ed-state" id="ed-state" data-state="saved">Saved</span>
+      <span id="ed-what"></span>
+      <span class="ed-save" id="ed-save" hidden>
+        <button type="button" class="btn small" id="ed-syx" title="Download this patch as a .syx file">Save .syx</button>
+        <button type="button" class="btn small primary" id="ed-pack" title="Download the pack with all your edits, ready for Novation Components">Download pack</button>
+      </span>
+      <span id="ed-hw" data-state="off" hidden></span>
+    </p>
 
     <section class="macros" aria-label="Macros">
       <p class="eyebrow">Macros</p>
@@ -144,13 +165,13 @@
     <div class="page" id="page-fx" hidden></div>
     <div class="page" id="page-mod" hidden></div>
 
-    <p class="foot">Version 0.6, for testing: keep a copy of your packs. The browser sound is an approximation of the Circuit Tracks; the hardware is the reference. Not affiliated with Novation or Focusrite. Synth engine adapted from <a href="https://github.com/namirsab/circuit-tracks-tools">circuit-tracks-tools</a> by Namir Sayed-Ahmad Baraza. <a href="help.html">Help</a> · <a href="https://github.com/GuinanNo1/RosettaGM/issues">Report a problem</a></p>
+    <p class="foot">Version 0.9, for testing: keep a copy of your packs. The browser sound is an approximation of the Circuit Tracks; the hardware is the reference. Not affiliated with Novation or Focusrite. Synth engine adapted from <a href="https://github.com/namirsab/circuit-tracks-tools">circuit-tracks-tools</a> by Namir Sayed-Ahmad Baraza. <a href="help.html">Help</a> · <a href="https://github.com/GuinanNo1/RosettaGM/issues">Report a problem</a></p>
   </main>
 </div>
 
 <footer class="dock" aria-label="Play">
   <div class="dock-ctl">
-    <div class="ctl">
+    <div class="ctl" id="hear-ctl" hidden>
       <span class="eyebrow">Hear on</span>
       <span class="seg" id="hear">
         <button type="button" data-hear="browser" class="on">Browser</button>
@@ -204,6 +225,6 @@
 </dialog>
 <input type="file" id="file-pack" accept=".circuittrackspack,.zip" hidden>
 <input type="file" id="file-syx" accept=".syx" multiple hidden>
-<script type="module" src="../js/patchworker.js?v=20261114v"></script>
+<script type="module" src="../js/patchworker.js?v=20261122a"></script>
 </body>
 </html>

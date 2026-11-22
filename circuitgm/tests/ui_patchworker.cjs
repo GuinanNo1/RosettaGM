@@ -40,7 +40,7 @@ const fakeMidi = () => {
   const page = await ctx.newPage();
   page.on('console', (m) => { if (m.type() === 'error' && !/ERR_|fonts\./.test(m.text())) errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(e.message));
-  const open = async () => { await page.goto('http://localhost:8765/circuitgm/patchworker/'); await page.waitForFunction(() => window.patchworker?.S.pack && document.querySelectorAll('#patchlist li[data-slot]').length === 128); };
+  const open = async () => { await page.goto('http://localhost:8765/circuitgm/patchworker/?tracksmode'); await page.waitForFunction(() => window.patchworker?.S.pack && document.querySelectorAll('#patchlist li[data-slot]').length === 128); };
   await open();
   check((await page.innerText('#pack-info')).startsWith('128 patches · 64 samples'), 'TracksGM loads by default');
   check(await page.inputValue('#patch-name') === 'Grand Piano', 'slot 1 is Grand Piano');
@@ -161,7 +161,7 @@ const fakeMidi = () => {
   await page.keyboard.press('ArrowUp');
   msgs = await sent();
   check(msgs.length === 1 && msgs[0][0] === 0xb0 && msgs[0][1] === 74, `filter frequency goes out as CC 74 (${JSON.stringify(msgs)})`);
-  await page.click('#hw [data-synth="1"]');
+  await page.click('#synth-seg [data-synth="1"]');
   await page.waitForTimeout(200);
   check((await page.getAttribute('body', 'data-synth')) === '1', 'choosing Synth 2 switches the panel colour');
   // Synth 2 plays something else: the first edit asks before replacing it.
@@ -210,13 +210,13 @@ const fakeMidi = () => {
   await page.check('#hw-live');
   msgs = await sent();
   check(msgs.some((m) => m.length === 350) && (await page.getAttribute('#ed-hw', 'data-state')) === 'same', 'ticking Live sends the patch');
-  // Replacing a patch from the menu asks first.
+  // Replacing a patch from the menu asks nothing (since 0.9); undo brings it back.
   await page.click('#patch-menu-btn');
   await page.click('[data-act="init"]');
-  await page.waitForSelector('#dlg[open]');
-  check((await page.innerText('#dlg-body')).includes('including the changes you made'), 'the Initial Patch asks before replacing a changed patch');
-  await page.click('#dlg-cancel');
-  check(await page.inputValue('#patch-name') === 'From Synth 2', 'cancelling leaves the patch alone');
+  await page.waitForTimeout(150);
+  check(!(await page.evaluate(() => document.querySelector('#dlg').open)) && await page.inputValue('#patch-name') === 'Initial Patch', 'the Initial Patch replaces the patch without asking');
+  await page.click('#undo');
+  check(await page.inputValue('#patch-name') === 'From Synth 2', 'undo brings the patch back');
 
   // Unlink: disconnects, and the next visit doesn't link by itself until Link is pressed.
   await page.click('#unlink-btn');

@@ -141,7 +141,25 @@ input[type=number], input[type=search], input[type=text] { background: var(--wel
 .patchbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 6px; }
 /* Which patch is being edited, and what the linked synth is playing. */
 .editing { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0 0 10px; font-size: .82rem; color: var(--muted); }
+.editing { align-items: center; }
 .editing #ed-hw { margin-left: auto; }
+/* Offline status: Saved / Edited · not saved, with the two ways to save beside it. */
+.ed-state { font: 600 .7rem var(--head); letter-spacing: .06em; text-transform: uppercase; border: 1px solid currentColor; border-radius: 3px; padding: 1px 6px; color: var(--muted); }
+.ed-state[data-state=edited] { color: var(--warn); }
+.ed-save { display: inline-flex; gap: 6px; }
+/* Unsaved edits tray (side panel). */
+.tray { border-bottom: 1px solid var(--edge); padding: 6px 12px 8px; font-size: .84rem; }
+.tray summary { cursor: pointer; font: 600 .74rem var(--head); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); list-style-position: inside; }
+.tray .badge { display: inline-block; min-width: 1.5em; text-align: center; font: 500 .72rem var(--mono); border-radius: 8px; padding: 0 5px; margin-left: 4px; background: #ffffff14; color: var(--muted); letter-spacing: 0; }
+.tray.has .badge { background: var(--warn); color: #000; }
+.tray .hint { margin: 6px 0 0; }
+.tray-list { list-style: none; margin: 6px 0; padding: 0; max-height: 30vh; overflow-y: auto; }
+.tray-list li { display: grid; grid-template-columns: auto 1fr; gap: 0 8px; padding: 5px 0; border-top: 1px solid #ffffff10; }
+.tray-list .n { font: 400 .76rem var(--mono); color: var(--faint); grid-row: span 2; padding-top: 2px; }
+.tray-list .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tray-list .meta { font-size: .74rem; color: var(--faint); }
+.tray-list .acts { grid-column: 2; display: flex; gap: 4px; margin-top: 3px; }
+.tray-list .acts button { font-size: .74rem; padding: 1px 7px; }
 .editing #ed-hw::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; background: var(--faint); }
 .editing #ed-hw[data-state=same] { color: var(--ink); }
 .editing #ed-hw[data-state=same]::before { background: var(--accent); }
@@ -153,8 +171,8 @@ input[type=number], input[type=search], input[type=text] { background: var(--wel
 .mini select { font: 400 .86rem var(--body); letter-spacing: 0; text-transform: none; padding-block: 3px; max-width: 150px; }
 .hwlabel { font: 600 .7rem var(--head); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .hw { display: flex; align-items: center; gap: 6px; padding-left: 10px; border-left: 1px solid var(--line); }
-.hw .seg button[data-synth="0"].on { background: color-mix(in srgb, var(--s1) 35%, transparent); }
-.hw .seg button[data-synth="1"].on { background: color-mix(in srgb, var(--s2) 30%, transparent); }
+.synthsel button[data-synth="0"].on { background: color-mix(in srgb, var(--s1) 35%, transparent); }
+.synthsel button[data-synth="1"].on { background: color-mix(in srgb, var(--s2) 30%, transparent); }
 .menu { position: relative; }
 .menu-pop {
   position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; min-width: 230px; padding: 5px;
@@ -425,3 +443,6 @@ body.doc { display: block; overflow: auto; }
 .navgroup > ul::before { content: ""; position: absolute; left: 0; right: 0; top: -12px; height: 12px; }
 .topnav { position: relative; z-index: 100; }
 .topnav .navgroups, .topnav .navgroup > ul { overflow: visible; }
+.tray #tray-all { display: flex; flex-wrap: wrap; gap: 6px; }
+.tray #tray-all[hidden] { display: none; }
+.tray #tray-all .btn { flex: 1 1 auto; white-space: nowrap; }

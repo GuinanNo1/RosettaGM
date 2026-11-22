@@ -8,9 +8,15 @@ import { PatchSynth, waveTable, lfoShape, envelopePoints } from './pw/engine.js?
 import { TracksLink, VIEW_CODES } from './pw/midi.js?v=20261114s';
 import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, projectsFollowing, download,
   fileSafe, session, PATCH_SLOTS } from './pw/packio.js?v=20261114s';
-import { buildPanel } from './pw/panel.js?v=20261114s';
+import { buildPanel } from './pw/panel.js?v=20261122a';
+import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
 
 const DEFAULT_PACK = '../tracksgm/TracksGM_v1.circuittrackspack';
+// PatchWorker is Offline only for now (plan-patchworker-tracks-first.md, 22 Nov 2026): the browser is
+// the synth and a connected MIDI keyboard (a Circuit Tracks too) only plays it. The Circuit Tracks
+// link (Live, Get, Save to Tracks, patches from the Tracks, Hear on) is kept for a later Tracks mode
+// and only shows with ?tracksmode, for development.
+const TRACKS_MODE = new URLSearchParams(location.search).has('tracksmode');
 const $ = (s) => document.querySelector(s);
 const NS = 'http://www.w3.org/2000/svg';
 
@@ -52,6 +58,7 @@ const S = {
   hw: [{ slot: null, dirty: false }, { slot: null, dirty: false }],   // what each Circuit Tracks synth was last sent
 };
 const link = new TracksLink();
+const keys = new MidiKeys();
 let ctx = null;
 let synth = null;
 
@@ -136,6 +143,7 @@ function replacePatch(bytes, note = null) {
 let saveTimer = null;
 let sendTimer = null;
 function changed(addr) {
+  (S.pack.at ??= {})[S.slot] = Date.now();
   synth?.refresh();
   repaint(addr);
   paintSlot(S.slot);
@@ -711,6 +719,7 @@ function paintBar() {
 function setOrigin(slot, kind, label) {
   S.pack.origin ??= {};
   S.pack.origin[slot] = { kind, label, bytes: S.pack.patches[slot].slice() };
+  (S.pack.at ??= {})[slot] = Date.now();
 }
 const sameBytes = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
 const slotLabel = (i) => `${pad3(i + 1)} "${S.pack.patches[i] ? getName(S.pack.patches[i]) : 'Initial Patch'}"`;
@@ -719,8 +728,114 @@ function replaceNote(i) {
   if (slotBlank(S.pack, i)) return `Slot ${pad3(i + 1)} is empty.`;
   return `This replaces ${slotLabel(i)} in the pack open here${slotEdited(S.pack, i) ? ', including the changes you made to it' : ''}. Undo brings it back.`;
 }
-// The line under the patch name: which patch is being edited, where it came from, and what the
-// linked synth is playing.
+// ------------------------------------------------------------------ saved and unsaved edits
+// A patch is unsaved when it differs from the pack as opened and hasn't been downloaded since it
+// last changed (as part of the pack, a bank or its own .syx). S.pack.saved[slot] keeps the bytes
+// last downloaded for a changed slot; S.pack.at[slot] when it was last changed.
+function slotUnsaved(i) {
+  if (!S.pack || !slotEdited(S.pack, i)) return false;
+  const saved = S.pack.saved?.[i];
+  return !(saved && S.pack.patches[i] && sameBytes(saved, S.pack.patches[i]));
+}
+const unsavedSlots = () => (S.pack ? editedSlots(S.pack).filter(slotUnsaved) : []);
+// Mark slots as downloaded just now.
+function markSaved(slots) {
+  S.pack.saved ??= {};
+  for (const i of slots) if (slotEdited(S.pack, i) && S.pack.patches[i]) S.pack.saved[i] = S.pack.patches[i].slice(); else delete S.pack.saved[i];
+  paintStatus();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveSession, 300);
+}
+// Some slots as one .syx bank ("Replace Patch" messages for those slots), in slot order.
+function slotsSyx(slots) {
+  const parts = slots.map((i) => toSyx(S.pack.patches[i] ?? initPatch(), { command: 1, location: i }));
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  let at = 0;
+  for (const p of parts) { out.set(p, at); at += p.length; }
+  return out;
+}
+function saveSlotSyx(i = S.slot) {
+  const b = S.pack.patches[i] ?? initPatch();
+  download(toSyx(b), `${fileSafe(getName(b))}.syx`);
+  markSaved([i]);
+}
+function saveUnsavedBank(slots = unsavedSlots()) {
+  if (!slots.length) return;
+  download(slotsSyx(slots), `${fileSafe(S.pack.name || 'Pack')} unsaved patches.syx`);
+  markSaved(slots);
+  toast(`Saved ${slots.length} patch${slots.length > 1 ? 'es' : ''} as one .syx bank. Open it here (Patch ▸ Open .syx…) or load it with Novation Components.`, 6000);
+}
+// Replace any slot's patch, undoably (its own undo history, as if edited there).
+function setSlotBytes(i, bytes) {
+  if (!S.pack.patches[i]) S.pack.patches[i] = initPatch();
+  if (!S.undo.has(i)) S.undo.set(i, { past: [], future: [], key: null, at: 0 });
+  const u = S.undo.get(i);
+  u.past.push(S.pack.patches[i].slice());
+  u.future.length = 0;
+  u.key = null;
+  S.pack.patches[i].set(bytes);
+  if (i === S.slot) { synth?.refresh(); repaint(); paintBar(); }
+  paintSlot(i);
+}
+// Put an unsaved patch back as it was last saved (downloaded, or as the pack had it).
+function discardSlot(i) {
+  const back = S.pack.saved?.[i] ?? S.pack.original[i] ?? initPatch();
+  setSlotBytes(i, back);
+  if (!S.pack.saved?.[i] && S.pack.origin) delete S.pack.origin[i];
+  paintStatus();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveSession, 300);
+}
+// Before something replaces the whole pack: the one warning PatchWorker keeps. Resolves true to go on.
+async function okToReplacePack(action) {
+  const slots = unsavedSlots();
+  if (!slots.length) return true;
+  const names = slots.slice(0, 5).map((i) => `${pad3(i + 1)} "${getName(S.pack.patches[i])}"`).join(', ') + (slots.length > 5 ? ` and ${slots.length - 5} more` : '');
+  const choice = await ask(`${action}?`, [
+    `You have ${slots.length} unsaved edit${slots.length > 1 ? 's' : ''} in "${S.pack.name || 'this pack'}": ${names}.`,
+    `${action} clears ${slots.length > 1 ? 'them' : 'it'}. To keep ${slots.length > 1 ? 'them' : 'it'}, save a .syx bank first (or cancel and download the pack).`,
+  ], `${action} anyway`, { alt: 'Save .syx bank, then go on' });
+  if (choice === 'alt') { saveUnsavedBank(slots); return true; }
+  return choice === true;
+}
+
+// When something happened, in words ("just now", "5 min ago", "yesterday 14:05").
+function ago(t) {
+  if (!t) return '';
+  const s = (Date.now() - t) / 1000;
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.round(s / 60)} min ago`;
+  const d = new Date(t);
+  const hm = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (d.toDateString() === new Date().toDateString()) return `today ${hm}`;
+  return `${d.toLocaleDateString([], { day: 'numeric', month: 'short' })} ${hm}`;
+}
+function paintTray() {
+  if (!S.pack) return;
+  const slots = unsavedSlots();
+  const tray = $('#tray');
+  $('#tray-count').textContent = slots.length;
+  tray.classList.toggle('has', slots.length > 0);
+  $('#tray-empty').hidden = slots.length > 0;
+  $('#tray-all').hidden = !slots.length;
+  const list = $('#tray-list');
+  list.textContent = '';
+  for (const i of slots.sort((a, b) => (S.pack.at?.[b] ?? 0) - (S.pack.at?.[a] ?? 0))) {
+    const o = S.pack.origin?.[i];
+    const where = o ? o.label : S.pack.saved?.[i] ? 'changed since you last saved it' : 'changed here';
+    list.append(h('li', { 'data-slot': i },
+      h('span', { class: 'n', text: pad3(i + 1) }),
+      h('span', { class: 'nm', text: getName(S.pack.patches[i]) || '(no name)' }),
+      h('span', { class: 'meta', text: `${where}${S.pack.at?.[i] ? ` · ${ago(S.pack.at[i])}` : ''}` }),
+      h('span', { class: 'acts' },
+        h('button', { type: 'button', class: 'btn small', text: 'Open', title: 'Edit this patch', onclick: () => chooseSlot(i) }),
+        h('button', { type: 'button', class: 'btn small', text: '.syx', title: 'Download this patch as a .syx file', onclick: () => saveSlotSyx(i) }),
+        h('button', { type: 'button', class: 'btn small quiet', text: 'Discard', title: 'Put back the patch as it was last saved. Open it and press Undo to bring your edit back.', onclick: () => { discardSlot(i); toast(`Discarded your edits to ${pad3(i + 1)}. Open it and press Undo to bring them back.`, 5000); } }))));
+  }
+}
+
+// The line under the patch name: which patch is being edited, where it came from, whether it is
+// saved, and (Tracks mode only) what the linked synth is playing.
 function paintStatus() {
   if (!S.pack) return;
   const edited = slotEdited(S.pack, S.slot);
@@ -729,7 +844,17 @@ function paintStatus() {
   if (!edited) from = S.pack.original[S.slot] ? 'as the pack has it' : 'an empty slot';
   else if (o) from = `${o.label}${sameBytes(o.bytes, S.bytes) ? '' : ', then changed here'}`;
   else from = 'changed here since the pack was opened';
-  $('#ed-what').textContent = `Editing slot ${pad3(S.slot + 1)} of "${S.pack.name || 'this pack'}": ${from}`;
+  $('#ed-what').textContent = `Slot ${pad3(S.slot + 1)} of "${S.pack.name || 'this pack'}": ${from}`;
+  const unsaved = slotUnsaved(S.slot);
+  $('#ed-state').textContent = unsaved ? 'Edited · not saved' : 'Saved';
+  $('#ed-state').dataset.state = unsaved ? 'edited' : 'saved';
+  $('#ed-state').title = unsaved ? 'Changed since the pack was opened, and not downloaded since (as the pack, a bank or this patch\'s .syx). Your edits are kept in this browser in the meantime.' : edited ? 'Downloaded since it was last changed.' : 'The same as in the pack you opened.';
+  $('#ed-save').hidden = !unsaved;
+  paintTray();
+  if (!TRACKS_MODE) {
+    $('#editing').title = 'Edits are kept in this browser, even if you close the tab, until you download them or load another pack.';
+    return;
+  }
   const el = $('#ed-hw');
   const n = `Synth ${S.synth + 1}`;
   let text = 'Circuit Tracks not linked: you are hearing the browser';
@@ -794,6 +919,9 @@ async function loadPackBuffer(buffer, fileName, { remember = true, edits = null 
     if (typeof edits.name === 'string') pack.name = edits.name;
   }
   pack.origin = edits?.origin ?? {};
+  pack.saved = {};
+  for (const [slot, data] of Object.entries(edits?.saved ?? {})) if (data?.length === PATCH_SIZE) pack.saved[+slot] = new Uint8Array(data);
+  pack.at = { ...(edits?.at ?? {}) };
   S.hw = [{ slot: null, dirty: false }, { slot: null, dirty: false }];
   if (remember) { await session.savePack(buffer, fileName); await session.saveEdits(null); }
   selectSlot(edits?.slot ?? 0, { send: false });
@@ -805,8 +933,14 @@ function saveSession() {
   const patches = {};
   for (const i of editedSlots(S.pack)) if (S.pack.patches[i]) patches[i] = S.pack.patches[i].slice();
   const origin = {};
-  for (const i of Object.keys(patches)) if (S.pack.origin?.[i]) origin[i] = S.pack.origin[i];
-  session.saveEdits({ patches, name: S.pack.name, slot: S.slot, origin });
+  const saved = {};
+  const at = {};
+  for (const i of Object.keys(patches)) {
+    if (S.pack.origin?.[i]) origin[i] = S.pack.origin[i];
+    if (S.pack.saved?.[i]) saved[i] = [...S.pack.saved[i]];
+    if (S.pack.at?.[i]) at[i] = S.pack.at[i];
+  }
+  session.saveEdits({ patches, name: S.pack.name, slot: S.slot, origin, saved, at });
 }
 
 // The default pack is fetched each visit, so only edits to it are stored (not the pack file).
@@ -820,7 +954,7 @@ async function loadDefault(edits = null) {
 
 async function openPackFile(file) {
   try {
-    if (editedSlots(S.pack).length && !(await ask('Open another pack?', `You have changed ${editedSlots(S.pack).length} patch(es) in "${S.pack.name}". Opening another pack replaces them. Download the pack first if you want to keep them.`, 'Open pack'))) return;
+    if (!(await okToReplacePack('Open another pack'))) return;
     await loadPackBuffer(await file.arrayBuffer(), file.name);
     toast(`Opened "${S.pack.name || file.name}".`);
   } catch (e) { toast(e.message, 6000); }
@@ -834,6 +968,7 @@ async function savePack() {
   if (!(await ask('Download pack', body, 'Download'))) return;
   const { blob } = await buildPack(S.pack, { name: S.pack.name, syncProjects: sync.checked });
   download(blob, `${fileSafe(S.pack.name || 'Pack')}.circuittrackspack`, 'application/zip');
+  markSaved(editedSlots(S.pack));
 }
 
 // Bring patches from a .syx file or the hardware into pack slots (the user picks where).
@@ -910,9 +1045,8 @@ async function openSyxFiles(files) {
 
 async function patchAction(act) {
   if (act === 'open-syx') $('#file-syx').click();
-  else if (act === 'save-syx') download(toSyx(S.bytes), `${fileSafe(getName(S.bytes))}.syx`);
+  else if (act === 'save-syx') saveSlotSyx();
   else if (act === 'init') {
-    if (!slotBlank(S.pack, S.slot) && !(await ask('Start from the Initial Patch?', replaceNote(S.slot), 'Replace patch'))) return;
     checkpoint(null);
     S.bytes.set(initPatch());
     setOrigin(S.slot, 'init', 'started from the Initial Patch');
@@ -920,10 +1054,9 @@ async function patchAction(act) {
     toast('Initial Patch loaded. Undo brings the old patch back.');
   } else if (act === 'revert') {
     const orig = S.pack.original[S.slot];
-    if (slotEdited(S.pack, S.slot) && !(await ask('Revert this patch?', `This throws away your changes to ${slotLabel(S.slot)} and puts back the patch the pack had. Undo brings them back.`, 'Revert'))) return;
     checkpoint(null);
     if (S.pack.origin) delete S.pack.origin[S.slot];
-    replacePatch(orig ?? initPatch(), 'Reverted to how the pack had it.');
+    replacePatch(orig ?? initPatch(), 'Reverted to how the pack had it. Undo brings your changes back.');
   } else if (act === 'copy') {
     const sel = slotSelect(Math.min(S.slot + 1, PATCH_SLOTS - 1));
     const note = h('p', { class: 'hint' });
@@ -948,8 +1081,7 @@ function copyTo(target) {
 // Copy onto a pad in the Tracks panel: ask first unless the slot is empty.
 async function copyToPad(target) {
   if (target === S.slot) return;
-  if (!slotBlank(S.pack, target) && !(await ask(`Duplicate "${getName(S.bytes)}" to slot ${pad3(target + 1)}?`, [h('p', { class: `hint${slotEdited(S.pack, target) ? ' warn' : ''}`, text: replaceNote(target) })], 'Duplicate'))) return;
-  copyTo(target);
+  copyTo(target);   // undo (on the target slot) brings back what was there
 }
 
 // ------------------------------------------------------------------ drum samples (Tracks panel)
@@ -1060,12 +1192,12 @@ link.onPatch = (bytes, synth) => tracksChanged(synth, { bytes });
 // CC Tx on): edit that synth here too, as Components does.
 link.onFocus = (synth) => {
   if (synth === S.synth || !$('#hw-live').checked) return;
-  document.querySelector(`#hw [data-synth="${synth}"]`)?.click();
+  document.querySelector(`#synth-seg [data-synth="${synth}"]`)?.click();
 };
 // A track selected on the Tracks (any view message that carries the track, e.g. 04 03 <track>, the
 // Note view a track button opens): edit that synth here too, and show that track in the TRACKS panel.
 link.onTrack = (track) => {
-  if (track <= 1 && track !== S.synth) document.querySelector(`#hw [data-synth="${track}"]`)?.click();
+  if (track <= 1 && track !== S.synth) document.querySelector(`#synth-seg [data-synth="${track}"]`)?.click();
   tracksPanel?.selectTrack(track);   // the TRACKS panel shows the same track (2-3 MIDI, 4-7 drums)
 };
 // A view chosen on the Tracks (04 <view> <track>): the TRACKS panel shows the same view.
@@ -1550,10 +1682,17 @@ function bindUI() {
   $('#file-pack').addEventListener('change', (e) => { if (e.target.files[0]) openPackFile(e.target.files[0]); e.target.value = ''; });
   $('#file-syx').addEventListener('change', (e) => { if (e.target.files.length) openSyxFiles([...e.target.files]); e.target.value = ''; });
   $('#pack-save').addEventListener('click', savePack);
-  $('#pack-bank').addEventListener('click', () => download(bankSyx(S.pack), `${fileSafe(S.pack.name || 'Pack')} patches.syx`));
+  $('#pack-bank').addEventListener('click', () => { download(bankSyx(S.pack), `${fileSafe(S.pack.name || 'Pack')} patches.syx`); markSaved(editedSlots(S.pack)); });
+  $('#ed-syx').addEventListener('click', () => saveSlotSyx());
+  $('#ed-pack').addEventListener('click', savePack);
+  $('#tray-bank').addEventListener('click', () => saveUnsavedBank());
+  $('#tray-clear').addEventListener('click', () => {
+    const slots = unsavedSlots();
+    for (const i of slots) discardSlot(i);
+    if (slots.length) toast(`Discarded ${slots.length} unsaved edit${slots.length > 1 ? 's' : ''}. Open a patch and press Undo to bring its edit back.`, 5000);
+  });
   $('#pack-reset').addEventListener('click', async () => {
-    const n = editedSlots(S.pack).length;
-    if (!(await ask('Load the TracksGM pack?', n ? `This replaces the pack you have open, including ${n} changed patch(es). Download the pack first if you want to keep them.` : 'This replaces the pack you have open.', 'Load TracksGM'))) return;
+    if (!(await okToReplacePack('Load TracksGM'))) return;
     try { await loadDefault(); toast('TracksGM loaded.'); } catch (e) { toast(e.message, 6000); }
   });
 
@@ -1580,11 +1719,11 @@ function bindUI() {
     try { localStorage.setItem('circuitgm-patchworker-unlinked', '1'); } catch { /* private mode */ }
     toast('Unlinked. The Circuit Tracks keeps what it is playing; PatchWorker plays the browser synth.');
   });
-  document.querySelectorAll('#hw [data-synth]').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('#synth-seg [data-synth]').forEach((b) => b.addEventListener('click', () => {
     panic();
     S.synth = +b.dataset.synth;
     document.body.dataset.synth = S.synth;
-    document.querySelectorAll('#hw [data-synth]').forEach((x) => x.classList.toggle('on', x === b));
+    document.querySelectorAll('#synth-seg [data-synth]').forEach((x) => x.classList.toggle('on', x === b));
     paintStatus();
     tracksPanel?.paint();
     if (hwLive()) followTracks(S.synth);
@@ -1623,10 +1762,17 @@ async function start() {
   buildMod();
   bindUI();
   bindKeys();
+  // Show the Tracks-mode controls only with ?tracksmode; Offline shows the keyboard status instead.
+  $('#kb').hidden = TRACKS_MODE;
+  $('#link').hidden = !TRACKS_MODE;
+  $('#hear-ctl').hidden = !TRACKS_MODE;
+  $('#ed-hw').hidden = !TRACKS_MODE;
+  document.body.dataset.mode = TRACKS_MODE ? 'tracks' : 'offline';
+  if (!TRACKS_MODE) bindKb();
   buildKeys();
   tracksPanel = buildPanel($('#tracks'), {
     synth: () => S.synth,
-    chooseSynth: (i) => document.querySelector(`#hw [data-synth="${i}"]`)?.click(),
+    chooseSynth: (i) => document.querySelector(`#synth-seg [data-synth="${i}"]`)?.click(),
     noteOn: (n) => noteOn(n),
     noteOff: (n) => noteOff(n),
     octave: () => S.octave,
@@ -1644,6 +1790,7 @@ async function start() {
     sampleName: (i) => sampleEntry(i)?.name || (sampleEntry(i) ? `Sample ${i + 1}` : ''),
     audition: (i) => auditionSample(i),
     stopAudition,
+    hardware: TRACKS_MODE,
   });
   let face = 'editor';
   try { face = localStorage.getItem('circuitgm-patchworker-face') || 'editor'; } catch { /* private mode */ }
@@ -1659,7 +1806,18 @@ async function start() {
   } catch (e) {
     try { await loadDefault(); } catch (e2) { $('#pack-info').textContent = e2.message; return; }
   }
-  // If the browser already allows MIDI for this page, link without being asked.
+  if (!TRACKS_MODE) {
+    // Offline: listen for a MIDI keyboard without asking, if the browser already allows MIDI here
+    // and it was turned on before.
+    let wanted = false;
+    try { wanted = localStorage.getItem(KB_KEY) === '1'; } catch { /* private mode */ }
+    try {
+      const perm = await navigator.permissions?.query({ name: 'midi', sysex: false });
+      if (perm?.state === 'granted' && wanted) keys.enable();
+    } catch { /* the permission query is optional */ }
+    return;
+  }
+  // Tracks mode: if the browser already allows MIDI for this page, link without being asked.
   try {
     const perm = await navigator.permissions?.query({ name: 'midi', sysex: true });
     let unlinked = false;
@@ -1668,6 +1826,56 @@ async function start() {
   } catch { /* the permission query is optional */ }
 }
 
+// ------------------------------------------------------------------ MIDI keyboard (Offline)
+// Notes from any MIDI keyboard play the browser synth. Channel 3 (the Circuit Tracks' MIDI 1 track)
+// chooses Synth 1, channel 4 (MIDI 2) Synth 2; other channels play the synth chosen here.
+const KB_KEY = 'circuitgm-patchworker-midikeys';
+let remindedTracks = false;
+const pedalHeld = new Set();
+let pedalDown = false;
+function paintKb() {
+  const on = keys.enabled && keys.inputs.length > 0;
+  $('#kb-led').classList.toggle('on', on);
+  let text = 'No MIDI keyboard';
+  if (keys.error) text = keys.error;
+  else if (keys.enabled) {
+    const first = keys.tracks ? 'Circuit Tracks' : keys.inputs[0];
+    text = on ? `Keyboard: ${first}${keys.inputs.length > 1 ? ` +${keys.inputs.length - 1}` : ''}` : 'No MIDI keyboard found: plug one in';
+  }
+  $('#kb-text').textContent = text;
+  $('#kb-btn').hidden = keys.enabled;
+}
+keys.addEventListener('change', () => {
+  paintKb();
+  if (keys.tracks && !remindedTracks) {
+    remindedTracks = true;
+    toast('Using your Circuit Tracks as a keyboard. Select MIDI 1 or MIDI 2 on the Tracks, or turn its volume down, so you only hear the browser.', 9000);
+  }
+  if (!keys.tracks) remindedTracks = false;
+});
+keys.onNote = (on, note, velocity, ch) => {
+  if (on) {
+    const want = SYNTH_CHANNELS[ch];
+    if (want != null && want !== S.synth) document.querySelector(`#synth-seg [data-synth="${want}"]`)?.click();
+    pedalHeld.delete(note);
+    noteOn(note, velocity);
+  } else if (pedalDown) pedalHeld.add(note);
+  else noteOff(note);
+};
+keys.onSustain = (down) => {
+  pedalDown = down;
+  if (!down) { for (const n of pedalHeld) noteOff(n); pedalHeld.clear(); }
+};
+keys.onAllOff = () => { pedalHeld.clear(); panic(); };
+function bindKb() {
+  $('#kb-btn').addEventListener('click', async () => {
+    if (await keys.enable()) { try { localStorage.setItem(KB_KEY, '1'); } catch { /* private mode */ } }
+    paintKb();
+    if (keys.enabled && !keys.inputs.length) toast('MIDI is on, but no keyboard is connected yet. Plug one in: PatchWorker picks it up by itself.', 6000);
+  });
+  paintKb();
+}
+
 // Handy when testing from the console, and for the automated tests.
-window.patchworker = { S, link, audio, selectSlot, copyTo, setByte, toSyx, buildPack, undo, redo, setFace, storeOnTracks, openFromTracks, panel: () => tracksPanel };
+window.patchworker = { S, link, keys, unsavedSlots, TRACKS_MODE, audio, selectSlot, copyTo, setByte, toSyx, buildPack, undo, redo, setFace, storeOnTracks, openFromTracks, panel: () => tracksPanel };
 start();

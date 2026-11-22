@@ -273,7 +273,7 @@ export function buildPanel(root, api) {
     if (v.id === 'preset') {
       if (t.kind === 'synth') hint.textContent = st.copying
         ? 'Press the pad to duplicate the patch being edited onto. Esc cancels.'
-        : 'Press a pad to edit that patch; it plays while you hold the pad. An orange dot marks a patch changed since the pack was opened, a ring one fetched from the Circuit Tracks.';
+        : `Press a pad to edit that patch; it plays while you hold the pad. An orange dot marks a patch changed since the pack was opened${api.hardware ? ', a ring one fetched from the Circuit Tracks' : ''}.`;
       else if (t.kind === 'drum') hint.textContent = `Press a pad to choose ${t.label}'s sample and hear it. A project sets each drum's sample when the Projects view comes (step 3).`;
       else hint.textContent = 'MIDI tracks have no presets here.';
       if (t.kind === 'midi') { st.pads.forEach((p) => { p.className = 'pad off'; p.textContent = ''; delete p.dataset.note; delete p.dataset.slot; delete p.dataset.sample; }); } else paintPresetPads();
