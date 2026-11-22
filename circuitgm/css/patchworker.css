@@ -487,3 +487,5 @@ body.doc { display: block; overflow: auto; }
 .tray #tray-all { display: flex; flex-wrap: wrap; gap: 6px; }
 .tray #tray-all[hidden] { display: none; }
 .tray #tray-all .btn { flex: 1 1 auto; white-space: nowrap; }
+#song-pick { max-width: 14em; }
+@media (max-width: 760px) { #song-pick { max-width: 9em; } }

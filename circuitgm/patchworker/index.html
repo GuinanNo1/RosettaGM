@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="../css/patchworker.css?v=20261122b">
+<link rel="stylesheet" href="../css/patchworker.css?v=20261122c">
 </head>
 <body>
 <nav class="topnav" aria-label="RosettaGM">
@@ -53,7 +53,7 @@
     </li>
   </ul>
   <span class="navfill"></span>
-  <span class="navver" title="Version of this page. If you expect a newer one, refresh with Shift-reload; GitHub Pages can take about 10 minutes to update."><span class="nv-long">For testing · </span>v0.10</span>
+  <span class="navver" title="Version of this page. If you expect a newer one, refresh with Shift-reload; GitHub Pages can take about 10 minutes to update."><span class="nv-long">For testing · </span>v0.11</span>
   <a class="navhelp" href="help.html">Help</a>
   <div class="link" id="kb" title="Play the browser synth from a MIDI keyboard. A Circuit Tracks works too: play from its MIDI 1 track (channel 3, Synth 1) or MIDI 2 track (channel 4, Synth 2).">
     <span class="led" id="kb-led"></span>
@@ -166,7 +166,7 @@
     <div class="page" id="page-fx" hidden></div>
     <div class="page" id="page-mod" hidden></div>
 
-    <p class="foot">Version 0.10, for testing: keep a copy of your packs. The browser sound is an approximation of the Circuit Tracks; the hardware is the reference. Not affiliated with Novation or Focusrite. Synth engine adapted from <a href="https://github.com/namirsab/circuit-tracks-tools">circuit-tracks-tools</a> by Namir Sayed-Ahmad Baraza. <a href="help.html">Help</a> · <a href="https://github.com/GuinanNo1/RosettaGM/issues">Report a problem</a></p>
+    <p class="foot">Version 0.11, for testing: keep a copy of your packs. The browser sound is an approximation of the Circuit Tracks; the hardware is the reference. Not affiliated with Novation or Focusrite. Synth engine adapted from <a href="https://github.com/namirsab/circuit-tracks-tools">circuit-tracks-tools</a> by Namir Sayed-Ahmad Baraza. <a href="help.html">Help</a> · <a href="https://github.com/GuinanNo1/RosettaGM/issues">Report a problem</a></p>
   </main>
 </div>
 
@@ -194,6 +194,13 @@
           <option value="bass">Bass line</option><option value="arp">Arpeggio</option><option value="chord">Chords</option><option value="note">Long note</option>
         </select>
         <button type="button" id="loop" title="Play a loop while you edit (Space)">▶</button>
+      </span>
+    </div>
+    <div class="ctl" id="song-ctl" hidden>
+      <span class="eyebrow">Project</span>
+      <span class="seg">
+        <select id="song-pick" aria-label="Project to play" title="A project from the pack open here. Synth 1 and 2 play the pack's patches as you edit them."></select>
+        <button type="button" id="song-play" title="Play or stop the project (Space)" aria-label="Play project">▶</button>
       </span>
     </div>
     <label class="check" title="Keep notes sounding after you let go"><input type="checkbox" id="hold"> Hold</label>
@@ -226,6 +233,6 @@
 </dialog>
 <input type="file" id="file-pack" accept=".circuittrackspack,.zip" hidden>
 <input type="file" id="file-syx" accept=".syx" multiple hidden>
-<script type="module" src="../js/patchworker.js?v=20261122b"></script>
+<script type="module" src="../js/patchworker.js?v=20261122c"></script>
 </body>
 </html>

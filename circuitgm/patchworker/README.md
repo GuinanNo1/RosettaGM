@@ -1,4 +1,4 @@
-# CircuitGM Patch Editor (PatchWorker), for testing, v0.10
+# CircuitGM Patch Editor (PatchWorker), for testing, v0.11
 
 **Try it:** https://guinanno1.github.io/RosettaGM/circuitgm/patchworker/
 
@@ -20,7 +20,7 @@ Since v0.9 PatchWorker is **Offline only** (see the claude.ai Project note `plan
 - **Files:** open and download `.circuittrackspack` packs, single patches and banks as `.syx`. Samples and projects pass through untouched; a project's own copy of an edited patch can be updated when it still matched the pack.
 - **Undo / redo per patch**, hold-to-compare with the original, revert, copy to another slot, and a session (including what is unsaved) that survives closing the tab.
 - **TRACKS / EDITOR switch:** TRACKS shows a panel laid out like the Circuit Tracks (track buttons, views, 32 pads, transport), modelled on [Web Tracks](https://webtracks.namirsab.dev/). Preset view picks patches and drum samples; Note view plays the patch from the pads.
-- **Offline player (v0.10):** Projects view loads a project from the pack and ▶ / Space plays it through the browser synth, the pack's drum samples and the measured project mixer, with Synth 1 / 2 on the pack's patches as you edit them. Patterns view (pattern chains), Mixer view (mutes, levels, scenes and scene chains), Tempo view (tempo, swing, Tap) and the play head in Note view. Nothing is written back to the project yet (step editing and saving projects come next).
+- **Offline player (v0.10):** A **Project** picker and ▶ in the bottom bar (v0.11), or Projects view in the TRACKS panel, load a project from the pack, and ▶ / Space plays it through the browser synth, the pack's drum samples and the measured project mixer, with Synth 1 / 2 on the pack's patches as you edit them. Patterns view (pattern chains), Mixer view (mutes, levels, scenes and scene chains), Tempo view (tempo, swing, Tap) and the play head in Note view. Nothing is written back to the project yet (step editing and saving projects come next).
 
 ## How it is built
 

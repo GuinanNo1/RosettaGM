@@ -27,8 +27,21 @@ const fs = require('fs');
     check(await p.$$eval('.pad.project.filled', (x) => x.length) === 0, `${name}: TracksGM has no projects to play`);
     check((await p.isDisabled('.tbtn.play')), `${name}: Play is off until a project is loaded`);
 
+    check(await p.isHidden('#song-ctl'), `${name}: no Project picker for a pack without projects`);
     await p.setInputFiles('#file-pack', packFile);
     await p.waitForFunction(() => window.patchworker.S.pack.fileName !== 'TracksGM_v1.circuittrackspack');
+
+    // The bottom bar's Project picker and ▶ play a song straight from the editor.
+    await p.click('#face [data-face=editor]');
+    await p.waitForSelector('#song-ctl:not([hidden])');
+    const opts = await p.$$eval('#song-pick option', (o) => o.length);
+    check(opts > 0, `${name}: the bottom bar offers the pack's projects (${opts})`);
+    await p.click('#song-play');
+    await p.waitForFunction(() => window.patchworker.proj.playing, null, { timeout: 8000 });
+    check((await p.innerText('#song-play')) === '■' && await p.evaluate(() => window.patchworker.proj.entry.slot === +document.querySelector('#song-pick').value), `${name}: its ▶ loads and plays the chosen project`);
+    await p.keyboard.press('Space');
+    check(!(await p.evaluate(() => window.patchworker.proj.playing)) && (await p.innerText('#song-play')) === '▶', `${name}: Space stops it from the editor`);
+    await p.click('#face [data-face=tracks]');
     await p.click('.view[data-view=projects]');
     const filled = await p.$$eval('.pad.project.filled', (ps) => ps.map((x) => +x.dataset.project));
     check(filled.length > 0, `${name}: the pack's projects light up (${filled.join(', ')})`);

@@ -65,7 +65,7 @@ const proj = new ProjectPlayer({
   patchBytes: (slot) => (S.pack.patches[slot] ??= initPatch()),
   patchName: (slot) => (S.pack.patches[slot] ? getName(S.pack.patches[slot]) : 'Initial Patch'),
   original: (slot) => S.pack.original[slot],
-  onChange: () => tracksPanel?.paint(),
+  onChange: () => { tracksPanel?.paint(); paintSong(); },
   onStep: (pos) => tracksPanel?.step(pos),
 });
 let ctx = null;
@@ -925,6 +925,7 @@ async function loadPackBuffer(buffer, fileName, { remember = true, edits = null 
   panic();
   proj.unload();
   tracksPanel?.projectLoaded();
+  songList = null;
   S.pack = pack;
   S.undo.clear();
   if (edits) {
@@ -939,6 +940,7 @@ async function loadPackBuffer(buffer, fileName, { remember = true, edits = null 
   if (remember) { await session.savePack(buffer, fileName); await session.saveEdits(null); }
   selectSlot(edits?.slot ?? 0, { send: false });
   paintPack();
+  paintSong();
 }
 
 function saveSession() {
@@ -1428,8 +1430,33 @@ async function chooseSlot(i) {
   selectSlot(i);
   if (proj.loaded) proj.setPatchSlot(S.synth, i);   // as the Circuit Tracks' Preset view: that synth now plays it
 }
+// The Project picker and ▶ in the bottom bar: shown when the open pack has projects, so a song can
+// be played from the editor without going to the TRACKS panel.
+let songList = null;   // the pack the picker was filled for
+function paintSong() {
+  if (!S.pack) return;
+  const list = packProjects(S.pack).filter((e) => !e.empty);
+  $('#song-ctl').hidden = !list.length;
+  const pick = $('#song-pick');
+  if (songList !== S.pack) {
+    songList = S.pack;
+    pick.replaceChildren(...list.map((e) => h('option', { value: e.slot, text: `${e.slot + 1} ${e.name || '(no name)'}` })));
+  }
+  if (proj.loaded && proj.pack === S.pack) pick.value = proj.entry.slot;
+  const btn = $('#song-play');
+  btn.textContent = proj.playing ? '■' : '▶';
+  btn.classList.toggle('on', proj.playing);
+  btn.setAttribute('aria-label', proj.playing ? 'Stop project' : 'Play project');
+}
+async function playSong() {
+  if (proj.playing) { proj.stop(); return; }
+  const slot = +$('#song-pick').value;
+  if (!proj.loaded || proj.pack !== S.pack || proj.entry.slot !== slot) await loadProject(slot, { quiet: true });
+  if (proj.loaded) proj.play();
+}
+
 // Load a project into the player; the editor follows the patch the chosen synth plays.
-async function loadProject(slot) {
+async function loadProject(slot, { quiet = false } = {}) {
   try {
     if (!(await proj.load(S.pack, slot))) { toast('That project slot is empty.'); return; }
   } catch (e) { toast(`The project could not be read: ${e.message}`, 6000); return; }
@@ -1437,7 +1464,8 @@ async function loadProject(slot) {
   $('#bpm').value = proj.tempo;
   const want = proj.patchSlots[S.synth];
   if (want !== S.slot) await chooseSlot(want);
-  toast(`Project ${slot + 1} "${proj.song.name}" loaded: press ▶ or Space to play it.`, 4000);
+  paintSong();
+  if (!quiet) toast(`Project ${slot + 1} "${proj.song.name}" loaded: press ▶ or Space to play it.`, 4000);
 }
 
 // Offline: leaving a patch with unsaved edits asks once whether to save it. Not again for the same
@@ -1593,8 +1621,8 @@ function bindKeys() {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); return; }
     if (e.metaKey || e.ctrlKey || e.altKey || typing(e)) return;
     const key = e.key.toLowerCase();
-    // Space: the project while one is loaded and playing or the TRACKS panel shows; otherwise the loop.
-    if (key === ' ' && (e.target.tagName !== 'BUTTON' || e.target.closest('#tracks'))) { e.preventDefault(); if (proj.loaded && (proj.playing || document.body.dataset.face === 'tracks')) proj.toggle(); else toggleLoop(); return; }
+    // Space: the project once one is loaded (Project in the bottom bar, or Projects view); otherwise the loop.
+    if (key === ' ' && (e.target.tagName !== 'BUTTON' || e.target.closest('#tracks'))) { e.preventDefault(); if (proj.loaded) { stopLoop(); proj.toggle(); } else toggleLoop(); return; }
     if (key === 'escape') { panic(); stopLoop(); if (proj.playing) proj.stop(); return; }
     if (e.repeat) return;
     if (key === 'z') return setOctave(S.octave - 1);
@@ -1799,6 +1827,8 @@ function bindUI() {
   $('#bpm').addEventListener('change', (e) => { if (synth) { synth.bpm = clamp(+e.target.value || 120, 40, 240); synth.refresh(); } if (loopTimer) { stopLoop(); toggleLoop(); } if (proj.loaded) { proj.setTempo(+e.target.value || 120); tracksPanel?.paint(); } });
   $('#hold').addEventListener('change', (e) => { S.hold = e.target.checked; if (!S.hold) panic(); });
   $('#loop').addEventListener('click', toggleLoop);
+  $('#song-play').addEventListener('click', playSong);
+  $('#song-pick').addEventListener('change', async (e) => { const was = proj.playing; await loadProject(+e.target.value, { quiet: was }); if (was && proj.loaded && !proj.playing) proj.play(); });
   // Keyboard size (small / medium / large), remembered between visits.
   const setKeySize = (size) => {
     document.body.dataset.keys = size;
