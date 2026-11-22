@@ -52,9 +52,35 @@ const fakeKeys = () => {
   // Edit slot 1, then slot 3.
   await page.evaluate(() => { const w = window.patchworker; w.setByte(70, 20); });
   check(/edited/i.test(await page.innerText('#ed-state')) && await page.isVisible('#ed-save'), 'an edit shows Edited · not saved with Save .syx and Download pack');
+  // Leaving a changed patch asks once.
+  const dlgOpen = () => page.evaluate(() => document.querySelector('#dlg').open);
   await page.click('#patchlist li[data-slot="2"]');
-  check(!(await page.evaluate(() => document.querySelector('#dlg').open)), 'choosing another patch asks nothing');
+  await page.waitForSelector('#dlg[open]');
+  check(/Save your changes to "Grand Piano"/.test(await page.innerText('#dlg-title')) && (await page.innerText('#dlg-ok')) === 'Save .syx', 'leaving a changed patch asks once whether to save it');
+  await page.click('#dlg-alt2');   // Not now
+  await page.waitForTimeout(100);
+  check(await page.evaluate(() => window.patchworker.S.slot === 2), 'Not now moves on, the edit stays unsaved');
+  await page.click('#patchlist li[data-slot="0"]');
+  await page.waitForTimeout(100);
+  check(!(await dlgOpen()), 'leaving an unchanged patch asks nothing');
+  await page.click('#patchlist li[data-slot="2"]');
+  await page.waitForTimeout(100);
+  check(!(await dlgOpen()) && await page.evaluate(() => window.patchworker.S.slot === 2), 'the same unsaved patch is not asked about twice');
   await page.evaluate(() => window.patchworker.setByte(70, 21));
+  await page.click('#patchlist li[data-slot="0"]');
+  await page.waitForSelector('#dlg[open]');
+  await page.click('#dlg-cancel');
+  await page.waitForTimeout(100);
+  check(await page.evaluate(() => window.patchworker.S.slot === 2), 'Stay on this patch stays');
+  await page.click('#patchlist li[data-slot="0"]');
+  await page.waitForSelector('#dlg[open]');
+  await page.check('#dlg-body input[type=checkbox]');
+  await page.click('#dlg-alt2');
+  await page.waitForTimeout(100);
+  check(await page.evaluate(() => window.patchworker.S.slot === 0) && !(await page.isChecked('#tray-ask')), "Don't ask again turns it off (the tray box shows it)");
+  await page.click('#patchlist li[data-slot="2"]');
+  await page.waitForTimeout(100);
+  check(!(await dlgOpen()), 'then nothing asks');
   check((await page.innerText('#tray-count')) === '2', 'both edits are in the tray');
   await page.click('#tray summary');
   const rows = await page.$$eval('#tray-list li', (ls) => ls.map((l) => l.querySelector('.n').textContent));
@@ -115,6 +141,16 @@ const fakeKeys = () => {
   dl = page.waitForEvent('download');
   await page.click('#dlg-ok');
   check((await dl).suggestedFilename().endsWith('.circuittrackspack') && (await page.innerText('#tray-count')) === '0', 'Download pack empties the tray');
+
+  // The tray box turns the question back on.
+  await page.evaluate(() => { document.querySelector('#tray').open = true; });
+  await page.check('#tray-ask');
+  await page.evaluate(() => window.patchworker.setByte(70, 31));
+  await page.click('#patchlist li[data-slot="5"]');
+  await page.waitForSelector('#dlg[open]');
+  dl = page.waitForEvent('download');
+  await page.click('#dlg-ok');
+  check((await dl).suggestedFilename().endsWith('.syx') && await page.evaluate(() => window.patchworker.S.slot === 5 && window.patchworker.unsavedSlots().length === 0), 'with it back on, Save .syx saves the patch and moves on');
 
   // --- MIDI keyboard
   await page.click('#kb-btn');

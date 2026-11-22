@@ -1409,8 +1409,36 @@ async function leaveEdited(cancellable) {
 // Choosing a patch here (patch list, Preset pads).
 async function chooseSlot(i) {
   if (i === S.slot) return;
-  if (hwLive() && !(await leaveEdited(true))) return;
+  if (hwLive() && !(await leaveEdited(true))) return;   // (Tracks mode)
+  // Only wait when there is something to ask: pads select at once, so the note they play survives.
+  if (!TRACKS_MODE && needSaveAsk() && !(await askSaveOnLeave())) return;
   selectSlot(i);
+}
+
+// Offline: leaving a patch with unsaved edits asks once whether to save it. Not again for the same
+// patch until it changes again, and never if "Don't ask again" was ticked (the tray has a box to
+// turn it back on). Resolves false to stay on the patch.
+const ASK_KEY = 'circuitgm-patchworker-ask-leave';
+const askedAt = new Map();   // slot -> S.pack.at[slot] when last asked
+const askOnLeave = () => { try { return localStorage.getItem(ASK_KEY) !== 'off'; } catch { return true; } };
+function setAskOnLeave(on) {
+  try { localStorage.setItem(ASK_KEY, on ? 'on' : 'off'); } catch { /* private mode */ }
+  $('#tray-ask').checked = on;
+}
+const needSaveAsk = () => askOnLeave() && slotUnsaved(S.slot) && askedAt.get(S.slot) !== (S.pack.at?.[S.slot] ?? 0);
+async function askSaveOnLeave() {
+  const i = S.slot;
+  askedAt.set(i, S.pack.at?.[i] ?? 0);
+  const never = h('input', { type: 'checkbox' });
+  const choice = await ask(`Save your changes to "${getName(S.bytes)}"?`, [
+    `You changed slot ${pad3(i + 1)} and haven't saved it yet. If you don't save now, it stays in Unsaved edits (kept in this browser) until you download it or load another pack.`,
+    h('label', { class: 'check' }, never, ' Don\'t ask again (the Unsaved edits tray can turn this back on)'),
+  ], 'Save .syx', { alt: 'Download pack', alt2: 'Not now', cancel: 'Stay on this patch' });
+  if (never.checked) setAskOnLeave(false);
+  if (choice === false) { askedAt.delete(i); return false; }
+  if (choice === true) saveSlotSyx(i);
+  else if (choice === 'alt') { await savePack(); }
+  return true;
 }
 
 // Find out what a synth on the Tracks is playing and edit that patch if the pack has it.
@@ -1686,6 +1714,8 @@ function bindUI() {
   $('#ed-syx').addEventListener('click', () => saveSlotSyx());
   $('#ed-pack').addEventListener('click', savePack);
   $('#tray-bank').addEventListener('click', () => saveUnsavedBank());
+  $('#tray-ask').checked = askOnLeave();
+  $('#tray-ask').addEventListener('change', (e) => setAskOnLeave(e.target.checked));
   $('#tray-clear').addEventListener('click', () => {
     const slots = unsavedSlots();
     for (const i of slots) discardSlot(i);
