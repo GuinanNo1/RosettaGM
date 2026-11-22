@@ -12,7 +12,7 @@ Each tool page shows its version next to its status badge, so you can tell which
 | MIDI2Rhythm | 0.21 | For testing · v0.21 |
 | Circuit2MIDI | 0.7 | alpha 0.7 |
 | CircuitTrim | 0.5 | alpha 0.5 |
-| PatchWorker | 0.9 | For testing · v0.9 (top bar) |
+| PatchWorker | 0.10 | For testing · v0.10 (top bar) |
 
 Numbering started on 14 Nov 2026. Earlier changes are grouped roughly:
 
@@ -54,6 +54,7 @@ See `midi2rhythm/help.html` (Versions). 0.1–0.6 on 14 Nov 2026; 0.7 (15 Nov): 
 - 0.1 (10 Nov 2026): first alpha.
 
 ## PatchWorker
+- **0.10** (22 Nov 2026): the Offline player (phase 2 of `plan-patchworker-tracks-first.md`, `js/pw/project.js`). TRACKS panel: Projects view loads one of the pack's 64 projects; ▶ / Space plays it (looping) through the browser synth, the pack's drum samples and the set 7 mixer; Synth 1 / 2 play the pack's patches live, so edits are heard in the song, and the editor follows the patch the chosen synth plays (choosing another patch gives that synth the new one; not saved in the project). Patterns view: each track's pattern chain (click, Shift-click to chain; two pages). Mixer view: mutes (top row), scenes and scene chains (bottom rows), level sliders. Tempo view: tempo, swing, Tap. Note view: the playing pattern's 16 steps with the play head; drum tracks get pads that play their sample. `js/pack.js` exports `readProject` and `isEmpty`.
 - **0.9** (22 Nov 2026): Offline only (plan `plan-patchworker-tracks-first.md`). The Circuit Tracks link (Live, Get, Play on Tracks, Save to Tracks, Patches from the Circuit Tracks, Hear on) is hidden; `?tracksmode` still shows it, for development. New: Saved / Edited · not saved status with Save .syx and Download pack; Unsaved edits tray (Open, .syx, Discard, Save all as .syx bank, Discard all); one warning, before Open pack… or Load TracksGM replaces unsaved edits (offers a .syx bank first); no more confirmations for Initial Patch, Revert or Duplicate to pad (Undo instead); leaving a changed, unsaved patch asks once (Save .syx, Download pack, Not now, Stay), not again for that patch until it changes, with Don't ask again and a tray box to turn it back on; MIDI keyboard input (any keyboard; channel 3 = Synth 1, channel 4 = Synth 2, as the Circuit Tracks' MIDI 1 / MIDI 2 tracks; sustain pedal) with a reminder to use MIDI 1 / 2 when a Circuit Tracks is the keyboard; Synth 1 / Synth 2 switch always shown.
 - **0.8** (21 Nov 2026): menu lists the Ableton Move tools (Devices › Ableton Move, MoveGM, MIDI2Move). Tool unchanged.
 - **0.7** (21 Nov 2026): CircuitGM moved into RosettaGM (now guinanno1.github.io/RosettaGM/circuitgm/); menu brand RosettaGM, new Devices group, "Circuit MIDI Converters" renamed "MIDI Converters". Tool unchanged.

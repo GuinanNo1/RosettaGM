@@ -56,7 +56,7 @@
 <main class="docwrap">
   <p><a href="./">← Back to PatchWorker</a></p>
   <h1>PatchWorker help</h1>
-  <p>PatchWorker edits the synth patches of a Novation Circuit Tracks, with no hardware needed: the page plays each patch itself. It opens with the <a href="../tracksgm/">TracksGM</a> pack, and what you make goes out as <code>.syx</code> patches or a whole <code>.circuittrackspack</code> to load with Novation Components. Nothing is uploaded: files stay on your computer.</p>
+  <p>PatchWorker edits the synth patches of a Novation Circuit Tracks, with no hardware needed: the page plays each patch itself. It opens with the <a href="../tracksgm/">TracksGM</a> pack, plays the projects in a pack so you can hear patches in context, and what you make goes out as <code>.syx</code> patches or a whole <code>.circuittrackspack</code> to load with Novation Components. Nothing is uploaded: files stay on your computer.</p>
   <p>Since v0.9 PatchWorker works offline only: the browser is the synth, and a MIDI keyboard (a Circuit Tracks too) just plays it. Editing a Circuit Tracks directly, as Components does, may come back later as a separate mode.</p>
 
   <h2 id="quickstart">Quick start</h2>
@@ -92,11 +92,17 @@
   <p>The eight <b>Macros</b> sit above every page. Their positions are saved in the patch. Click a macro to select it; the Modulation page then shows its destinations. The line under each knob names what it controls.</p>
   <p>Values shown with <code>~</code> (Hz, ms, dB) are measured from a real Circuit Tracks, so "Frequency ~650 Hz" is what the hardware does at that setting. A <code>Sync</code> box swaps a rate knob to tempo-locked note lengths.</p>
 
-  <h2 id="tracks">The TRACKS panel</h2>
-  <p>The <b>TRACKS / EDITOR</b> switch at the left of the patch bar swaps the editor's pages for a panel laid out like the Circuit Tracks: track buttons, view buttons and 32 pads. The patch bar, status line and macros stay. The panel is being built in steps; views not built yet say so.</p>
+  <h2 id="tracks">The TRACKS panel and playing projects</h2>
+  <p>The <b>TRACKS / EDITOR</b> switch at the left of the patch bar swaps the editor's pages for a panel laid out like the Circuit Tracks: track buttons, view buttons, 32 pads and ▶. The patch bar, status line and macros stay. Views not built yet say so.</p>
+  <p>To hear your patches in a song, open a pack that has projects (TracksGM has none), go to <b>Projects</b>, press a project, then ▶ or <code>Space</code>. It loops until you stop it (▶ again, <code>Space</code> or <code>Esc</code>), and keeps playing if you switch to EDITOR. Synth 1 and Synth 2 play the pack's patches as you edit them, so every change is heard in the song. The editor opens the patch the chosen synth plays; choosing Synth 1 / Synth 2 (the patch bar, the track buttons, or a MIDI keyboard on channel 3 / 4) switches to that synth's patch. Choosing another patch, in the list or in Preset view, gives that synth the new patch to play, as the Circuit Tracks' Preset view does. Nothing is saved in the project: these are ways of listening for now.</p>
+  <p>The sound is the browser synth, the pack's own drum samples and the project's mixer, reverb, delay, drum settings and sidechain as measured on a real Circuit Tracks. MIDI 1 and MIDI 2, which play other gear from the Circuit Tracks, are sketched with a simple tone.</p>
   <table>
-    <tr><th>Note</th><td>Synth 1 or 2: the bottom two rows of pads are a keyboard that plays the patch, using the octave and velocity at the bottom of the page.</td></tr>
-    <tr><th>Preset</th><td>Synth 1 or 2: the pack's 128 patches as four pages of 32 pads. The lit pad is the patch being edited; press a pad to edit that patch (it plays while you hold the pad). An orange dot marks a changed patch, as in the patch list. <b>Duplicate to pad…</b> then a pad copies the patch being edited there and opens the copy for editing; Undo brings back what was there. <b>Revert</b> puts back the pack's version.<br>Drum 1 to 4: the pack's 64 samples as two pages. Press a pad to choose the drum's sample and hear it.</td></tr>
+    <tr><th>Note</th><td>Top two rows: the 16 steps of the pattern the track is playing (lit where a step plays something), with the play head. Synth 1 or 2: the bottom two rows are a keyboard that plays the patch, using the octave and velocity at the bottom of the page. Drum 1 to 4: the bottom-left pads play the drum's sample.</td></tr>
+    <tr><th>Preset</th><td>Synth 1 or 2: the pack's 128 patches as four pages of 32 pads. The lit pad is the patch being edited; press a pad to edit that patch (it plays while you hold the pad, and the synth plays it in the project). An orange dot marks a changed patch, as in the patch list. <b>Duplicate to pad…</b> then a pad copies the patch being edited there and opens the copy for editing; Undo brings back what was there. <b>Revert</b> puts back the pack's version.<br>Drum 1 to 4: the pack's 64 samples as two pages. Press a pad to choose the drum's sample and hear it; loading a project sets each drum to the project's sample.</td></tr>
+    <tr><th>Projects</th><td>The pack's 64 project slots as two pages; saved projects are blue, the loaded one white.</td></tr>
+    <tr><th>Patterns</th><td>One column per track, patterns 1 to 4 down the rows (the second page has 5 to 8). Lit pads are the patterns each track plays, and a white ring shows the one playing now. Click a pattern to play it; Shift-click another to chain the patterns between them. This replaces the scene until you choose a scene again.</td></tr>
+    <tr><th>Mixer</th><td>Top row: mute each track. Bottom two rows: the 16 scenes (white: saved in the project; green: in the scene chain; pulsing: playing). Click a scene to play it; Shift-click another to chain the scenes between them. The sliders under the pads set each track's level (the Circuit Tracks' default is 100).</td></tr>
+    <tr><th>Tempo</th><td>Tempo (40 to 240 BPM, also the <b>Tempo</b> box at the bottom), swing (20 to 80%) and <b>Tap</b>.</td></tr>
   </table>
 
   <h2 id="tracks-later">Editing a Circuit Tracks directly</h2>
@@ -131,7 +137,7 @@
     <li><b>A MIDI keyboard plays nothing:</b> check that the top right says <b>Keyboard:</b> and its name. Safari has no Web MIDI. For a Circuit Tracks, switch on MIDI note Tx in its Setup view.</li>
     <li><b>You hear the Circuit Tracks as well as the browser:</b> play from its MIDI 1 or MIDI 2 track, or turn its volume down.</li>
   </ul>
-  <p>PatchWorker is v0.9 (for testing): keep copies of your packs, and please report problems on <a href="https://github.com/GuinanNo1/RosettaGM/issues">GitHub</a>. Not affiliated with Novation or Focusrite.</p>
+  <p>PatchWorker is v0.10 (for testing): keep copies of your packs, and please report problems on <a href="https://github.com/GuinanNo1/RosettaGM/issues">GitHub</a>. Not affiliated with Novation or Focusrite.</p>
 </main>
 </body>
 </html>

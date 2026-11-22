@@ -51,7 +51,7 @@ export async function loadPack(buffer, fileName = '') {
   return pack;
 }
 
-function readProject(product, buf) {
+export function readProject(product, buf) {
   if (product === 'circuit-rhythm') return parseRhythm(buf);
   const d = new Uint8Array(buf);
   const magic = String.fromCharCode(d[0], d[1], d[2], d[3]);
@@ -64,7 +64,7 @@ function readProject(product, buf) {
 }
 
 // A project is empty when it is Components' blank slot, or when nothing in it plays.
-function isEmpty(product, proj) {
+export function isEmpty(product, proj) {
   if (proj.empty) return true;
   for (const pats of proj.patterns) for (const p of pats) for (const s of p.steps) {
     if (product === 'circuit-rhythm' ? s.mask : (s.active || s.mask)) return false;

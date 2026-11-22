@@ -409,7 +409,48 @@ body.doc { display: block; overflow: auto; }
 .tracks[data-copying=yes] .pad.preset.target { animation: padblink 1s steps(2, start) infinite; }
 @keyframes padblink { 50% { background: color-mix(in srgb, var(--pc) 42%, #2a2a36); } }
 @media (prefers-reduced-motion: reduce) { .tracks[data-copying=yes] .pad.preset.target { animation: none; outline: 1px dashed var(--pc); outline-offset: -3px; } }
+/* Offline player views (0.10). Track colours: --c per kind. */
+.pad.synth, .pad.s1 { --c: var(--accent); }
+.pad.midi { --c: var(--midi); }
+.pad.drum { --c: var(--drum); }
+.pad.step.on { background: color-mix(in srgb, var(--c, var(--accent)) 55%, #262632); }
+.pad.step.outside { background: #1c1c25; box-shadow: none; }
+.pad.step.play { box-shadow: inset 0 0 0 2px #fff; }
+.pad.step.on.play { background: color-mix(in srgb, var(--c, var(--accent)) 85%, #fff); }
+.pad.drumhit { cursor: pointer; background: color-mix(in srgb, var(--drum) 45%, #2a2a36); color: #12111a; }
+.pad.drumhit.down { background: var(--drum); }
+.pad.project { cursor: default; font: 600 .72rem var(--mono); color: #5d5d72; background: #22222c; }
+.pad.project.filled { cursor: pointer; color: #cfe3ff; background: color-mix(in srgb, #5b8cff 32%, #23232e); }
+.pad.project.lit { background: #e9e9f2; color: #12111a; box-shadow: 0 0 14px #ffffff70; }
+.pad.project.playing { animation: padpulse 1s ease-in-out infinite; }
+.pad.pattern { cursor: pointer; font: 600 .72rem var(--mono); color: color-mix(in srgb, var(--c) 45%, #8a8aa0); background: color-mix(in srgb, var(--c) 9%, #22222c); }
+.pad.pattern.has { background: color-mix(in srgb, var(--c) 26%, #23232e); color: color-mix(in srgb, var(--c) 60%, #d8d8e6); }
+.pad.pattern.sel { background: color-mix(in srgb, var(--c) 70%, #2a2a36); color: #12111a; }
+.pad.pattern.now { box-shadow: inset 0 0 0 2px #fff, 0 0 12px color-mix(in srgb, var(--c) 70%, transparent); }
+.pad.mute { cursor: pointer; font: 600 .66rem var(--head); color: #12111a; background: color-mix(in srgb, var(--c) 75%, #2a2a36); }
+.pad.mute[data-mute="0"] { --c: var(--s1); }
+.pad.mute[data-mute="1"] { --c: var(--s2); }
+.pad.mute.muted { background: color-mix(in srgb, var(--c) 14%, #1f1f29); color: #8a8aa0; }
+.pad.scene { cursor: pointer; font: 600 .72rem var(--mono); color: #6d6d82; background: #23232e; }
+.pad.scene.stored { background: #4a4a5e; color: #e9e9f2; }
+.pad.scene.chain { background: color-mix(in srgb, var(--s2) 45%, #2a2a36); color: #12111a; }
+.pad.scene.sel { box-shadow: inset 0 0 0 2px var(--s2); }
+.pad.scene.now { background: var(--s2); color: #12111a; animation: padpulse 1s ease-in-out infinite; }
+@keyframes padpulse { 50% { filter: brightness(.7); } }
+@media (prefers-reduced-motion: reduce) { .pad.scene.now, .pad.project.playing { animation: none; } }
+.tbtn.play.on { color: #fff; background: color-mix(in srgb, var(--s2) 35%, #24242f); }
+.mixbox { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 7px; padding: 8px 10px 0; }
+.mixbox .lvl { display: grid; gap: 3px; justify-items: center; font: 600 .66rem var(--head); color: var(--muted); }
+.mixbox .lvl input { width: 100%; }
+.mixbox .lvl output { font: 400 .72rem var(--mono); color: var(--lcd-ink); }
+.tempobox { display: grid; gap: 10px; padding: 14px; background: #15151d; border-radius: 10px; box-shadow: inset 0 2px 6px #000c; }
+.bigbpm { margin: 0; font: 600 2.6rem var(--mono); color: var(--lcd-ink); text-align: center; }
+.tempobox .trow { display: grid; grid-template-columns: 4.5em minmax(0, 1fr) auto auto; gap: 10px; align-items: center; font-size: .86rem; color: var(--muted); }
+.tempobox .trow input[type=number] { width: 4.5em; }
+.tempobox output { font: 400 .8rem var(--mono); color: var(--lcd-ink); min-width: 3em; }
 @media (max-width: 760px) {
+  .mixbox { gap: 4px; padding: 6px 6px 0; }
+  .mixbox .lvl span { font-size: .58rem; }
   .panel-mid { grid-template-columns: 1fr; }
   .views { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .view.project { margin-top: 0; }

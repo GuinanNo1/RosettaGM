@@ -8,8 +8,9 @@ import { PatchSynth, waveTable, lfoShape, envelopePoints } from './pw/engine.js?
 import { TracksLink, VIEW_CODES } from './pw/midi.js?v=20261114s';
 import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, projectsFollowing, download,
   fileSafe, session, PATCH_SLOTS } from './pw/packio.js?v=20261114s';
-import { buildPanel } from './pw/panel.js?v=20261122a';
+import { buildPanel } from './pw/panel.js?v=20261122b';
 import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
+import { ProjectPlayer, packProjects } from './pw/project.js?v=20261122b';
 
 const DEFAULT_PACK = '../tracksgm/TracksGM_v1.circuittrackspack';
 // PatchWorker is Offline only for now (plan-patchworker-tracks-first.md, 22 Nov 2026): the browser is
@@ -59,6 +60,14 @@ const S = {
 };
 const link = new TracksLink();
 const keys = new MidiKeys();
+// The Offline player: projects from the pack, played with the pack's patches (as edited here).
+const proj = new ProjectPlayer({
+  patchBytes: (slot) => (S.pack.patches[slot] ??= initPatch()),
+  patchName: (slot) => (S.pack.patches[slot] ? getName(S.pack.patches[slot]) : 'Initial Patch'),
+  original: (slot) => S.pack.original[slot],
+  onChange: () => tracksPanel?.paint(),
+  onStep: (pos) => tracksPanel?.step(pos),
+});
 let ctx = null;
 let synth = null;
 
@@ -145,6 +154,7 @@ let sendTimer = null;
 function changed(addr) {
   (S.pack.at ??= {})[S.slot] = Date.now();
   synth?.refresh();
+  proj.patchChanged(S.slot);
   repaint(addr);
   paintSlot(S.slot);
   paintBar();
@@ -774,6 +784,7 @@ function setSlotBytes(i, bytes) {
   u.future.length = 0;
   u.key = null;
   S.pack.patches[i].set(bytes);
+  proj.patchChanged(i);
   if (i === S.slot) { synth?.refresh(); repaint(); paintBar(); }
   paintSlot(i);
 }
@@ -912,6 +923,8 @@ function slotSelect(selected) {
 async function loadPackBuffer(buffer, fileName, { remember = true, edits = null } = {}) {
   const pack = await openPack(buffer, fileName);
   panic();
+  proj.unload();
+  tracksPanel?.projectLoaded();
   S.pack = pack;
   S.undo.clear();
   if (edits) {
@@ -1413,6 +1426,18 @@ async function chooseSlot(i) {
   // Only wait when there is something to ask: pads select at once, so the note they play survives.
   if (!TRACKS_MODE && needSaveAsk() && !(await askSaveOnLeave())) return;
   selectSlot(i);
+  if (proj.loaded) proj.setPatchSlot(S.synth, i);   // as the Circuit Tracks' Preset view: that synth now plays it
+}
+// Load a project into the player; the editor follows the patch the chosen synth plays.
+async function loadProject(slot) {
+  try {
+    if (!(await proj.load(S.pack, slot))) { toast('That project slot is empty.'); return; }
+  } catch (e) { toast(`The project could not be read: ${e.message}`, 6000); return; }
+  tracksPanel?.projectLoaded();
+  $('#bpm').value = proj.tempo;
+  const want = proj.patchSlots[S.synth];
+  if (want !== S.slot) await chooseSlot(want);
+  toast(`Project ${slot + 1} "${proj.song.name}" loaded: press ▶ or Space to play it.`, 4000);
 }
 
 // Offline: leaving a patch with unsaved edits asks once whether to save it. Not again for the same
@@ -1568,8 +1593,9 @@ function bindKeys() {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); return; }
     if (e.metaKey || e.ctrlKey || e.altKey || typing(e)) return;
     const key = e.key.toLowerCase();
-    if (key === ' ' && e.target.tagName !== 'BUTTON') { e.preventDefault(); toggleLoop(); return; }
-    if (key === 'escape') { panic(); stopLoop(); return; }
+    // Space: the project while one is loaded and playing or the TRACKS panel shows; otherwise the loop.
+    if (key === ' ' && (e.target.tagName !== 'BUTTON' || e.target.closest('#tracks'))) { e.preventDefault(); if (proj.loaded && (proj.playing || document.body.dataset.face === 'tracks')) proj.toggle(); else toggleLoop(); return; }
+    if (key === 'escape') { panic(); stopLoop(); if (proj.playing) proj.stop(); return; }
     if (e.repeat) return;
     if (key === 'z') return setOctave(S.octave - 1);
     if (key === 'x') return setOctave(S.octave + 1);
@@ -1757,6 +1783,7 @@ function bindUI() {
     paintStatus();
     tracksPanel?.paint();
     if (hwLive()) followTracks(S.synth);
+    if (proj.loaded && proj.patchSlots[S.synth] !== S.slot) chooseSlot(proj.patchSlots[S.synth]);   // edit what that synth plays
   }));
   $('#hw-send').addEventListener('click', () => { if (hwSend()) toast(`Playing "${getName(S.bytes)}" on Synth ${S.synth + 1} (not saved on the Circuit Tracks).`); });
   $('#hw-get').addEventListener('click', getFromTracks);
@@ -1768,8 +1795,8 @@ function bindUI() {
   $('#oct-down').addEventListener('click', () => setOctave(S.octave - 1));
   $('#oct-up').addEventListener('click', () => setOctave(S.octave + 1));
   $('#vel').addEventListener('input', (e) => { S.velocity = +e.target.value; $('#vel-out').textContent = S.velocity; });
-  $('#vol').addEventListener('input', (e) => synth?.setVolume(e.target.value / 100));
-  $('#bpm').addEventListener('change', (e) => { if (synth) { synth.bpm = clamp(+e.target.value || 120, 40, 240); synth.refresh(); } if (loopTimer) { stopLoop(); toggleLoop(); } });
+  $('#vol').addEventListener('input', (e) => { synth?.setVolume(e.target.value / 100); if (proj.player.master) proj.player.master.gain.value = 0.55 * (e.target.value / 80); });
+  $('#bpm').addEventListener('change', (e) => { if (synth) { synth.bpm = clamp(+e.target.value || 120, 40, 240); synth.refresh(); } if (loopTimer) { stopLoop(); toggleLoop(); } if (proj.loaded) { proj.setTempo(+e.target.value || 120); tracksPanel?.paint(); } });
   $('#hold').addEventListener('change', (e) => { S.hold = e.target.checked; if (!S.hold) panic(); });
   $('#loop').addEventListener('click', toggleLoop);
   // Keyboard size (small / medium / large), remembered between visits.
@@ -1821,6 +1848,9 @@ async function start() {
     audition: (i) => auditionSample(i),
     stopAudition,
     hardware: TRACKS_MODE,
+    proj,
+    projects: () => (S.pack ? packProjects(S.pack) : []),
+    loadProject: (slot) => loadProject(slot),
   });
   let face = 'editor';
   try { face = localStorage.getItem('circuitgm-patchworker-face') || 'editor'; } catch { /* private mode */ }
@@ -1907,5 +1937,5 @@ function bindKb() {
 }
 
 // Handy when testing from the console, and for the automated tests.
-window.patchworker = { S, link, keys, unsavedSlots, TRACKS_MODE, audio, selectSlot, copyTo, setByte, toSyx, buildPack, undo, redo, setFace, storeOnTracks, openFromTracks, panel: () => tracksPanel };
+window.patchworker = { S, link, keys, proj, loadProject, unsavedSlots, TRACKS_MODE, audio, selectSlot, copyTo, setByte, toSyx, buildPack, undo, redo, setFace, storeOnTracks, openFromTracks, panel: () => tracksPanel };
 start();

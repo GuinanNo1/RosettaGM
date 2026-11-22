@@ -1,4 +1,4 @@
-# CircuitGM Patch Editor (PatchWorker), for testing, v0.9
+# CircuitGM Patch Editor (PatchWorker), for testing, v0.10
 
 **Try it:** https://guinanno1.github.io/RosettaGM/circuitgm/patchworker/
 
@@ -19,7 +19,8 @@ Since v0.9 PatchWorker is **Offline only** (see the claude.ai Project note `plan
 - **Circuit Tracks link (`?tracksmode` only):** sends the patch to Synth 1 or 2, sends each edit live (CC / NRPN for single parameters, the whole patch for mod matrix and macro assignments), plays notes on the hardware, follows the hardware's macro knobs, fetches a synth's current patch, and can write a patch to a slot on the Circuit Tracks.
 - **Files:** open and download `.circuittrackspack` packs, single patches and banks as `.syx`. Samples and projects pass through untouched; a project's own copy of an edited patch can be updated when it still matched the pack.
 - **Undo / redo per patch**, hold-to-compare with the original, revert, copy to another slot, and a session (including what is unsaved) that survives closing the tab.
-- **TRACKS / EDITOR switch (in progress):** TRACKS shows a panel laid out like the Circuit Tracks (track buttons, views, 32 pads, transport), modelled on [Web Tracks](https://webtracks.namirsab.dev/). So far the track buttons choose Synth 1 or 2 and Note view plays the patch from the pads; the other views come in later steps.
+- **TRACKS / EDITOR switch:** TRACKS shows a panel laid out like the Circuit Tracks (track buttons, views, 32 pads, transport), modelled on [Web Tracks](https://webtracks.namirsab.dev/). Preset view picks patches and drum samples; Note view plays the patch from the pads.
+- **Offline player (v0.10):** Projects view loads a project from the pack and ▶ / Space plays it through the browser synth, the pack's drum samples and the measured project mixer, with Synth 1 / 2 on the pack's patches as you edit them. Patterns view (pattern chains), Mixer view (mutes, levels, scenes and scene chains), Tempo view (tempo, swing, Tap) and the play head in Note view. Nothing is written back to the project yet (step editing and saving projects come next).
 
 ## How it is built
 
@@ -34,6 +35,7 @@ Since v0.9 PatchWorker is **Offline only** (see the claude.ai Project note `plan
 | `js/pw/midi.js` | Web MIDI link to the Circuit Tracks (Tracks mode, `?tracksmode`). |
 | `js/pw/packio.js` | Reading and writing packs and `.syx` files, and the saved session. |
 | `js/pw/panel.js` | The TRACKS face: the Circuit Tracks style panel. |
+| `js/pw/project.js` | The Offline player: a pack project's live state (scene, scene chain, pattern chains, mutes, levels, tempo, swing) on top of Circuit2MIDI's song model (`js/song.js`), played by `js/player.js`. |
 | `js/pw/mixlaws.js` | The Circuit Tracks project controls as numbers, from calibration set 7: mixer levels and pans, reverb, delay, master filter, drum pitch / decay / distortion / EQ, sidechain. |
 | `js/pw/mixer.js` | The project mixer in Web Audio, built from `mixlaws.js`; `js/player.js` plays through it. |
 | `tests/ui_offline.cjs` | Browser test of Offline mode: no link controls, status tag, Unsaved edits tray, the load-pack warning and bank, and a stand-in MIDI keyboard on channels 1, 3 and 4. |
@@ -64,6 +66,7 @@ Not emulated: Q normalise, pitch-bend range, LFO slew and common sync, and mod m
 ```sh
 python3 -m http.server 8765 &      # from the RosettaGM root
 node tests/ui_offline.cjs tests/out
+node tests/ui_player.cjs "path/to/Blue Monday.circuittrackspack" tests/out   # any Tracks pack with projects
 node tests/ui_patchworker.cjs tests/out
 node tests/ui_panel.cjs && node tests/ui_preset.cjs && node tests/ui_follow.cjs
 ```
