@@ -8,9 +8,9 @@ import { PatchSynth, waveTable, lfoShape, envelopePoints } from './pw/engine.js?
 import { TracksLink, VIEW_CODES } from './pw/midi.js?v=20261114s';
 import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, projectsFollowing, download,
   fileSafe, session, PATCH_SLOTS } from './pw/packio.js?v=20261114s';
-import { buildPanel } from './pw/panel.js?v=20261123b';
+import { buildPanel } from './pw/panel.js?v=20261123c';
 import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
-import { ProjectPlayer, packProjects } from './pw/project.js?v=20261123b';
+import { ProjectPlayer, packProjects } from './pw/project.js?v=20261123c';
 
 const DEFAULT_PACK = '../tracksgm/TracksGM_v1.circuittrackspack';
 // PatchWorker is Offline only for now (plan-patchworker-tracks-first.md, 22 Nov 2026): the browser is
@@ -943,6 +943,7 @@ async function loadPackBuffer(buffer, fileName, { remember = true, edits = null 
   S.undo.clear();
   if (edits) {
     for (const [slot, data] of Object.entries(edits.patches ?? {})) if (data?.length === PATCH_SIZE) pack.patches[+slot] = sanitise(new Uint8Array(data));
+    pack.openedName = pack.name;   // the name in the file opened, for Download pack's suggestion
     if (typeof edits.name === 'string') pack.name = edits.name;
   }
   pack.origin = edits?.origin ?? {};
@@ -1005,15 +1006,36 @@ async function openPackFile(file) {
   } catch (e) { toast(e.message, 6000); }
 }
 
+// A new name for a download: "Blue Monday" -> "Blue Monday 2", "Blue Monday 2" -> "Blue Monday 3"
+// (16 characters at most, as Components allows).
+function nextPackName(name) {
+  const m = /^(.*?)\s*(\d+)$/.exec(name);
+  const stem = (m ? m[1] : name).trim() || 'Pack';
+  const n = m ? +m[2] + 1 : 2;
+  return `${stem.slice(0, 16 - String(n).length - 1)} ${n}`;
+}
 async function savePack() {
   const follow = projectsFollowing(S.pack);
+  // Ask for the name: the file opened is never replaced, so suggest a new one while the pack
+  // still has the name it was opened with.
+  const cur = (S.pack.name || 'Pack').slice(0, 16);
+  const suggest = S.pack.openedName == null || cur === (S.pack.openedName || '').slice(0, 16) ? nextPackName(cur) : cur;
+  const nameIn = h('input', { type: 'text', maxlength: 16, value: suggest, spellcheck: 'false', 'aria-label': 'Pack name' });
+  const fileHint = h('p', { class: 'hint' });
+  const paintFile = () => { fileHint.textContent = `Saved to your Downloads folder as "${fileSafe(nameIn.value.trim() || 'Pack')}.circuittrackspack" (the browser adds a number if that file is already there; nothing is replaced). Components shows the pack under this name.`; };
+  nameIn.addEventListener('input', paintFile);
+  paintFile();
   const sync = h('input', { type: 'checkbox', checked: true });
   const savedProj = [...(S.pack.savedProjects ?? [])].sort((a, b) => a - b);
-  const body = [`Downloads "${S.pack.name || 'pack'}" with your patch edits${savedProj.length ? ` and the project${savedProj.length > 1 ? 's' : ''} saved here (${savedProj.map((i) => i + 1).join(', ')})` : ''}. Samples${savedProj.length ? ' and the other projects' : ' and projects'} are copied unchanged. Load it onto the Circuit Tracks with Novation Components.`];
+  const body = [`Downloads a new pack file with your patch edits${savedProj.length ? ` and the project${savedProj.length > 1 ? 's' : ''} saved here (${savedProj.map((i) => i + 1).join(', ')})` : ''}. Samples${savedProj.length ? ' and the other projects' : ' and projects'} are copied unchanged. Load it onto the Circuit Tracks with Novation Components.`];
   const unsavedProj = packProjects(S.pack).filter((e) => e.edited);
   if (unsavedProj.length) body.push(h('p', { class: 'hint warn', text: `Project${unsavedProj.length > 1 ? 's' : ''} ${unsavedProj.map((e) => e.slot + 1).join(', ')} ha${unsavedProj.length > 1 ? 've' : 's'} edits not saved yet: they are left out. Press Save on the TRACKS panel first to include them.` }));
+  body.unshift(h('label', { class: 'field' }, 'Pack name (up to 16 characters) ', nameIn), fileHint);
   if (follow) body.push(h('label', { class: 'check' }, sync, ` Also update ${follow} project patch cop${follow > 1 ? 'ies' : 'y'}. Projects keep their own copy of each patch; this updates the ones that still matched the pack.`));
+  setTimeout(() => { nameIn.focus(); nameIn.select(); }, 50);
   if (!(await ask('Download pack', body, 'Download'))) return;
+  S.pack.name = nameIn.value.trim().slice(0, 16) || 'Pack';
+  $('#pack-name').value = S.pack.name;
   const { blob } = await buildPack(S.pack, { name: S.pack.name, syncProjects: sync.checked });
   download(blob, `${fileSafe(S.pack.name || 'Pack')}.circuittrackspack`, 'application/zip');
   markSaved(editedSlots(S.pack));

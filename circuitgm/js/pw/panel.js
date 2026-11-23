@@ -32,7 +32,7 @@ export const VIEWS = [
   { id: 'preset', label: 'Preset', step: 1, group: 'project' }, { id: 'projects', label: 'Projects', step: 1 },
   { id: 'patterns', label: 'Patterns', step: 1 }, { id: 'mixer', label: 'Mixer', step: 1 },
   { id: 'fx', label: 'FX', step: 4 }, { id: 'sidechain', label: 'Sidechain', step: 4 },
-  { id: 'scales', label: 'Scales', step: 4 }, { id: 'tempo', label: 'Tempo', step: 1 },
+  { id: 'scales', label: 'Scales', step: 3 }, { id: 'expand', label: 'Expanded Note', step: 3 }, { id: 'tempo', label: 'Tempo', step: 1 },
 ];
 const NOTE_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
 const noteName = (n) => `${NOTE_NAMES[n % 12]}${Math.floor(n / 12) - 1}`;
@@ -45,6 +45,7 @@ const DIRECTIONS = ['Forward', 'Reverse', 'Ping-pong', 'Random'];
 const FIXED_VELOCITY = 96;
 // Note view keyboard on the bottom two rows of pads: white keys on the bottom row, the black
 // keys above them (null = no key), from C to the next C.
+import { SCALES, CHROMATIC, ROOT_NAMES, inScale, degreeNote } from '../scales.js';
 const WHITE = [0, 2, 4, 5, 7, 9, 11, 12];
 const BLACK = [null, 1, 3, null, 6, 8, 10, null];
 
@@ -82,7 +83,8 @@ export function buildPanel(root, api) {
     dupSrc: null,                      // Duplicate: the step being copied
     fixedVel: false,                   // Shift + Velocity: Fixed Velocity (96)
     saveArm: false,                    // Save pressed once: the next Save (or a project pad) saves
-    msg: '', msgTimer: null };
+    msg: '', msgTimer: null,
+    scale: { root: 0, type: CHROMATIC } };   // the keyboard's scale when no project is loaded
   const pp = api.proj ?? null;
 
   // ---- the panel, laid out as the Circuit Tracks' top panel (User Guide v3, page 15)
@@ -128,7 +130,7 @@ export function buildPanel(root, api) {
     b.setAttribute('aria-pressed', 'false');
     return b;
   };
-  const vNote = viewBtn('note', 'Note', { below: 'Expand' });
+  const vNote = viewBtn('note', 'Note', { below: 'Expand', secondary: 'expand' });
   const vVel = viewBtn('velocity', 'Velocity', { below: 'Fixed', title: 'Velocity (Shift: Fixed Velocity on or off; notes you add then have velocity 96)', onShift: () => { st.fixedVel = !st.fixedVel; flash(`Fixed Velocity ${st.fixedVel ? 'on: notes you add have velocity 96' : 'off: notes you add take the velocity set at the bottom'}.`); } });
   const vGate = viewBtn('gate', 'Gate', { below: 'Micro Step', secondary: 'micro' });
   const vPat = viewBtn('pattern', 'Pattern Settings', { below: 'Probability', secondary: 'probability' });
@@ -158,7 +160,7 @@ export function buildPanel(root, api) {
     if (presetKind() === 'synth') { st.copying = !st.copying; paint(); return; }
     if (STEP_VIEWS.includes(st.view)) setMode(st.mode === 'dup' ? null : 'dup');
   } });
-  const saveBtn = btn('save half', 'Save', { title: 'Save: press once (it flashes), then again to save the project into the pack open here. In Projects view, press Save and then a pad to save to that project. Download pack keeps the pack in a file. Shift: Setup.', onclick: (e) => {
+  const saveBtn = btn('save half', 'Save', { title: 'Save: press once (it flashes), then again to save the project into the browser\'s copy of the pack (nothing is written to disk). In Projects view, press Save and then a pad to save to that project. Download pack writes a new pack file. Shift: Setup.', onclick: (e) => {
     const sh = isShift(e); useShift();
     if (sh) { flash('Setup is not built yet.'); return; }
     if (!pp?.loaded) { flash('Load a project in Projects view first.'); return; }
@@ -317,6 +319,8 @@ export function buildPanel(root, api) {
     }
     if (pad.dataset.step != null) { e.preventDefault(); stepPress(+pad.dataset.step, e); return; }
     if (pad.dataset.val != null) { e.preventDefault(); valuePress(+pad.dataset.val); return; }
+    if (pad.dataset.keynote != null) { e.preventDefault(); setScale(+pad.dataset.keynote, null); return; }
+    if (pad.dataset.scale != null) { e.preventDefault(); setScale(null, +pad.dataset.scale); return; }
     // Chains, as on the hardware: hold one pattern (or scene) pad and press another. Shift-click too.
     if (pad.dataset.pattern != null) {
       e.preventDefault();
@@ -408,7 +412,7 @@ export function buildPanel(root, api) {
   function flash(text) {
     st.msg = text;
     clearTimeout(st.msgTimer);
-    st.msgTimer = setTimeout(() => { st.msg = ''; paintHint(); }, 4500);
+    st.msgTimer = setTimeout(() => { st.msg = ''; paintHint(); }, 7000);
     paintHint();
   }
   function paintHint() { hint.textContent = st.msg || hint.dataset.text || ''; hint.classList.toggle('msg', !!st.msg); }
@@ -507,7 +511,7 @@ export function buildPanel(root, api) {
     const over = slot !== from && !list[slot]?.empty;
     const e = pp.save(slot);
     st.saveArm = false;
-    flash(`Saved "${e.name || 'project'}" ${slot === from ? `in project ${slot + 1}` : `to project ${slot + 1}${over ? ' (replacing what was there)' : ''}; project ${from + 1} stays as it was saved`}. It is in the pack open here: Download pack to keep it in a file.`);
+    flash(`Saved "${e.name || 'project'}" ${slot === from ? `in project ${slot + 1}` : `to project ${slot + 1}${over ? ' (replacing what was there)' : ''}; project ${from + 1} stays as it was saved`}. It is saved in the browser's copy of the pack (kept between visits); nothing is written to disk until you Download pack.`);
     api.projectSaved?.(slot);
     paint();
   }
@@ -516,14 +520,14 @@ export function buildPanel(root, api) {
   function stepPage(dir) {
     const n = pageCount();
     if (n) { setPage(Math.max(0, Math.min(n - 1, getPage() + dir))); paint(); return; }
-    if (st.view === 'note') api.setOctave?.(api.octave() + dir);
+    if (st.view === 'note' || st.view === 'expand') api.setOctave?.(api.octave() + dir);
   }
   function paintPages() {
     const n = pageCount();
     const paged = n > 0;
     if (paged) setPage(Math.min(getPage(), n - 1));
-    downBtn.classList.toggle('idle', paged ? getPage() === 0 : st.view !== 'note' || api.octave() <= 0);
-    upBtn.classList.toggle('idle', paged ? getPage() >= n - 1 : st.view !== 'note' || api.octave() >= 6);
+    downBtn.classList.toggle('idle', paged ? getPage() === 0 : !['note', 'expand'].includes(st.view) || api.octave() <= 0);
+    upBtn.classList.toggle('idle', paged ? getPage() >= n - 1 : !['note', 'expand'].includes(st.view) || api.octave() >= 6);
     const synth = presetKind() === 'synth';
     const stepView = STEP_VIEWS.includes(st.view);
     const projEdit = !!pp?.loaded && pp.edited && (stepView || st.view === 'projects');
@@ -607,8 +611,10 @@ export function buildPanel(root, api) {
     }
     if (pp?.loaded && STEP_VIEWS.includes(st.view)) text += stepText();
     if (st.view === 'velocity' && st.fixedVel) text += ' · Fixed Velocity';
-    if (pp?.loaded && pp.edited && (STEP_VIEWS.includes(st.view) || st.view === 'projects')) text += ' · edited, not saved';
-    lcd.textContent = text + (st.view === 'note' && TRACKS[st.track].kind !== 'drum' ? ` · octave C${api.octave()}` : pageText());
+    if (pp?.loaded && pp.edited && (STEP_VIEWS.includes(st.view) || st.view === 'projects' || st.view === 'scales')) text += ' · edited, not saved';
+    const keys = (st.view === 'note' || st.view === 'expand') && TRACKS[st.track].kind !== 'drum';
+    if (st.view === 'scales') text += ` · ${scaleText()}`;
+    lcd.textContent = text + (keys ? ` · octave C${api.octave()} · ${scaleText()}` : pageText());
   }
 
   // Note view's top two rows: the 16 steps of the pattern the track is playing (or the first of its
@@ -631,6 +637,20 @@ export function buildPanel(root, api) {
     if (st.mode === 'dup' && st.dupSrc === k) cls += ' src';
     return cls;
   }
+  // The scale the keyboard follows: the loaded project's (saved with it), otherwise Chromatic.
+  const curScale = () => (pp?.loaded ? { root: pp.root, type: pp.scaleType } : st.scale);
+  // The note of a keyboard pad (rows counted from the top, 0-3), or null for a dark pad. Chromatic:
+  // a one-octave piano (white keys on the bottom row), two octaves in Expanded Note view. Other
+  // scales: eight scale notes a row from the root, each row starting on the last note of the row
+  // below (User Guide pp. 25-28), two rows or four in Expanded Note view.
+  function keyNote(row, col, oct, sc) {
+    if (sc.type === CHROMATIC) {
+      const semi = row % 2 ? WHITE[col] : BLACK[col];
+      return semi == null ? null : (oct + 1 + (row < 2 ? 1 : 0)) * 12 + semi;
+    }
+    const deg = (3 - row) * 7 + col;
+    return degreeNote((oct + 1) * 12 + sc.root, deg, sc.type);
+  }
   function paintPads() {
     const kind = TRACKS[st.track].kind;
     const synthTrack = kind === 'synth';
@@ -645,22 +665,27 @@ export function buildPanel(root, api) {
       const row = Math.floor(i / 8), col = i % 8;
       let note = null, cls = 'pad', label = '';
       delete p.dataset.drumhit; delete p.dataset.project; delete p.dataset.pattern; delete p.dataset.ptrack; delete p.dataset.scene; delete p.dataset.mute; delete p.dataset.val;
+      const expand = st.view === 'expand';
       if (st.view === 'note' && row < 2) {
         const k = base + row * 8 + col;
         cls = stepClass(k, vp, kind);
         p.dataset.step = k;
         if (vp) label = String(k + 1);
-      } else if (st.view === 'note' && kind === 'drum') {
-        if (row === 3 && col < 4 || row === 2 && col < 4) { cls += ' drumhit'; p.dataset.drumhit = drumSample; label = row === 3 && col === 0 ? 'Hit' : ''; } else cls += ' off';
-      } else if (st.view === 'note' && keyTrack) {
-        const semi = row === 3 ? WHITE[col] : BLACK[col];
-        if (semi != null) {
-          note = (oct + 1) * 12 + semi;
-          cls += row === 3 ? ' key white' : ' key black';
-          if (semi % 12 === 0) { cls += ' root'; label = `${NOTE_NAMES[0]}${Math.floor(note / 12) - 1}`; }
+      } else if ((st.view === 'note' || expand) && kind === 'drum') {
+        if (expand) cls += ' off';
+        else if (row === 3 && col < 4 || row === 2 && col < 4) { cls += ' drumhit'; p.dataset.drumhit = drumSample; label = row === 3 && col === 0 ? 'Hit' : ''; } else cls += ' off';
+      } else if ((st.view === 'note' || expand) && keyTrack) {
+        const sc = curScale();
+        note = keyNote(row, col, oct, sc);
+        if (note != null && note >= 0 && note <= 127) {
+          const chrom = sc.type === CHROMATIC;
+          cls += chrom ? (row % 2 ? ' key white' : ' key black') : ' key scale';
+          const isRoot = (((note - sc.root) % 12) + 12) % 12 === 0;
+          if (isRoot) cls += ' root';
+          if (isRoot || !chrom) label = noteName(note);
           if (inStep.has(note)) cls += ' instep';
           if (!synthTrack && !st.armed) cls += ' mute';
-        } else cls += ' off';
+        } else { note = null; cls += ' off'; }
       } else cls += ' off';
       if (!(st.view === 'note' && row < 2)) delete p.dataset.step;
       p.className = cls;
@@ -671,6 +696,41 @@ export function buildPanel(root, api) {
       if (p.dataset.step != null) p.setAttribute('aria-label', `Step ${+p.dataset.step + 1}`);
     });
   }
+
+  // Scales view (User Guide pp. 30-32): rows 1-2 choose the root as a one-octave piano (pads 1, 4,
+  // 8 and 16 dark), bright where the note is in the scale; rows 3-4 the 16 scales, in the order of
+  // the stored scale type.
+  function paintScales() {
+    const sc = curScale();
+    st.pads.forEach((p, i) => {
+      clearPad(p);
+      delete p.dataset.keynote; delete p.dataset.scale;
+      const row = Math.floor(i / 8), col = i % 8;
+      if (row < 2) {
+        const semi = row === 1 ? (col < 7 ? WHITE[col] : null) : BLACK[col];
+        if (semi == null) { p.className = 'pad off'; return; }
+        const inSc = inScale(semi - sc.root, sc.type);
+        p.className = `pad keynote${inSc ? ' on' : ''}${semi === sc.root ? ' root' : ''}`;
+        p.textContent = ROOT_NAMES[semi];
+        p.dataset.keynote = semi;
+        p.title = `Root ${ROOT_NAMES[semi]}${semi === sc.root ? ' (chosen)' : ''}`;
+      } else {
+        const t = (row - 2) * 8 + col;
+        p.className = `pad scale${t === sc.type ? ' sel' : ''}`;
+        p.textContent = SCALES[t].name;
+        p.dataset.scale = t;
+        p.title = `${SCALES[t].name}: ${SCALES[t].steps.map((x) => ROOT_NAMES[(x + sc.root) % 12]).join(' ')}`;
+      }
+      p.setAttribute('aria-label', p.title);
+    });
+  }
+  function setScale(root, type) {
+    if (pp?.loaded) { pp.setScale(root, type); return; }
+    if (root != null) st.scale.root = root;
+    if (type != null) st.scale.type = type;
+    paint();
+  }
+  const scaleText = () => { const sc = curScale(); return `${sc.type === CHROMATIC && sc.root === 0 ? '' : `${ROOT_NAMES[sc.root]} `}${SCALES[sc.type].name}`; };
 
   // Velocity, Gate, Probability and Pattern Settings views: steps on the top rows, the chosen
   // step's value (or the pattern's settings) on the bottom rows.
@@ -881,6 +941,16 @@ export function buildPanel(root, api) {
     if (v.id === 'projects') { setHint((st.saveArm && pp?.loaded ? '' : 'Press a project to load it, then ▶ (or Space) to play it. Synth 1 and 2 play the pack\'s patches as you edit them. Edits stay here until you Save (a dot marks a project with unsaved edits, a ring one saved into the pack here).') + saveHint); paintProjects(); return; }
     if (v.id === 'patterns') { setHint(pp?.loaded ? 'The lit pads are the patterns each track plays. Click a pattern to play it; hold it and press another (or Shift-click) to chain the patterns between them. ▼ ▲ show patterns 1-4 or 5-8. Choosing a scene in Mixer view puts back its patterns.' + saveHint : none); paintPatterns(); return; }
     if (v.id === 'mixer') { setHint(pp?.loaded ? 'Top row: mute each track. Bottom two rows: the 16 scenes (white: saved in the project). Click a scene to play it; hold it and press another (or Shift-click) to chain the scenes between them. The sliders set each track\'s level.' + saveHint : none); paintMixer(); return; }
+    if (v.id === 'scales') {
+      setHint(`Rows 1-2: the root note (bright: notes in the scale). Rows 3-4: the scale. Note view's keyboard follows them. ${pp?.loaded ? 'They belong to the project: changing the root transposes its synth and MIDI notes, and a note not in a new scale plays the nearest one in it (nothing is lost; choose the old scale to hear it as before). Save keeps them.' : 'With no project loaded this only sets the keyboard (Chromatic to start with).'}` + saveHint);
+      paintScales();
+      return;
+    }
+    if (v.id === 'expand') {
+      setHint(TRACKS[st.track].kind === 'drum' ? 'Expanded Note view is a bigger keyboard for Synth 1 and 2 (and MIDI 1 and 2).' : `A four-row keyboard (${scaleText()}): two octaves more than Note view. ▼ ▲ change octave. Press Note again to go back.`);
+      paintPads();
+      return;
+    }
     if (v.id === 'tempo') { setHint(pp?.loaded ? 'Tempo and swing. Save keeps them in the project.' + saveHint : none); paintTempo(); return; }
     if (!pp?.loaded && v.step <= 3) setHint(`${none} Then the top rows show the steps of the pattern the track plays, and you can edit them.`);
     else if (v.step > 3) setHint(`${v.label} view is not built yet.`);

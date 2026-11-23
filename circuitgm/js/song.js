@@ -2,6 +2,7 @@
 // MIDI events (and preview events). The reverse of js/convert.js + js/build.js.
 import { GM_NAMES } from './midifile.js';
 import { TRACKS } from './convert.js';
+import { snapToScale } from './scales.js';
 
 export const PPQ = 1440;
 // Step length in ticks for each sync rate (0-7: 1/32T, 1/32, 1/16T, 1/16, 1/8T, 1/8, 1/4T, 1/4).
@@ -22,6 +23,9 @@ export function songOf(pack, entry) {
   // root D (2) a stored 41 is F2 (MIDI 41 - 12 + 2), not D#2. Found 2026-11-15 on Blue Monday
   // (root D), whose converted melodies came out a whole tone flat against its tuned samples.
   const root = rhythm ? 0 : (p.scaleRoot ?? 0) % 12;
+  // A note outside the project's scale plays the nearest note in it (js/scales.js); notes made
+  // on the hardware or by MIDI2Circuit (Chromatic) are always in it.
+  const scale = rhythm ? null : (p.scaleType ?? 15);
   const sampleName = (slot) => pack.samples[slot]?.name || `Sample ${slot + 1}`;
   const tracks = [];
   for (let t = 0; t < 8; t++) {
@@ -33,7 +37,7 @@ export function songOf(pack, entry) {
       end: Math.max(pat.settings.playbackStart, pat.settings.playbackEnd),
       rate: pat.settings.syncRate,
       dir: pat.settings.direction,
-      steps: pat.steps.map((s) => ({ prob: s.probability, hits: hitsOf(kind, s, defaultSample, root) })),
+      steps: pat.steps.map((s) => ({ prob: s.probability, hits: hitsOf(kind, s, defaultSample, root, scale) })),
     }));
     const label = rhythm ? `Track ${t + 1}` : TRACKS[t];
     // The track's sound: its patch, or its default sample; if that slot is empty, the
@@ -92,12 +96,13 @@ function microTicks(mask) {
   return out;
 }
 
-function hitsOf(kind, s, defaultSample, root = 0) {
+function hitsOf(kind, s, defaultSample, root = 0, scale = null) {
   if (kind === 'synth' || kind === 'midi') {
     const out = [];
     s.notes.forEach((n, j) => {
       if (!((s.mask >> j) & 1)) return;
-      out.push({ micro: n.delay % 6, note: n.note - STORED_NOTE_OFFSET + root, vel: n.velocity, gate: n.gate & 0x7f, tie: (n.gate & 0x80) !== 0, sample: null });
+      const semi = n.note - STORED_NOTE_OFFSET;
+      out.push({ micro: n.delay % 6, note: (scale == null ? semi : snapToScale(semi, scale)) + root, vel: n.velocity, gate: n.gate & 0x7f, tie: (n.gate & 0x80) !== 0, sample: null });
     });
     return out;
   }

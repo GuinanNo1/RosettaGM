@@ -7,9 +7,10 @@
 // Circuit Tracks has while playing: the selected scene and scene chain, each track's pattern
 // chain (as chosen in Patterns view), mutes, levels, tempo and swing.
 import { readProject, isEmpty } from '../pack.js?v=20261122b';
-import { songOf, renderSong, STEP_TICKS, PPQ } from '../song.js?v=20261122b';
+import { songOf, renderSong, STEP_TICKS, PPQ } from '../song.js?v=20261123c';
 import { Player } from '../player.js?v=20261122b';
 import { serializeNCS } from '../vendor/ncs.js';
+import { snapToScale, CHROMATIC } from '../scales.js';
 
 const NCS_PATCH_SLOT = [0xcd64, 0xcd6c];   // Synth 1 / Synth 2: the pack slot the project plays
 const STORED_NOTE_OFFSET = 12;             // stored synth note = MIDI note + 12 - scale root
@@ -271,6 +272,14 @@ export class ProjectPlayer {
   get edited() { return !!this.entry?.edited; }
   raw(t, p) { return this.entry.project.patterns[t][p]; }
   get root() { return (this.entry.project.scaleRoot ?? 0) % 12; }
+  get scaleType() { return this.entry.project.scaleType ?? CHROMATIC; }
+  // Scales view: root 0-11 (transposes the synth and MIDI notes) and scale 0-15. Saved with Save.
+  setScale(root, type) {
+    const p = this.entry.project;
+    if (root != null) p.scaleRoot = root;
+    if (type != null) p.scaleType = type;
+    this.edit();
+  }
   isDrum(t) { return t >= 4; }
   // After any edit: rebuild the song model, keep what is selected, re-render (at the same point).
   edit() {
@@ -283,7 +292,8 @@ export class ProjectPlayer {
     const s = this.raw(t, p).steps[k];
     if (this.isDrum(t)) return [];
     const out = [];
-    s.notes.forEach((n, j) => { if ((s.mask >> j) & 1) out.push({ j, note: n.note - STORED_NOTE_OFFSET + this.root, vel: n.velocity, gate: n.gate & 0x7f, tie: (n.gate & 0x80) !== 0, delay: n.delay }); });
+    // The note as it sounds: in the scale (snapped if the scale was changed), above the root.
+    s.notes.forEach((n, j) => { if ((s.mask >> j) & 1) out.push({ j, note: snapToScale(n.note - STORED_NOTE_OFFSET, this.scaleType) + this.root, vel: n.velocity, gate: n.gate & 0x7f, tie: (n.gate & 0x80) !== 0, delay: n.delay }); });
     return out;
   }
   stepHas(t, p, k) {

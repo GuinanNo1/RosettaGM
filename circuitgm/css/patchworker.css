@@ -611,3 +611,13 @@ body.doc { display: block; overflow: auto; }
 .ct .pad.project.target { --pc: #e9e9f2; }
 .ct .pad.step.on.drum { background: color-mix(in srgb, var(--drum) 62%, #262632); color: #12111a99; }
 .ct .pad.step.on.drum.play { background: color-mix(in srgb, var(--drum) 90%, #fff); }
+/* Scales (0.14): scale keyboards are one colour with paler roots, as on the hardware; Scales view
+   keynote pads bright when in the scale, the root sand; the chosen scale sand. */
+.ct .pad.key.scale { background: color-mix(in srgb, var(--accent) 34%, #2a2a36); font: 600 .6rem var(--mono); color: #ffffff8c; }
+.ct .pad.key.scale.root { background: color-mix(in srgb, var(--accent) 70%, #2a2a36); color: #fff; }
+.ct .pads .pad.key.instep { background: #e0384a; color: #fff; }
+.ct .pad.keynote, .ct .pad.scale { cursor: pointer; font: 600 .62rem var(--mono); color: #8a8aa0; background: #23232e; text-align: center; line-height: 1.15; padding: 2px; }
+.ct .pad.keynote.on { background: color-mix(in srgb, #4f8bff 55%, #23232e); color: #fff; }
+.ct .pad.keynote.root { background: #e8d3a0; color: #12111a; box-shadow: inset 0 0 0 2px #fff; }
+.ct .pad.scale { background: #26262f; font-size: .56rem; }
+.ct .pad.scale.sel { background: #e8d3a0; color: #12111a; }

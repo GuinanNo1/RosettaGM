@@ -32,10 +32,12 @@ const fs = require('fs');
   const pw = (fn, ...a) => p.evaluate(fn, ...a);
   const pat = () => pw(() => { const pp = window.patchworker.proj, st = window.patchworker.panel().state; return pp.sel[st.track].start; });
   const pad = (i) => `.pads .pad:nth-child(${i + 1})`;
+  // Go to a view without pressing its button a second time (that opens its secondary view).
+  const view = async (id) => { if (await pw(() => window.patchworker.panel().state.view) !== id) await p.click(`.view[data-view=${id}]`); };
 
   // ---- Note view, Synth 1: choose an empty step, add a note from the keys, remove it again.
   await p.click('.trk[data-track="0"]');
-  await p.click('.view[data-view=note]');
+  await view('note');
   const p0 = await pat();
   let empty = await pw((pt) => { const pp = window.patchworker.proj; for (let k = 0; k < 16; k++) if (!pp.stepHas(0, pt, k)) return k; return -1; }, p0);
   if (empty < 0) {
@@ -54,7 +56,7 @@ const fs = require('fs');
   check(await p.$eval('.pad.key.root', (x) => x.classList.contains('instep')), 'the key lights as on the step');
   check(await pw(() => window.patchworker.proj.render.events.length) > evBefore, 'the new note is in what plays');
   check(/edited, not saved/.test(await p.innerText('.panel-lcd')), 'the LCD says the project is edited');
-  await p.click('.pads .pad.key.white:nth-child(28)');
+  await p.click(pad(27));
   notes = await pw(([pt, k]) => window.patchworker.proj.stepNotes(0, pt, k).length, [p0, empty]);
   check(notes === 2, 'a second key adds a second note');
   await p.click('.pad.key.root');
@@ -114,7 +116,7 @@ const fs = require('fs');
   await p.click(pad(24 + 4));
 
   // ---- 1-16/17-32
-  await p.click('.view[data-view=note]');
+  await view('note');
   await p.click('.cbtn.steppage');
   check(await pw((pt) => window.patchworker.proj.raw(0, pt).settings.playbackEnd, p0) === 31, '1-16/17-32 makes the pattern 32 steps');
   await p.click('.cbtn.steppage');
@@ -157,7 +159,7 @@ const fs = require('fs');
 
   // ---- Save to another project slot (Projects view: Save, then a pad)
   await p.click('.trk[data-track="0"]');
-  await p.click('.view[data-view=note]');
+  await view('note');
   await p.click(pad(empty));
   await p.click('.cbtn.clear');
   await p.click(pad(empty));
