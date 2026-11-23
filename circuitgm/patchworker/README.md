@@ -1,4 +1,4 @@
-# CircuitGM Patch Editor (PatchWorker), for testing, v0.14
+# CircuitGM Patch Editor (PatchWorker), for testing, v0.15
 
 **Try it:** https://guinanno1.github.io/RosettaGM/circuitgm/patchworker/
 
@@ -23,6 +23,7 @@ Since v0.9 PatchWorker is **Offline only** (see the claude.ai Project note `plan
 - **Offline player (v0.10):** A **Project** picker and ▶ in the bottom bar (v0.11), or Projects view in the TRACKS panel, load a project from the pack, and ▶ / Space plays it through the browser synth, the pack's drum samples and the measured project mixer, with Synth 1 / 2 on the pack's patches as you edit them. Patterns view (pattern chains), Mixer view (mutes, levels, scenes and scene chains), Tempo view (tempo, swing, Tap) and the play head in Note view. 
 - **Step editing and Save (v0.13):** Note view adds and removes notes (synth and MIDI: choose a step, then the keys; drums: tap steps), Velocity, Gate, Probability and Pattern Settings views, Clear, Duplicate and 1-16/17-32 as in the User Guide. Save (twice, or Save then a pad in Projects view) writes the project into the pack open in the browser with `serializeNCS` over the original file; saved projects are kept in the session and go into Download pack.
 - **Scales (v0.14):** Scales view sets the project's root and scale (`js/scales.js`); the Note view keyboard follows it, Expanded Note view adds two rows. Download pack asks for the pack name.
+- **Drum sample pads (v0.15):** drum Note view's bottom rows are 16 of the 64 samples as on the hardware: tap = the track's sample, hold = sample flip, holding a step lights its sample red.
 
 ## How it is built
 

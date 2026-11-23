@@ -13,6 +13,7 @@ import { serializeNCS } from '../vendor/ncs.js';
 import { snapToScale, CHROMATIC } from '../scales.js';
 
 const NCS_PATCH_SLOT = [0xcd64, 0xcd6c];   // Synth 1 / Synth 2: the pack slot the project plays
+const NCS_DEFAULT_DRUMS = 0x1a278;          // 4 bytes: each drum track's sample (its active sample)
 const STORED_NOTE_OFFSET = 12;             // stored synth note = MIDI note + 12 - scale root
 const MAX_NOTES = 6;                       // notes per synth / MIDI step
 export const FULL_GATE = 6;                // a gate of one step, in sixths of a step
@@ -331,6 +332,35 @@ export class ProjectPlayer {
     this.edit();
     return s.active;
   }
+  // The sample a drum step plays (its own, after a sample flip, or the track's).
+  stepSample(t, p, k) {
+    const s = this.raw(t, p).steps[k];
+    if (!s.active) return null;
+    return s.drumChoice === 0xff ? this.entry.project.defaultDrums?.[t - 4] : s.drumChoice;
+  }
+  // A drum track's active sample: hits without a sample of their own play it (Note view: a tap on
+  // a sample pad; Preset view). Kept in both places the project stores it (0x1A278 and the drum
+  // config's first byte; which one the unit loads is unconfirmed, see the file-format notes).
+  setDrumSample(t, slot) {
+    const p = this.entry.project;
+    if (p.defaultDrums[t - 4] === slot) return;
+    p.defaultDrums[t - 4] = slot;
+    if (p.drumConfigs?.[t - 4]) p.drumConfigs[t - 4].patchSelect = slot;
+    this.edit();
+  }
+  // Sample flip (User Guide p. 62): the step plays this sample instead of the track's. A step that
+  // already plays it loses its hit.
+  // keep: give the step the sample even if it already plays it (a step armed by a long press).
+  flipStep(t, p, k, slot, vel, { keep = false } = {}) {
+    const s = this.raw(t, p).steps[k];
+    const dflt = this.entry.project.defaultDrums?.[t - 4];
+    const choice = slot === dflt ? 0xff : slot;
+    if (s.active && s.drumChoice === choice) { if (keep) return true; s.active = false; s.micro = null; }
+    else if (s.active) s.drumChoice = choice;
+    else Object.assign(s, { active: true, micro: null, velocity: Math.max(1, Math.min(127, vel)), probability: 7, drumChoice: choice });
+    this.edit();
+    return s.active;
+  }
   // Clear: every note or hit on the step goes, and its probability returns to 100%.
   clearStep(t, p, k) {
     const s = this.raw(t, p).steps[k];
@@ -423,6 +453,7 @@ export class ProjectPlayer {
     const base = pack.files.get(src.url);
     const out = serializeNCS(proj, base);
     NCS_PATCH_SLOT.forEach((o, i) => { out[o] = this.patchSlots[i]; });
+    proj.defaultDrums.forEach((v, i) => { out[NCS_DEFAULT_DRUMS + i] = v; });
     pack.index.projects ??= [];
     for (let i = pack.index.projects.length; i < 64; i++) pack.index.projects.push({ name: '', url: `projects/project_${i}.ncs` });
     const url = pack.index.projects[slot]?.url || `projects/project_${slot}.ncs`;

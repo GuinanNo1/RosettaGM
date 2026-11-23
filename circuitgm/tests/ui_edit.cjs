@@ -136,6 +136,38 @@ const fs = require('fs');
   await p.click(pad(dk));
   check(!(await pw(([pt, k]) => window.patchworker.proj.stepHas(4, pt, k), [dp, dk])), 'and another tap removes it');
   await p.click(pad(dk));
+
+  // ---- Drum sample pads (bottom rows): 16 of the 64 samples, tap = the track's sample, hold =
+  // sample flip; holding a step lights its sample red; a long press on a step arms it.
+  check(await p.$$eval('.pad.dsample', (x) => x.length) === 16, '16 sample pads');
+  const lsel = (sel) => p.$(sel).then((h) => h.boundingBox());
+  const longPress = async (sel, ms = 650) => { const b = await lsel(sel); await p.mouse.move(b.x + b.width / 2, b.y + b.height / 2); await p.mouse.down(); await p.waitForTimeout(ms); await p.mouse.up(); };
+  const act0 = await pw(() => window.patchworker.proj.entry.project.defaultDrums[0]);
+  check(await p.$eval('.pad.dsample.lit', (x) => +x.dataset.dsample) === act0, `the lit sample pad is Drum 1's sample (${act0 + 1})`);
+  await p.click('.cbtn.arrow:has-text("▲")');
+  const pg = await pw(() => window.patchworker.panel().state.dpage[0]);
+  check(pg === Math.min(3, Math.floor(act0 / 16) + 1), `▲ shows the next 16 samples (page ${pg + 1})`);
+  const newSmp = await p.$eval('.pad.dsample:not(.lit)', (x) => +x.dataset.dsample);
+  await p.click(`.pad.dsample[data-dsample="${newSmp}"]`);
+  check(await pw(() => window.patchworker.proj.entry.project.defaultDrums[0]) === newSmp, `a tap makes sample ${newSmp + 1} Drum 1's sample`);
+  check(await pw(([pt, k]) => window.patchworker.proj.stepSample(4, pt, k), [dp, dk]) === newSmp, 'hits without their own sample play it');
+  const flipSmp = await p.$$eval('.pad.dsample:not(.lit)', (x) => +x[1].dataset.dsample);
+  await longPress(`.pad.dsample[data-dsample="${flipSmp}"]`);
+  check(await pw(() => window.patchworker.panel().state.flip) === flipSmp, 'a long press arms a sample flip');
+  const fk = (dk + 1) % 16;
+  await p.click(pad(fk));
+  check(await pw(([pt, k]) => window.patchworker.proj.stepSample(4, pt, k), [dp, fk]) === flipSmp, `a step pressed then plays sample ${flipSmp + 1}`);
+  await p.keyboard.press('Escape');
+  check(await p.$eval(pad(fk), (x) => x.classList.contains('flip')), 'the flipped step is pink');
+  await p.click('.cbtn.arrow:has-text("▼")');
+  // Hold the flipped step: its sample lights red (turning to its page).
+  { const b = await lsel(pad(fk)); await p.mouse.move(b.x + b.width / 2, b.y + b.height / 2); await p.mouse.down(); await p.waitForTimeout(150);
+    check(await p.$eval('.pad.dsample.flipsrc', (x) => +x.dataset.dsample).catch(() => null) === flipSmp, 'holding a step lights its sample red');
+    check(/its own sample/.test(await p.innerText('.panel-lcd')), 'the LCD names the step\'s own sample');
+    await p.waitForTimeout(600); await p.mouse.up(); }
+  check(await pw(() => window.patchworker.panel().state.stepFlip) === fk, 'a long press on a step arms it');
+  await p.click(`.pad.dsample[data-dsample="${newSmp}"]`);
+  check(await pw(([pt, k]) => window.patchworker.proj.stepSample(4, pt, k), [dp, fk]) === newSmp && await pw(() => window.patchworker.panel().state.stepFlip) == null, 'then a sample pad gives the step that sample');
   await p.screenshot({ path: `${out}/edit-note-drum.png` });
 
   // ---- Save over the project
@@ -153,8 +185,9 @@ const fs = require('fs');
     const d = window.patchworker.S.pack.files.get(window.patchworker.S.pack.index.projects[s].url);
     const proj = readProject('circuit-tracks', d.slice().buffer);
     const st = proj.patterns[0][pt].steps[k];
-    return { mask: st.mask, vel: st.notes.find((n, j) => (st.mask >> j) & 1)?.velocity, gate: st.notes.find((n, j) => (st.mask >> j) & 1)?.gate, prob: st.probability, tempo: proj.tempo };
+    return { drums: proj.defaultDrums[0], mask: st.mask, vel: st.notes.find((n, j) => (st.mask >> j) & 1)?.velocity, gate: st.notes.find((n, j) => (st.mask >> j) & 1)?.gate, prob: st.probability, tempo: proj.tempo };
   }, [slot, p0, empty]);
+  check(back.drums !== act0, `the saved file has Drum 1's new sample (${back.drums + 1})`);
   check(back.mask && back.vel === 48 && back.gate === 23 && back.prob === 3, `the saved file has the step's note, velocity, gate and probability (${JSON.stringify(back)})`);
 
   // ---- Save to another project slot (Projects view: Save, then a pad)

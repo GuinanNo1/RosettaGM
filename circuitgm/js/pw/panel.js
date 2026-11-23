@@ -84,7 +84,11 @@ export function buildPanel(root, api) {
     fixedVel: false,                   // Shift + Velocity: Fixed Velocity (96)
     saveArm: false,                    // Save pressed once: the next Save (or a project pad) saves
     msg: '', msgTimer: null,
-    scale: { root: 0, type: CHROMATIC } };   // the keyboard's scale when no project is loaded
+    scale: { root: 0, type: CHROMATIC },     // the keyboard's scale when no project is loaded
+    dpage: [0, 0, 0, 0],                     // drum Note view: the page of 16 samples shown
+    flip: null,                              // drum Note view: the sample armed for a sample flip
+    heldStep: null,                          // drum Note view: the step held (its sample shows red)
+    stepFlip: null };                        // drum Note view: the step armed by a long press                            // drum Note view: the sample armed for a sample flip   // the keyboard's scale when no project is loaded
   const pp = api.proj ?? null;
 
   // ---- the panel, laid out as the Circuit Tracks' top panel (User Guide v3, page 15)
@@ -305,9 +309,43 @@ export function buildPanel(root, api) {
     }
     if (pad.dataset.sample != null) {
       e.preventDefault();
-      st.drum[st.track - 4] = +pad.dataset.sample;
+      chooseSample(st.track, +pad.dataset.sample);
       api.audition(+pad.dataset.sample);
       paint();
+      return;
+    }
+    // Drum Note view sample pads: a quick tap makes the sample the track's active sample (and plays
+    // it); a longer press only plays it, and arms it for a sample flip (User Guide pp. 60-62).
+    if (pad.dataset.dsample != null) {
+      e.preventDefault();
+      const slot = +pad.dataset.dsample, t = st.track, down = performance.now();
+      api.audition(slot);
+      pad.classList.add('down');
+      const up = () => {
+        pad.classList.remove('down');
+        window.removeEventListener('pointerup', up);
+        window.removeEventListener('pointercancel', up);
+        if (st.stepFlip != null && pp?.loaded) {
+          // A step armed by a long press takes this sample.
+          const vp = viewPattern(t);
+          if (vp) pp.flipStep(t, vp.index, st.stepFlip, slot, velocity(), { keep: true });
+          flash(`Step ${st.stepFlip + 1} plays ${pad3(slot + 1)} ${api.sampleName(slot) || ''}.`);
+          st.stepFlip = null;
+          paint();
+          return;
+        }
+        if (performance.now() - down < 500) {
+          if (st.flip != null) { st.flip = null; paint(); return; }
+          chooseSample(t, slot);
+          paint();
+        } else {
+          st.flip = st.flip === slot ? null : slot;
+          paint();
+          if (st.flip != null) flash(`Sample flip: press steps to give them sample ${pad3(slot + 1)} ${api.sampleName(slot) || ''} (a step that already plays it loses its hit). Press the sample pad again or Esc to finish.`);
+        }
+      };
+      window.addEventListener('pointerup', up);
+      window.addEventListener('pointercancel', up);
       return;
     }
     if (pad.dataset.project != null) {
@@ -317,7 +355,12 @@ export function buildPanel(root, api) {
       if (!api.projects?.()[i]?.empty) api.loadProject(i);
       return;
     }
-    if (pad.dataset.step != null) { e.preventDefault(); stepPress(+pad.dataset.step, e); return; }
+    if (pad.dataset.step != null) {
+      e.preventDefault();
+      if (drumNote() && pp?.loaded && !st.mode && st.flip == null && viewPattern(st.track)) { drumStepHold(+pad.dataset.step); return; }
+      stepPress(+pad.dataset.step, e);
+      return;
+    }
     if (pad.dataset.val != null) { e.preventDefault(); valuePress(+pad.dataset.val); return; }
     if (pad.dataset.keynote != null) { e.preventDefault(); setScale(+pad.dataset.keynote, null); return; }
     if (pad.dataset.scale != null) { e.preventDefault(); setScale(null, +pad.dataset.scale); return; }
@@ -369,7 +412,7 @@ export function buildPanel(root, api) {
   // Hovering a preset pad shows its name on the LCD.
   grid.addEventListener('pointerover', (e) => {
     const pad = e.target.closest('.pad');
-    const k = pad?.dataset.slot ?? pad?.dataset.sample ?? (pad?.dataset.project != null ? `p${pad.dataset.project}` : null);
+    const k = pad?.dataset.slot ?? pad?.dataset.sample ?? (pad?.dataset.project != null ? `p${pad.dataset.project}` : pad?.dataset.dsample != null ? `d${pad.dataset.dsample}` : pad?.dataset.step != null && drumNote() ? `s${pad.dataset.step}` : null);
     if (k === st.hover) return;
     st.hover = k;
     paintLcd();
@@ -377,7 +420,7 @@ export function buildPanel(root, api) {
   grid.addEventListener('pointerleave', () => { st.hover = null; paintLcd(); });
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (st.copying || st.mode || st.saveArm || st.armed) { st.copying = false; st.mode = null; st.dupSrc = null; st.saveArm = false; st.armed = false; paint(); }
+    if (st.copying || st.mode || st.saveArm || st.armed || st.flip != null || st.stepFlip != null) { st.copying = false; st.mode = null; st.dupSrc = null; st.saveArm = false; st.armed = false; st.flip = null; st.stepFlip = null; paint(); }
   });
   document.addEventListener('pointerup', (e) => { if (st.held?.id === e.pointerId) st.held = null; });
   grid.addEventListener('pointerup', up);
@@ -388,6 +431,9 @@ export function buildPanel(root, api) {
     st.copying = false;
     st.armed = false;
     st.dupSrc = null;
+    st.flip = null;
+    st.stepFlip = null;
+    if (TRACKS[i].kind === 'drum') st.dpage[i - 4] = Math.floor(activeSample(i) / 16);
     if (TRACKS[i].kind === 'synth' && i !== api.synth()) api.chooseSynth(i);
     paint();
   }
@@ -395,6 +441,8 @@ export function buildPanel(root, api) {
     st.view = id;
     st.copying = false;
     st.armed = false;
+    st.flip = null;
+    st.stepFlip = null;
     if (!STEP_VIEWS.includes(id)) { st.mode = null; st.dupSrc = null; }
     if (id === 'preset') followSlot();
     paint();
@@ -403,9 +451,17 @@ export function buildPanel(root, api) {
   function followSlot() { st.lastSlot = api.slot(); st.page[0] = st.page[1] = Math.floor(st.lastSlot / 32); }
   const presetKind = () => (st.view !== 'preset' ? null : TRACKS[st.track].kind);
   const viewPaged = () => st.view === 'projects' || (st.view === 'patterns' && pp?.loaded);
-  const pageCount = () => (viewPaged() ? 2 : presetKind() === 'synth' ? Math.ceil(api.slotCount() / 32) : presetKind() === 'drum' ? Math.ceil(api.sampleCount() / 32) : 0);
-  const getPage = () => (viewPaged() ? st.vpage[st.view] : st.page[st.track]);
-  const setPage = (k) => { if (viewPaged()) st.vpage[st.view] = k; else st.page[st.track] = k; };
+  const drumNote = () => st.view === 'note' && TRACKS[st.track].kind === 'drum';
+  const pageCount = () => (drumNote() ? Math.ceil(api.sampleCount() / 16) : viewPaged() ? 2 : presetKind() === 'synth' ? Math.ceil(api.slotCount() / 32) : presetKind() === 'drum' ? Math.ceil(api.sampleCount() / 32) : 0);
+  const getPage = () => (drumNote() ? st.dpage[st.track - 4] : viewPaged() ? st.vpage[st.view] : st.page[st.track]);
+  const setPage = (k) => { if (drumNote()) st.dpage[st.track - 4] = k; else if (viewPaged()) st.vpage[st.view] = k; else st.page[st.track] = k; };
+  // A drum track's active sample: the loaded project's (it plays it), otherwise the panel's.
+  const activeSample = (t) => (pp?.loaded ? pp.entry.project.defaultDrums[t - 4] : st.drum[t - 4]);
+  function chooseSample(t, slot) {
+    st.drum[t - 4] = slot;
+    st.dpage[t - 4] = Math.floor(slot / 16);
+    if (pp?.loaded) pp.setDrumSample(t, slot);
+  }
 
   // ---- step editing
   // A short message in the status strip (it replaces the hint for a few seconds).
@@ -439,6 +495,34 @@ export function buildPanel(root, api) {
     for (const n of notes) api.noteOn(n.note, n.vel);
     if (notes.length) setTimeout(() => { for (const n of notes) api.noteOff(n.note); }, 280);
   }
+  // Drum Note view, as on the hardware: holding a step lights its sample red on the sample pads
+  // (turning to its page); a quick tap adds or removes the hit; a long press arms the step for a
+  // sample flip (a sample pad then gives it that sample; the step again or Esc cancels).
+  function drumStepHold(k) {
+    const t = st.track, vp = viewPattern(t), down = performance.now();
+    if (st.stepFlip === k) { st.stepFlip = null; paint(); return; }
+    st.stepFlip = null;
+    st.heldStep = k;
+    const smp = pp.stepSample(t, vp.index, k);
+    if (smp != null) st.dpage[t - 4] = Math.floor(smp / 16);
+    paint();
+    const up = () => {
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      st.heldStep = null;
+      if (performance.now() - down < 500) {
+        const on = pp.toggleHit(t, vp.index, k, activeSample(t), velocity());
+        if (on) api.audition(activeSample(t));
+        paint();
+      } else {
+        st.stepFlip = k;
+        paint();
+        flash(`Step ${k + 1} is armed: tap a sample pad to give it that sample (▼ ▲ for other pages). Press the step again or Esc to cancel.`);
+      }
+    };
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+  }
   function stepPress(k, e) {
     const tg = editTarget();
     if (!tg) { flash('Choose a project in Projects view first.'); return; }
@@ -457,8 +541,9 @@ export function buildPanel(root, api) {
     }
     if (st.view === 'note') {
       if (kind === 'drum') {
-        const on = pp.toggleHit(t, p, k, st.drum[t - 4], velocity());
-        if (on) api.audition(st.drum[t - 4]);
+        if (st.flip != null) { if (pp.flipStep(t, p, k, st.flip, velocity())) api.audition(st.flip); return; }
+        const on = pp.toggleHit(t, p, k, activeSample(t), velocity());
+        if (on) api.audition(activeSample(t));
         return;
       }
       if (st.armed && st.sel === k) { st.armed = false; paint(); return; }
@@ -560,7 +645,7 @@ export function buildPanel(root, api) {
   function paintPresetPads() {
     const kind = presetKind();
     const base = st.page[st.track] * 32;
-    const cur = kind === 'synth' ? api.slot() : st.drum[st.track - 4];
+    const cur = kind === 'synth' ? api.slot() : activeSample(st.track);
     st.pads.forEach((p, k) => {
       const i = base + k;
       clearPad(p);
@@ -599,7 +684,7 @@ export function buildPanel(root, api) {
       const info = api.slotInfo(i);
       text += ` · ${pad3(i + 1)} ${info.empty ? 'Initial Patch' : info.name || '(no name)'}`;
     } else if (kind === 'drum') {
-      const i = st.hover != null ? +st.hover : st.drum[st.track - 4];
+      const i = st.hover != null ? +st.hover : activeSample(st.track);
       text += ` · ${pad3(i + 1)} ${api.sampleName(i) || '(empty)'}`;
     } else if (st.view === 'projects') {
       const list = api.projects?.() ?? [];
@@ -610,6 +695,15 @@ export function buildPanel(root, api) {
       text = `${v.label} · ${pp.entry.slot + 1} ${pp.song.name} · ${sc}${st.pos?.scene != null && pp.playing ? ` · playing scene ${st.pos.scene + 1}` : ''}`;
     }
     if (pp?.loaded && STEP_VIEWS.includes(st.view)) text += stepText();
+    if (drumNote()) {
+      // Which sample: the pad or step under the pointer, the step held or armed, else the track's.
+      const vp = pp?.loaded ? viewPattern(st.track) : null;
+      const hs = st.hover?.startsWith?.('s') ? +st.hover.slice(1) : st.heldStep ?? st.stepFlip;
+      const nm = (i) => `${pad3(i + 1)} ${api.sampleName(i) || '(empty)'}`;
+      if (st.hover?.startsWith?.('d')) text += ` · sample ${nm(+st.hover.slice(1))}`;
+      else if (hs != null && vp) { const smp = pp.stepSample(st.track, vp.index, hs); text += ` · step ${hs + 1}: ${smp == null ? 'no hit' : `${nm(smp)}${smp !== activeSample(st.track) ? ' (its own sample)' : ''}`}`; }
+      else text += ` · ${nm(activeSample(st.track))}`;
+    }
     if (st.view === 'velocity' && st.fixedVel) text += ' · Fixed Velocity';
     if (pp?.loaded && pp.edited && (STEP_VIEWS.includes(st.view) || st.view === 'projects' || st.view === 'scales')) text += ' · edited, not saved';
     const keys = (st.view === 'note' || st.view === 'expand') && TRACKS[st.track].kind !== 'drum';
@@ -631,9 +725,18 @@ export function buildPanel(root, api) {
     const step = vp?.pat?.steps[k];
     const has = !!step?.hits.length;
     if (vp && (k < vp.pat.start || k > vp.pat.end)) cls += ` outside${has ? ' has' : ''}`;
-    else if (has) cls += ` on ${kind}`;
+    else if (has) {
+      cls += ` on ${kind}`;
+      // Drum steps: pink where the hit has its own sample (a sample flip); red for the sample armed.
+      if (kind === 'drum' && pp?.loaded) {
+        const smp = pp.stepSample(st.track, vp.index, k);
+        if (st.flip != null && smp === st.flip) cls += ' flipmark';
+        else if (smp !== activeSample(st.track)) cls += ' flip';
+      }
+    }
     if (vp && st.view !== 'note' && st.view !== 'pattern' && st.sel === k) cls += ' sel';
     if (st.view === 'note' && st.armed && st.sel === k) cls += ' armed';
+    if (kind === 'drum' && (st.heldStep === k || st.stepFlip === k)) cls += ' armed';
     if (st.mode === 'dup' && st.dupSrc === k) cls += ' src';
     return cls;
   }
@@ -657,14 +760,14 @@ export function buildPanel(root, api) {
     const keyTrack = kind === 'synth' || kind === 'midi';
     const oct = api.octave();
     const vp = st.view === 'note' ? viewPattern(st.track) : null;
-    const drumSample = kind === 'drum' ? st.drum[st.track - 4] : null;
+    const drumSample = kind === 'drum' ? activeSample(st.track) : null;
     const base = pageBase();
     // The chosen step's notes light their keys (in the octave shown).
     const inStep = new Set(vp && st.armed && st.sel != null && keyTrack ? pp.stepNotes(st.track, vp.index, st.sel).map((n) => n.note) : []);
     st.pads.forEach((p, i) => {
       const row = Math.floor(i / 8), col = i % 8;
       let note = null, cls = 'pad', label = '';
-      delete p.dataset.drumhit; delete p.dataset.project; delete p.dataset.pattern; delete p.dataset.ptrack; delete p.dataset.scene; delete p.dataset.mute; delete p.dataset.val;
+      delete p.dataset.drumhit; delete p.dataset.dsample; delete p.dataset.project; delete p.dataset.pattern; delete p.dataset.ptrack; delete p.dataset.scene; delete p.dataset.mute; delete p.dataset.val;
       const expand = st.view === 'expand';
       if (st.view === 'note' && row < 2) {
         const k = base + row * 8 + col;
@@ -673,7 +776,18 @@ export function buildPanel(root, api) {
         if (vp) label = String(k + 1);
       } else if ((st.view === 'note' || expand) && kind === 'drum') {
         if (expand) cls += ' off';
-        else if (row === 3 && col < 4 || row === 2 && col < 4) { cls += ' drumhit'; p.dataset.drumhit = drumSample; label = row === 3 && col === 0 ? 'Hit' : ''; } else cls += ' off';
+        else {
+          // 16 of the 64 samples (▼ ▲ for the other pages), in the track's colour; the active one bright.
+          const slot = st.dpage[st.track - 4] * 16 + (row - 2) * 8 + col;
+          if (slot < api.sampleCount()) {
+            const showStep = st.heldStep ?? st.stepFlip;
+            const stepSmp = showStep != null && vp ? pp.stepSample(st.track, vp.index, showStep) : null;
+            cls += ` dsample t${st.track - 3}${slot === drumSample ? ' lit' : ''}${st.flip === slot || stepSmp === slot ? ' flipsrc' : ''}${api.sampleName(slot) ? '' : ' empty'}`;
+            p.dataset.dsample = slot;
+            label = String(slot + 1);
+            p.title = `${pad3(slot + 1)} ${api.sampleName(slot) || '(empty)'}`;
+          } else cls += ' off';
+        }
       } else if ((st.view === 'note' || expand) && keyTrack) {
         const sc = curScale();
         note = keyNote(row, col, oct, sc);
@@ -690,7 +804,8 @@ export function buildPanel(root, api) {
       if (!(st.view === 'note' && row < 2)) delete p.dataset.step;
       p.className = cls;
       p.textContent = label;
-      delete p.dataset.slot; delete p.dataset.sample; p.removeAttribute('title'); p.removeAttribute('aria-pressed');
+      delete p.dataset.slot; delete p.dataset.sample; p.removeAttribute('aria-pressed');
+      if (p.dataset.dsample == null) p.removeAttribute('title');
       if (note == null) { delete p.dataset.note; p.removeAttribute('aria-label'); p.tabIndex = -1; }
       else { p.dataset.note = note; p.setAttribute('aria-label', noteName(note)); }
       if (p.dataset.step != null) p.setAttribute('aria-label', `Step ${+p.dataset.step + 1}`);
@@ -961,7 +1076,7 @@ export function buildPanel(root, api) {
     else if (v.id === 'probability') setHint('Press a step (top rows), then a pad on row 3: the chance the step plays on each pass (8 pads 100%, 4 pads 50%, 1 pad 12.5%). Press Pattern Settings again to go back.');
     else if (v.id === 'pattern') setHint('Press a step to make it the last step of the pattern (hold Shift, or click Shift first, to move the first step). Row 3: sync rate (1/16 is the default). Pads 29-32: play order forward, reverse, ping-pong, random. Press Pattern Settings again for Probability.');
     else if (t.kind === 'midi') setHint(`Press a step to choose it (it turns red), then the keys to add or remove its notes; press the step again to let go. MIDI tracks play other gear from the Circuit Tracks; here they are sketched with a simple tone. Clear, Duplicate and 1-16/17-32 work on steps.`);
-    else if (t.kind === 'drum') setHint(`Tap a step to add a hit with ${t.label}'s sample (${pad3(st.drum[st.track - 4] + 1)} ${api.sampleName(st.drum[st.track - 4]) || ''}), or tap it again to remove it. The bottom-left pads play the sample; choose another in Preset view.`);
+    else if (t.kind === 'drum') setHint(st.flip != null ? `Sample flip with ${pad3(st.flip + 1)} ${api.sampleName(st.flip) || ''}: press steps to give them this sample (red: steps playing it). Press the sample pad again or Esc to finish.` : `Bottom rows: 16 of the 64 samples (▼ ▲ for the others; hover for the name). Tap one to make it ${t.label}'s sample (bright) and hear it; hold one to hear it and arm a sample flip. Tap a step to add a hit with ${t.label}'s sample (${pad3(activeSample(st.track) + 1)} ${api.sampleName(activeSample(st.track)) || ''}), tap it again to remove it. Pink steps play a sample of their own; hover a step to see which.`);
     else setHint(st.armed ? `Step ${st.sel + 1} is chosen: the keys add notes to it (red: already on it) or remove them. ▼ ▲ change octave. Press the step again or Esc to play the keys normally.` : 'Press a step to choose it (it turns red, and plays its notes), then the keys to add or remove its notes. Without a chosen step the keys play the patch. ▼ ▲ change octave; velocity comes from the control at the bottom.');
     if (saveHint && STEP_VIEWS.includes(v.id)) setHint(hint.dataset.text + saveHint);
     if (['velocity', 'gate', 'probability', 'pattern'].includes(v.id)) { paintStepView(); return; }
