@@ -64,22 +64,80 @@ export function buildPanel(root, api) {
   const st = { track: api.synth(), view: 'note', pads: [], page: [0, 0, 0, 0, 0, 0, 0, 0], vpage: { projects: 0, patterns: 0 }, drum: DRUM_DEFAULT.slice(), copying: false, hover: null, lastSlot: null, pos: null };
   const pp = api.proj ?? null;
 
-  const trackBtns = TRACKS.map((t, i) => h('button', {
-    type: 'button', class: `trk ${t.kind}`, 'data-track': i, 'aria-pressed': 'false', text: t.label,
-    title: t.kind === 'synth' ? `${t.label}: edit and play its patch` : `${t.label}: its steps in Note view, its sample in Preset view`,
-    onclick: () => selectTrack(i),
-  }));
-  const viewBtns = VIEWS.map((v) => h('button', {
-    type: 'button', class: `view${v.group ? ` ${v.group}` : ''}`, 'data-view': v.id, 'aria-pressed': 'false', text: v.label,
-    title: v.step > 3 ? `${v.label} view (not built yet)` : `${v.label} view`,
-    onclick: () => selectView(v.id),
-  }));
+  // ---- the panel, laid out as the Circuit Tracks' top panel (User Guide v3, page 15)
+  const shift = { on: false, held: false };   // Shift: the computer's Shift key, or click to arm it for one press
+  const isShift = (e) => !!e?.shiftKey || shift.on;
+  const useShift = () => { if (shift.on && !shift.held) { shift.on = false; paintShift(); } };
+  // A panel button: name, optional second legend (shown below, as on the hardware) or top legend
+  // (above: the function row's Shift legends), and a handler (e) => void.
+  const btn = (cls, name, { below, above, title, onclick, disabled } = {}) => {
+    const b = h('button', { type: 'button', class: `cbtn ${cls}`, title: title ?? name },
+      above ? h('span', { class: 'leg-top', text: above }) : null,
+      h('span', { class: 'nm', text: name }),
+      below ? h('span', { class: 'leg', text: below }) : null);
+    if (disabled) b.classList.add('idle');
+    b.addEventListener('click', (e) => { onclick?.(e); });
+    return b;
+  };
+  const trackBtns = TRACKS.map((t, i) => {
+    const b = btn(`trk ${t.kind}`, t.label, { title: t.kind === 'synth' ? `${t.label}: edit and play its patch` : `${t.label}: its steps in Note view, its sample in Preset view`, onclick: () => selectTrack(i) });
+    b.dataset.track = i;
+    b.dataset.short = t.label.replace('Synth ', 'S').replace('MIDI ', 'M').replace('Drum ', 'D');
+    b.setAttribute('aria-pressed', 'false');
+    return b;
+  });
+  // View buttons. Second legends: a secondary view (Shift + button, or press the button again in its
+  // view) or a Shift-only mode. Views not built yet still select, and say so in the status strip.
+  const viewBtn = (id, name, { below, secondary, title } = {}) => {
+    const b = btn('view', name, { below, title: title ?? `${name}${below ? ` (Shift: ${below})` : ''}`, onclick: (e) => {
+      const sh = isShift(e);
+      useShift();
+      if (secondary && (sh || st.view === id)) selectView(st.view === secondary && !sh ? id : secondary);
+      else selectView(id);
+    } });
+    b.dataset.view = id;
+    if (secondary) b.dataset.secondary = secondary;
+    b.setAttribute('aria-pressed', 'false');
+    return b;
+  };
+  const vNote = viewBtn('note', 'Note', { below: 'Expand' });
+  const vVel = viewBtn('velocity', 'Velocity', { below: 'Fixed' });
+  const vGate = viewBtn('gate', 'Gate', { below: 'Micro Step', secondary: 'micro' });
+  const vPat = viewBtn('pattern', 'Pattern Settings', { below: 'Probability', secondary: 'probability' });
+  const vPreset = viewBtn('preset', 'Preset');
+  const vPatterns = viewBtn('patterns', 'Patterns', { below: 'View Lock' });
+  const vMixer = viewBtn('mixer', 'Mixer');
+  const vFx = viewBtn('fx', 'FX', { below: 'Side Chain', secondary: 'sidechain' });
+  const vScales = viewBtn('scales', 'Scales');
+  const vTempo = btn('view tempo', 'Tempo Swing', { above: 'Tap', title: 'Tempo and Swing (Shift: Tap tempo)', onclick: (e) => { const sh = isShift(e); useShift(); if (sh) { tapTempo(); if (st.view !== 'tempo') selectView('tempo'); } else selectView('tempo'); } });
+  vTempo.dataset.view = 'tempo';
+  const vProjects = btn('view half', 'Projects', { above: 'Packs', title: 'Projects (Shift or press again: Packs, not built yet)', onclick: () => { useShift(); selectView('projects'); } });
+  vProjects.dataset.view = 'projects';
+  const viewBtns = [vNote, vVel, vGate, vPat, vPreset, vPatterns, vMixer, vFx, vScales, vTempo, vProjects];
+  // ▼ ▲: octave in Note view, page in Preset, Projects and Patterns views.
+  const arrow = (dir) => btn('arrow half', dir < 0 ? '▼' : '▲', { title: dir < 0 ? 'Octave down, or the previous page' : 'Octave up, or the next page', onclick: () => { useShift(); stepPage(dir); } });
+  const downBtn = arrow(-1), upBtn = arrow(1);
+  const stepPageBtn = btn('idle', '1-16 17-32', { title: '1-16 / 17-32: step pages (comes with step editing)', disabled: true });
+  const clearBtn = btn('idle', 'Clear', { above: 'Click', title: 'Clear (comes with step editing)', disabled: true });
+  const copyBtn = btn('dup', 'Duplicate', { above: 'Mutate', title: 'Duplicate. In Preset view: press it, then a pad, to copy the patch being edited there.', onclick: () => { useShift(); if (presetKind() === 'synth') { st.copying = !st.copying; paint(); } } });
+  const saveBtn = btn('idle half', 'Save', { title: 'Save (comes with saving projects; use Download pack meanwhile). Shift: Setup.', disabled: true });
+  const shiftBtn = btn('shift', 'Shift', { title: 'Shift: click to arm it for the next button or pad, or hold the computer\'s Shift key', onclick: () => { shift.on = !shift.on; paintShift(); } });
+  const playBtn = btn('tbtn play', '▶', { title: 'Play or stop the project (Space). Choose a project first (Projects, or Project in the bottom bar).', onclick: () => { useShift(); pp?.toggle(); } });
+  playBtn.setAttribute('aria-label', 'Play');
+  const recBtn = btn('tbtn rec idle', '●', { below: 'Rec Quantise', title: 'Record (comes with step editing). Shift: Rec Quantise.', disabled: true });
+  recBtn.setAttribute('aria-label', 'Record');
+  function paintShift() {
+    shiftBtn.classList.toggle('on', shift.on || shift.held);
+    root.classList.toggle('shifted', shift.on || shift.held);
+  }
+  document.addEventListener('keydown', (e) => { if (e.key === 'Shift' && !shift.held) { shift.held = true; paintShift(); } });
+  document.addEventListener('keyup', (e) => { if (e.key === 'Shift') { shift.held = false; paintShift(); } });
+  window.addEventListener('blur', () => { shift.held = false; paintShift(); });
+
   const lcd = h('p', { class: 'panel-lcd', role: 'status' });
   const hint = h('p', { class: 'panel-hint' });
-  const pages = h('div', { class: 'pages seg', role: 'group', 'aria-label': 'Pages' });
-  const copyBtn = h('button', { type: 'button', class: 'btn small', 'aria-pressed': 'false', title: 'Duplicate the patch being edited onto another pad and edit the copy: press this, then the pad', onclick: () => { st.copying = !st.copying; paint(); } });
   const revertBtn = h('button', { type: 'button', class: 'btn small', text: 'Revert', title: 'Put back the patch the pack had in this slot', onclick: () => api.revert() });
-  const tools = h('div', { class: 'pad-tools' }, pages, h('span', { class: 'grow' }), copyBtn, revertBtn);
+  const tools = h('div', { class: 'pad-tools' }, h('span', { class: 'grow' }), revertBtn);
   const grid = h('div', { class: 'pads', role: 'group', 'aria-label': 'Pads' });
   // Mixer view: a level slider per track under the pads (the hardware uses its macro knobs).
   const levels = TRACKS.map((t, i) => {
@@ -101,13 +159,14 @@ export function buildPanel(root, api) {
   bpm.addEventListener('change', () => setBpm(+bpm.value || 120));
   bpmRange.addEventListener('input', () => setBpm(+bpmRange.value));
   swing.addEventListener('input', () => { pp?.setSwing(+swing.value); paintTempo(); });
-  tap.addEventListener('click', () => {
+  tap.addEventListener('click', () => tapTempo());
+  function tapTempo() {
     const now = performance.now();
     if (taps.length && now - taps[taps.length - 1] > 2000) taps.length = 0;
     taps.push(now);
     if (taps.length > 5) taps.shift();
     if (taps.length >= 3) setBpm(60000 / ((taps[taps.length - 1] - taps[0]) / (taps.length - 1)));
-  });
+  }
   const bigBpm = h('p', { class: 'bigbpm' });
   const tempobox = h('div', { class: 'tempobox', hidden: true }, bigBpm,
     h('label', { class: 'trow' }, h('span', { text: 'Tempo' }), bpmRange, bpm, tap),
@@ -126,20 +185,51 @@ export function buildPanel(root, api) {
     st.pads.push(pad);
     grid.append(pad);
   }
-  const playBtn = h('button', { type: 'button', class: 'tbtn play', disabled: true, title: 'Play or stop the project (Space). Choose a project in Projects view first.', 'aria-label': 'Play', text: '▶', onclick: () => pp?.toggle() });
-  const transport = h('div', { class: 'transport' },
-    playBtn,
-    h('button', { type: 'button', class: 'tbtn rec', disabled: true, title: 'Record (comes with step editing)', 'aria-label': 'Record', text: '●' }),
-    h('button', { type: 'button', class: 'tbtn', disabled: true, title: 'Clear (comes with step editing)', text: 'Clear' }),
-    h('button', { type: 'button', class: 'tbtn', disabled: true, title: 'Duplicate (comes with step editing)', text: 'Duplicate' }),
-  );
 
-  root.append(
-    h('div', { class: 'panel-top' }, h('div', { class: 'tracks-row', role: 'group', 'aria-label': 'Tracks' }, trackBtns), transport),
-    h('div', { class: 'panel-mid' },
-      h('div', { class: 'views', role: 'group', 'aria-label': 'Views' }, viewBtns),
-      h('div', { class: 'padzone' }, lcd, tools, grid, mixbox, tempobox, hint)),
-  );
+  // Knobs: Master Volume, the eight macros (the editor's own macro knobs move in here while TRACKS
+  // shows: see adoptMacros), Master Filter.
+  const dial = (label, { value, min = 0, max = 127, centre = null, onInput, title }) => {
+    const svg = h('span', { class: 'dial', role: 'slider', tabindex: 0, 'aria-label': label, 'aria-valuemin': min, 'aria-valuemax': max, title });
+    const cell = h('div', { class: 'ct-dial' }, svg, h('span', { class: 'cap', text: label }));
+    let v = value();
+    const show = () => {
+      const a = -135 + 270 * (v - min) / (max - min);
+      svg.style.setProperty('--a', `${a}deg`);
+      svg.setAttribute('aria-valuenow', v);
+      svg.classList.toggle('centre', centre != null && v === centre);
+    };
+    const set = (x) => { v = Math.max(min, Math.min(max, Math.round(x))); show(); onInput(v); };
+    svg.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      svg.setPointerCapture(e.pointerId);
+      const y0 = e.clientY, v0 = v;
+      const move = (ev) => set(v0 + (y0 - ev.clientY) * (max - min) / 160);
+      const end = () => { svg.removeEventListener('pointermove', move); svg.removeEventListener('pointerup', end); };
+      svg.addEventListener('pointermove', move);
+      svg.addEventListener('pointerup', end);
+    });
+    svg.addEventListener('dblclick', () => set(centre ?? value()));
+    svg.addEventListener('keydown', (e) => { const d = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1 }[e.key]; if (d) { e.preventDefault(); set(v + d * (e.shiftKey ? 10 : 1)); } });
+    show();
+    return { cell, refresh: () => { v = value(); show(); } };
+  };
+  const vol = dial('Master Volume', { value: () => api.volume?.() ?? 80, min: 0, max: 100, onInput: (v) => api.setVolume?.(v), title: 'Master Volume (the page volume). Drag up or down.' });
+  const filt = dial('Master Filter', { value: () => pp?.masterFilter ?? 64, centre: 64, onInput: (v) => pp?.setMasterFilter(v), title: 'Master Filter for the project playing: left low-pass, right high-pass, centre off. Double-click for off.' });
+  const macroSlot = h('div', { class: 'ct-macros', 'aria-label': 'Macros' });
+
+  root.append(h('div', { class: 'ct' },
+    h('div', { class: 'ct-knobs' }, vol.cell, macroSlot, filt.cell),
+    h('div', { class: 'ct-body' },
+      h('div', { class: 'c-l r1' }, vScales),
+      h('div', { class: 'c-m r1 fnrow' }, h('span', { class: 'pair' }, downBtn, upBtn), stepPageBtn, vTempo, clearBtn, copyBtn, h('span', { class: 'pair' }, saveBtn, vProjects)),
+      h('div', { class: 'c-r r1' }, shiftBtn),
+      h('div', { class: 'c-l r2' }, vPreset),
+      h('div', { class: 'c-m r2 tracks-row', role: 'group', 'aria-label': 'Tracks' }, trackBtns),
+      h('div', { class: 'c-r r2' }, vPatterns),
+      h('div', { class: 'c-l rg stepcol' }, vNote, vVel, vGate, vPat),
+      h('div', { class: 'c-m rg padzone' }, grid, tempobox),
+      h('div', { class: 'c-r rg rightcol' }, vMixer, vFx, recBtn, playBtn),
+      h('div', { class: 'c-m rs status' }, lcd, tools, mixbox, hint))));
 
   // Pads: pointer down plays, up / leave releases. In Preset view a pad picks a patch (and plays
   // it at the keyboard's C while held) or a drum sample (and plays it).
@@ -169,8 +259,27 @@ export function buildPanel(root, api) {
       return;
     }
     if (pad.dataset.project != null) { e.preventDefault(); api.loadProject(+pad.dataset.project); return; }
-    if (pad.dataset.pattern != null) { e.preventDefault(); pp?.selectPattern(+pad.dataset.ptrack, +pad.dataset.pattern, { extend: e.shiftKey }); return; }
-    if (pad.dataset.scene != null) { e.preventDefault(); pp?.selectScene(+pad.dataset.scene, { chain: e.shiftKey }); return; }
+    // Chains, as on the hardware: hold one pattern (or scene) pad and press another. Shift-click too.
+    if (pad.dataset.pattern != null) {
+      e.preventDefault();
+      const t = +pad.dataset.ptrack, pt = +pad.dataset.pattern;
+      const held = st.held?.kind === 'pattern' && st.held.track === t;
+      if (held) pp?.selectPattern(t, st.held.index, {}), pp?.selectPattern(t, pt, { extend: true });
+      else pp?.selectPattern(t, pt, { extend: isShift(e) });
+      useShift();
+      if (!held) st.held = { kind: 'pattern', track: t, index: pt, id: e.pointerId };
+      return;
+    }
+    if (pad.dataset.scene != null) {
+      e.preventDefault();
+      const i = +pad.dataset.scene;
+      const held = st.held?.kind === 'scene';
+      if (held) { pp?.selectScene(st.held.index); pp?.selectScene(i, { chain: true }); }
+      else pp?.selectScene(i, { chain: isShift(e) });
+      useShift();
+      if (!held) st.held = { kind: 'scene', index: i, id: e.pointerId };
+      return;
+    }
     if (pad.dataset.mute != null) { e.preventDefault(); const t = +pad.dataset.mute; pp?.setMute(t, !pp.mutes[t]); return; }
     if (pad.dataset.drumhit != null) { e.preventDefault(); api.audition(+pad.dataset.drumhit); pad.classList.add('down'); setTimeout(() => pad.classList.remove('down'), 120); return; }
     if (pad.dataset.note == null) return;
@@ -178,6 +287,7 @@ export function buildPanel(root, api) {
     hold(e, pad, +pad.dataset.note);
   });
   const up = (e) => {
+    if (st.held?.id === e.pointerId) st.held = null;
     const n = down.get(e.pointerId);
     if (n == null) return;
     down.delete(e.pointerId);
@@ -194,6 +304,7 @@ export function buildPanel(root, api) {
   });
   grid.addEventListener('pointerleave', () => { st.hover = null; paintLcd(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && st.copying) { st.copying = false; paint(); } });
+  document.addEventListener('pointerup', (e) => { if (st.held?.id === e.pointerId) st.held = null; });
   grid.addEventListener('pointerup', up);
   grid.addEventListener('pointercancel', up);
 
@@ -217,30 +328,30 @@ export function buildPanel(root, api) {
   const getPage = () => (viewPaged() ? st.vpage[st.view] : st.page[st.track]);
   const setPage = (k) => { if (viewPaged()) st.vpage[st.view] = k; else st.page[st.track] = k; };
 
+  // ▼ ▲ turn pages where a view has them (Preset, Projects, Patterns), otherwise the octave.
+  function stepPage(dir) {
+    const n = pageCount();
+    if (n) { setPage(Math.max(0, Math.min(n - 1, getPage() + dir))); paint(); return; }
+    if (st.view === 'note') api.setOctave?.(api.octave() + dir);
+  }
   function paintPages() {
     const n = pageCount();
-    tools.hidden = !n;
-    if (!n) return;
-    setPage(Math.min(getPage(), n - 1));
-    if (pages.children.length !== n) {
-      pages.textContent = '';
-      for (let k = 0; k < n; k++) pages.append(h('button', { type: 'button', 'data-page': k, onclick: () => { setPage(k); paint(); } }));
-    }
-    [...pages.children].forEach((b, k) => {
-      b.textContent = st.view === 'patterns' ? `Patterns ${k * 4 + 1}–${k * 4 + 4}` : `${k * 32 + 1}–${(k + 1) * 32}`;
-      const on = k === getPage();
-      b.classList.toggle('on', on);
-      b.setAttribute('aria-pressed', String(on));
-    });
+    const paged = n > 0;
+    if (paged) setPage(Math.min(getPage(), n - 1));
+    downBtn.classList.toggle('idle', paged ? getPage() === 0 : st.view !== 'note' || api.octave() <= 0);
+    upBtn.classList.toggle('idle', paged ? getPage() >= n - 1 : st.view !== 'note' || api.octave() >= 6);
     const synth = presetKind() === 'synth';
-    copyBtn.hidden = revertBtn.hidden = !synth;
-    if (synth) {
-      const info = api.slotInfo(api.slot());
-      copyBtn.textContent = st.copying ? 'Cancel' : 'Duplicate to pad…';
-      copyBtn.classList.toggle('on', st.copying);
-      copyBtn.setAttribute('aria-pressed', String(st.copying));
-      revertBtn.disabled = !info.edited;
-    }
+    tools.hidden = !synth;
+    copyBtn.classList.toggle('on', st.copying);
+    copyBtn.classList.toggle('idle', !synth);
+    if (synth) revertBtn.disabled = !api.slotInfo(api.slot()).edited;
+  }
+  // Page text for the status strip.
+  function pageText() {
+    const n = pageCount();
+    if (!n) return '';
+    const k = getPage();
+    return st.view === 'patterns' ? ` · patterns ${k * 4 + 1}–${k * 4 + 4}` : ` · ${k * 32 + 1}–${(k + 1) * 32}`;
   }
 
   function paintPresetPads() {
@@ -295,7 +406,7 @@ export function buildPanel(root, api) {
       const sc = pp.custom ? 'patterns chosen here' : pp.sceneChain.end > pp.sceneChain.start ? `scenes ${pp.sceneChain.start + 1}–${pp.sceneChain.end + 1}` : `scene ${pp.scene + 1}`;
       text = `${v.label} · ${pp.entry.slot + 1} ${pp.song.name} · ${sc}${st.pos?.scene != null && pp.playing ? ` · playing scene ${st.pos.scene + 1}` : ''}`;
     }
-    lcd.textContent = text;
+    lcd.textContent = text + (st.view === 'note' && TRACKS[st.track].kind === 'synth' ? ` · octave C${api.octave()}` : pageText());
   }
 
   // Note view's top two rows: the 16 steps of the pattern the track is playing (or the first of its
@@ -416,15 +527,17 @@ export function buildPanel(root, api) {
 
   function paint() {
     st.track = TRACKS[st.track].kind === 'synth' ? api.synth() : st.track;
-    playBtn.disabled = !pp?.loaded;
+    playBtn.classList.toggle('idle', !pp?.loaded);
     playBtn.classList.toggle('on', !!pp?.playing);
-    playBtn.textContent = pp?.playing ? '■' : '▶';
+    playBtn.querySelector('.nm').textContent = pp?.playing ? '■' : '▶';
     playBtn.setAttribute('aria-label', pp?.playing ? 'Stop' : 'Play');
     mixbox.hidden = st.view !== 'mixer';
     tempobox.hidden = st.view !== 'tempo';
     grid.hidden = st.view === 'tempo';
     trackBtns.forEach((b, i) => { const on = i === st.track; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
-    viewBtns.forEach((b) => { const on = b.dataset.view === st.view; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    viewBtns.forEach((b) => { const on = b.dataset.view === st.view || b.dataset.secondary === st.view; b.classList.toggle('on', on); b.classList.toggle('second', b.dataset.secondary === st.view); b.setAttribute('aria-pressed', String(on)); });
+    vol.refresh();
+    filt.refresh();
     const t = TRACKS[st.track], v = VIEWS.find((x) => x.id === st.view);
     root.dataset.track = t.kind;
     root.dataset.copying = st.copying ? 'yes' : 'no';
@@ -432,8 +545,8 @@ export function buildPanel(root, api) {
     paintPages();
     if (v.id === 'preset') {
       if (t.kind === 'synth') hint.textContent = st.copying
-        ? 'Press the pad to duplicate the patch being edited onto. Esc cancels.'
-        : `Press a pad to edit that patch; it plays while you hold the pad. An orange dot marks a patch changed since the pack was opened${api.hardware ? ', a ring one fetched from the Circuit Tracks' : ''}.`;
+        ? 'Press the pad to copy the patch being edited onto. Duplicate again or Esc cancels.'
+        : `Press a pad to edit that patch; it plays while you hold the pad. ▼ ▲ turn the page; Duplicate then a pad copies the patch there. An orange dot marks a patch changed since the pack was opened${api.hardware ? ', a ring one fetched from the Circuit Tracks' : ''}.`;
       else if (t.kind === 'drum') hint.textContent = `Press a pad to choose ${t.label}'s sample and hear it.${pp?.loaded ? ' Loading a project sets each drum to the project\'s own sample.' : ''}`;
       else hint.textContent = 'MIDI tracks have no presets here.';
       if (t.kind === 'midi') { st.pads.forEach((p) => { clearPad(p); p.className = 'pad off'; }); } else paintPresetPads();
@@ -441,8 +554,8 @@ export function buildPanel(root, api) {
     }
     const none = 'Choose a project in Projects view first.';
     if (v.id === 'projects') { hint.textContent = 'Press a project to load it, then ▶ (or Space) to play it. Synth 1 and 2 play the pack\'s patches as you edit them; changing patch here (patch list or Preset view) changes what that synth plays. Nothing is saved in the project.'; paintProjects(); return; }
-    if (v.id === 'patterns') { hint.textContent = pp?.loaded ? 'The lit pads are the patterns each track plays. Click a pattern to play it; Shift-click another to chain the patterns between them. Choosing a scene in Mixer view puts back its patterns.' : none; paintPatterns(); return; }
-    if (v.id === 'mixer') { hint.textContent = pp?.loaded ? 'Top row: mute each track. Bottom two rows: the 16 scenes (white: saved in the project). Click a scene to play it; Shift-click another to chain the scenes between them. The sliders set each track\'s level.' : none; paintMixer(); return; }
+    if (v.id === 'patterns') { hint.textContent = pp?.loaded ? 'The lit pads are the patterns each track plays. Click a pattern to play it; hold it and press another (or Shift-click) to chain the patterns between them. ▼ ▲ show patterns 1-4 or 5-8. Choosing a scene in Mixer view puts back its patterns.' : none; paintPatterns(); return; }
+    if (v.id === 'mixer') { hint.textContent = pp?.loaded ? 'Top row: mute each track. Bottom two rows: the 16 scenes (white: saved in the project). Click a scene to play it; hold it and press another (or Shift-click) to chain the scenes between them. The sliders set each track\'s level.' : none; paintMixer(); return; }
     if (v.id === 'tempo') { hint.textContent = pp?.loaded ? 'Tempo and swing for playing here. Not saved in the project.' : none; paintTempo(); return; }
     if (v.step > 3) hint.textContent = `${v.label} view is not built yet (step ${v.step} of the Tracks panel plan).`;
     else if (t.kind === 'midi') hint.textContent = pp?.loaded ? `${t.label}'s steps in the pattern it is playing. MIDI tracks play other gear from the Circuit Tracks; here they are sketched with a simple tone.` : `${t.label} shows its steps once a project is loaded.`;
@@ -486,5 +599,5 @@ export function buildPanel(root, api) {
   paint();
   // selectTrack: a track chosen on the Circuit Tracks itself (0 Synth 1 … 7 Drum 4).
   // selectView: a view chosen on the Circuit Tracks itself (an id from VIEWS).
-  return { paint, refresh, step, projectLoaded, selectTrack: (i) => { if (i >= 0 && i < TRACKS.length) selectTrack(i); }, selectView: (id) => { if (VIEWS.some((v) => v.id === id) && id !== st.view) selectView(id); }, state: st };
+  return { paint, refresh, step, projectLoaded, macroSlot, selectTrack: (i) => { if (i >= 0 && i < TRACKS.length) selectTrack(i); }, selectView: (id) => { if (VIEWS.some((v) => v.id === id) && id !== st.view) selectView(id); }, state: st };
 }

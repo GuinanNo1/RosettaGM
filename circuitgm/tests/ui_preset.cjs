@@ -21,7 +21,7 @@ const { chromium } = require('playwright');
     await p.click('#face [data-face=tracks]');
     await p.click('.view[data-view=preset]');
     const lit = () => p.evaluate(() => [...document.querySelectorAll('.pad.preset.lit')].map((x) => +x.dataset.slot).join());
-    check(`${name}: Preset shows 32 patch pads and 4 pages`, await p.evaluate(() => document.querySelectorAll('.pad.preset[data-slot]').length === 32 && document.querySelectorAll('.pages button').length === 4));
+    check(`${name}: Preset shows 32 patch pads and 4 pages`, await p.evaluate(() => document.querySelectorAll('.pad.preset[data-slot]').length === 32 && /1–32/.test(document.querySelector('.panel-lcd').textContent)));
     check(`${name}: the lit pad is the patch being edited`, (await lit()) === String(await p.evaluate(() => window.patchworker.S.slot)));
     // Press pad 5: edits slot 5 and plays C3 while held.
     await p.hover('.pad[data-slot="4"]');
@@ -32,15 +32,15 @@ const { chromium } = require('playwright');
     check(`${name}: letting go stops it`, (await p.evaluate(() => window.patchworker.S.held.size)) === 0);
     check(`${name}: the LCD names the patch`, await p.evaluate(() => document.querySelector('.panel-lcd').textContent.includes(`005 ${document.querySelector('#patch-name').value}`)));
     // Page 3, then choosing a patch from the editor's list turns the page back.
-    await p.click('.pages button[data-page="2"]');
+    await p.click('.fnrow .arrow:has-text("▲")'); await p.click('.fnrow .arrow:has-text("▲")');
     check(`${name}: page 3 shows slots 65-96`, await p.evaluate(() => document.querySelector('.pad.preset').dataset.slot === '64'));
     await p.evaluate(() => window.patchworker.selectSlot(100));
-    check(`${name}: choosing slot 101 elsewhere lights it on page 4`, (await lit()) === '100' && await p.evaluate(() => document.querySelector('.pages button.on').dataset.page === '3'));
+    check(`${name}: choosing slot 101 elsewhere lights it on page 4`, (await lit()) === '100' && await p.evaluate(() => /97–128/.test(document.querySelector('.panel-lcd').textContent)));
     // An edit marks the pad.
     await p.evaluate(() => { const w = window.patchworker; w.setByte(20, (w.S.bytes[20] + 1) & 127); });
     check(`${name}: an edited patch gets its mark`, await p.evaluate(() => document.querySelector('.pad[data-slot="100"]').classList.contains('edited')));
     // Copy to pad 102 (not empty: since 0.9 it doesn't ask; undo brings it back).
-    await p.click('.pad-tools .btn >> text=Duplicate to pad…');
+    await p.click('.cbtn.dup');
     check(`${name}: Copy to pad makes the other pads targets`, await p.evaluate(() => document.querySelectorAll('.pad.preset.target').length === 31));
     await p.click('.pad[data-slot="101"]');
     await p.waitForTimeout(150);
@@ -61,7 +61,7 @@ const { chromium } = require('playwright');
     check(`${name}: Revert clears the mark`, await p.evaluate(() => !document.querySelector('.pad[data-slot="100"]').classList.contains('edited')));
     // Drum track: 2 pages of samples; a pad picks the sample.
     await p.click('.trk[data-track="4"]');
-    check(`${name}: Drum 1 shows sample pads, 2 pages, Std Kick lit`, await p.evaluate(() => document.querySelectorAll('.pad.preset[data-sample]').length === 32 && document.querySelectorAll('.pages button').length === 2 && document.querySelector('.pad.preset.lit').dataset.sample === '0'));
+    check(`${name}: Drum 1 shows sample pads, 2 pages, Std Kick lit`, await p.evaluate(() => document.querySelectorAll('.pad.preset[data-sample]').length === 32 && /1–32/.test(document.querySelector('.panel-lcd').textContent) && document.querySelector('.pad.preset.lit').dataset.sample === '0'));
     await p.click('.pad[data-sample="8"]');
     await p.waitForTimeout(200);
     check(`${name}: pressing a sample pad picks it`, await p.evaluate(() => document.querySelector('.pad.preset.lit').dataset.sample === '8' && document.querySelector('.panel-lcd').textContent.includes('009 Room Kick')));

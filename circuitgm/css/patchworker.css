@@ -489,3 +489,81 @@ body.doc { display: block; overflow: auto; }
 .tray #tray-all .btn { flex: 1 1 auto; white-space: nowrap; }
 #song-pick { max-width: 14em; }
 @media (max-width: 760px) { #song-pick { max-width: 9em; } }
+/* TRACKS panel laid out as the Circuit Tracks' top panel (0.12; User Guide v3, page 15). */
+.ct { background: #111115; border: 1px solid #2b2b36; border-radius: 14px; padding: 12px 16px 12px; max-width: 920px; }
+.ct-knobs, .ct-body { display: grid; grid-template-columns: 82px minmax(0, 1fr) 92px; column-gap: 14px; }
+.ct-knobs { align-items: start; margin-bottom: 4px; }
+.ct-dial { display: grid; justify-items: center; gap: 3px; }
+.ct-knobs > .ct-dial:last-child { align-self: end; }
+.ct-dial .cap { font: 600 .64rem var(--head); color: var(--muted); text-align: center; }
+.dial { --a: 0deg; position: relative; width: 46px; height: 46px; border-radius: 50%; background: #1c1c22; box-shadow: 0 0 0 2px #2f2f3a, inset 0 2px 4px #000; cursor: ns-resize; touch-action: none; }
+.dial::after { content: ''; position: absolute; left: 50%; top: 5px; width: 3px; height: 14px; margin-left: -1.5px; border-radius: 2px; background: #e9e9f2; transform-origin: 50% 18px; transform: rotate(var(--a)); }
+.dial.centre { box-shadow: 0 0 0 2px #5a5a6e, inset 0 2px 4px #000; }
+.dial:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.ct-macros #macro-row { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); grid-template-rows: auto auto; gap: 0 4px; }
+.ct-macros .macro { grid-row: 2; }
+.ct-macros .macro:nth-child(even) { grid-row: 1; }
+.ct-macros .macro:nth-child(1) { grid-column: 1 / span 2; } .ct-macros .macro:nth-child(2) { grid-column: 2 / span 2; }
+.ct-macros .macro:nth-child(3) { grid-column: 3 / span 2; } .ct-macros .macro:nth-child(4) { grid-column: 4 / span 2; }
+.ct-macros .macro:nth-child(5) { grid-column: 5 / span 2; } .ct-macros .macro:nth-child(6) { grid-column: 6 / span 2; }
+.ct-macros .macro:nth-child(7) { grid-column: 7 / span 2; } .ct-macros .macro:nth-child(8) { grid-column: 8 / span 2; }
+.ct-macros .macro .m-cap { font-size: .64rem; }
+.ct-body { row-gap: 7px; }
+.ct-body .r1 { grid-row: 1; padding-top: 13px; } .ct-body .r2 { grid-row: 2; } .ct-body .rg { grid-row: 3; } .ct-body .rs { grid-row: 4; }
+.ct-body .c-l { grid-column: 1; } .ct-body .c-m { grid-column: 2; } .ct-body .c-r { grid-column: 3; }
+.ct .cbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; position: relative; width: 100%; min-width: 0; min-height: 34px; padding: 5px 4px; border: 1px solid #383844; border-radius: 5px; background: #26262e; color: #e4e4ee; font: 600 .7rem var(--head); letter-spacing: .02em; text-align: center; white-space: normal; line-height: 1.15; cursor: pointer; box-shadow: inset 0 1px 0 #ffffff0c; }
+.ct .cbtn:hover { background: #2e2e38; }
+.ct .cbtn .leg { font: 500 .6rem var(--head); color: #8d8da2; }
+.ct .cbtn .leg-top { position: absolute; left: -4px; right: -4px; bottom: calc(100% + 2px); font: 500 .6rem var(--head); color: #8d8da2; white-space: nowrap; }
+.ct.shifted .cbtn .leg, .ct.shifted .cbtn .leg-top, .shifted .ct .cbtn .leg, .shifted .ct .cbtn .leg-top { color: #fff; }
+.ct .cbtn.idle { color: #6c6c80; cursor: default; }
+.ct .cbtn.idle:hover { background: #26262e; }
+.ct .cbtn.view.on { background: #34343f; color: #fff; box-shadow: inset 0 0 0 1px #9a9ab0; }
+.ct .cbtn.view.second .leg { color: #fff; }
+.ct .cbtn.view.second .nm { color: #b8b8c8; }
+.ct .cbtn.shift.on { background: #5a5a70; color: #fff; }
+.ct .cbtn.dup.on { background: var(--accent); color: #12111a; }
+.fnrow { display: flex; gap: 6px; align-items: stretch; }
+.fnrow > * { flex: 1 1 0; min-width: 0; }
+.fnrow .pair { display: flex; gap: 1px; flex: 1.6 1 0; }
+.fnrow .pair .cbtn:first-child { border-radius: 5px 0 0 5px; } .fnrow .pair .cbtn:last-child { border-radius: 0 5px 5px 0; }
+.ct .tracks-row { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 7px; padding: 0 10px; max-width: none; }
+.ct .cbtn.trk .nm { color: color-mix(in srgb, var(--c) 55%, #9a9ab0); }
+.ct .cbtn.trk.on { background: color-mix(in srgb, var(--c) 22%, #26262e); box-shadow: inset 0 0 0 1px var(--c); }
+.ct .cbtn.trk.on .nm { color: var(--c); }
+.stepcol, .rightcol { display: grid; grid-template-rows: repeat(4, minmax(0, 1fr)); gap: 7px; padding: 10px 0; }
+.stepcol .cbtn, .rightcol .cbtn { height: 100%; }
+.ct .cbtn.tbtn .nm { font-size: 1.4rem; line-height: 1; }
+.ct .cbtn.tbtn.play .nm { color: #34d27b; }
+.ct .cbtn.tbtn.play.on { background: #1f3a2c; box-shadow: inset 0 0 0 1px #34d27b; }
+.ct .cbtn.tbtn.rec .nm { color: #ff4b5c; }
+.ct .cbtn.tbtn.rec .leg { color: #ff8a95; }
+.ct .padzone { max-width: none; }
+.ct .status { min-width: 0; }
+.ct .status .panel-lcd { margin: 2px 0 6px; }
+.ct .status .pad-tools { margin-bottom: 4px; }
+@media (max-width: 760px) {
+  .ct { padding: 10px 8px; }
+  .ct-knobs, .ct-body { grid-template-columns: 54px minmax(0, 1fr) 58px; column-gap: 6px; }
+  .dial { width: 36px; height: 36px; }
+  .dial::after { height: 11px; transform-origin: 50% 13px; top: 4px; }
+  .ct .cbtn { font-size: .58rem; padding: 4px 2px; min-height: 30px; }
+  .ct .cbtn .leg, .ct .cbtn .leg-top { font-size: .52rem; }
+  .fnrow { gap: 3px; }
+  .ct .tracks-row { gap: 4px; padding: 0 6px; }
+  .stepcol, .rightcol { gap: 4px; padding: 6px 0; }
+  .ct .pads { gap: 4px; padding: 6px; }
+  .ct-macros .macro .k-svg { width: 30px; height: 30px; }
+  .ct-macros .macro .m-cap { display: none; }
+  .stepcol .cbtn, .rightcol .cbtn { min-height: 0; }
+  .ct .padzone { display: flex; flex-direction: column; }
+  .ct .pads { flex: 1; grid-auto-rows: minmax(0, 1fr); }
+  .ct .pad { aspect-ratio: auto; min-height: 30px; }
+  .ct .cbtn.trk .nm { display: none; }
+  .ct .cbtn.trk::after { content: attr(data-short); color: color-mix(in srgb, var(--c) 55%, #9a9ab0); }
+  .ct .cbtn.trk.on::after { color: var(--c); }
+}
+/* Note view steps lit blue, as on the hardware (drum tracks keep their colour). */
+.ct .pad.step.on.synth, .ct .pad.step.on.midi { background: color-mix(in srgb, #4f8bff 60%, #262632); }
+.ct .pad.step.on.synth.play, .ct .pad.step.on.midi.play { background: color-mix(in srgb, #4f8bff 90%, #fff); }
+.ct .pad.step { background: color-mix(in srgb, #4f8bff 10%, #22222c); }

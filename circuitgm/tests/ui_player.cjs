@@ -25,9 +25,24 @@ const fs = require('fs');
     await p.click('#face [data-face=tracks]');
     await p.click('.view[data-view=projects]');
     check(await p.$$eval('.pad.project.filled', (x) => x.length) === 0, `${name}: TracksGM has no projects to play`);
-    check((await p.isDisabled('.tbtn.play')), `${name}: Play is off until a project is loaded`);
+    check(await p.evaluate(() => document.querySelector('.tbtn.play').classList.contains('idle')), `${name}: Play is off until a project is loaded`);
 
     check(await p.isHidden('#song-ctl'), `${name}: no Project picker for a pack without projects`);
+    // The panel is laid out as the Circuit Tracks (User Guide p. 15): Play at the bottom right of the
+    // grid, the view columns either side, the track buttons above.
+    const lay = await p.evaluate(() => {
+      const r = (q) => document.querySelector(q).getBoundingClientRect();
+      const g = r('.ct .pads'), play = r('.tbtn.play'), note = r('.cbtn.view[data-view=note]'), mixer = r('.cbtn.view[data-view=mixer]'), trk = r('.trk[data-track="0"]'), shift = r('.cbtn.shift');
+      return { playRight: play.left >= g.right - 2, playBottom: Math.abs(play.bottom - g.bottom) < 16, noteLeft: note.right <= g.left + 2, mixerRight: mixer.left >= g.right - 2, trkAbove: trk.bottom <= g.top + 2, shiftTopRight: shift.left >= g.right - 2 && shift.bottom < trk.top };
+    });
+    check(Object.values(lay).every(Boolean), `${name}: Play bottom right, views either side, tracks above, Shift top right (${JSON.stringify(lay)})`);
+    await p.click('.cbtn.view[data-view=gate]');
+    await p.click('.cbtn.view[data-view=gate]');
+    check(await p.evaluate(() => window.patchworker.panel().state.view === 'micro'), `${name}: pressing Gate again opens Micro Step`);
+    await p.click('.cbtn.shift');
+    await p.click('.cbtn.view[data-view=fx]');
+    check(await p.evaluate(() => window.patchworker.panel().state.view === 'sidechain' && !document.querySelector('.cbtn.shift').classList.contains('on')), `${name}: Shift then FX opens Side Chain, and Shift lets go`);
+    await p.click('.cbtn.view[data-view=projects]');
     await p.setInputFiles('#file-pack', packFile);
     await p.waitForFunction(() => window.patchworker.S.pack.fileName !== 'TracksGM_v1.circuittrackspack');
 
@@ -83,7 +98,7 @@ const fs = require('fs');
     check(await p.evaluate(() => { const w = window.patchworker.proj; return w.custom && w.sel[4].start === 1 && w.sel[4].end === 1 && w.playing; }), `${name}: clicking a pattern plays it (still playing)`);
     await p.click('.pad[data-ptrack="4"][data-pattern="3"]', { modifiers: ['Shift'] });
     check(await p.evaluate(() => { const s = window.patchworker.proj.sel[4]; return s.start === 1 && s.end === 3; }), `${name}: Shift-click chains patterns 2 to 4`);
-    await p.click('.pages button[data-page="1"]');
+    await p.click('.fnrow .arrow:has-text("▲")');
     check(await p.$eval('.pad.pattern', (x) => x.dataset.pattern) === '4', `${name}: page 2 shows patterns 5-8`);
 
     // Mixer view: mute, level, scenes.

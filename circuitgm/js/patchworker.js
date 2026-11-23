@@ -8,9 +8,9 @@ import { PatchSynth, waveTable, lfoShape, envelopePoints } from './pw/engine.js?
 import { TracksLink, VIEW_CODES } from './pw/midi.js?v=20261114s';
 import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, projectsFollowing, download,
   fileSafe, session, PATCH_SLOTS } from './pw/packio.js?v=20261114s';
-import { buildPanel } from './pw/panel.js?v=20261122b';
+import { buildPanel } from './pw/panel.js?v=20261123a';
 import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
-import { ProjectPlayer, packProjects } from './pw/project.js?v=20261122b';
+import { ProjectPlayer, packProjects } from './pw/project.js?v=20261123a';
 
 const DEFAULT_PACK = '../tracksgm/TracksGM_v1.circuittrackspack';
 // PatchWorker is Offline only for now (plan-patchworker-tracks-first.md, 22 Nov 2026): the browser is
@@ -666,6 +666,11 @@ function setFace(face) {
   document.body.dataset.face = face;
   $('#tracks').hidden = face !== 'tracks';
   $('.tabs').hidden = face === 'tracks';
+  // The macro knobs sit above the pads in TRACKS, as on the Circuit Tracks, and in their own strip in EDITOR.
+  const row = $('#macro-row');
+  if (face === 'tracks' && tracksPanel?.macroSlot) tracksPanel.macroSlot.append(row);
+  else $('.macros').append(row);
+  $('.macros').hidden = face === 'tracks';
   if (face === 'tracks') for (const p of ['main', 'fx', 'mod']) $(`#page-${p}`).hidden = true;
   else showPage(document.querySelector('.tabs [aria-selected=true]')?.dataset.page ?? 'main');
   document.querySelectorAll('#face [data-face]').forEach((b) => {
@@ -1863,6 +1868,9 @@ async function start() {
     noteOn: (n) => noteOn(n),
     noteOff: (n) => noteOff(n),
     octave: () => S.octave,
+    setOctave: (o) => setOctave(o),
+    volume: () => +$('#vol').value,
+    setVolume: (v) => { $('#vol').value = v; $('#vol').dispatchEvent(new Event('input')); },
     slot: () => S.slot,
     slotCount: () => PATCH_SLOTS,
     slotInfo: (i) => {

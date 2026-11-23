@@ -63,6 +63,7 @@ export class ProjectPlayer {
     this.mutes = new Array(8).fill(false);
     this.levels = null;      // per track 0-127 (MIDI tracks: 127)
     this.render = null;      // { order, rendered, scenes (song with the live scene), loop, events }
+    this.masterFilter = 64;  // the panel's Master Filter knob (64 = off), as CC 74 on channel 16
     this.player.onPosition = (pos) => this.tickAt(pos);
     this.player.onEnd = () => { if (this.wantPlay) this.start(0); else this.o.onChange?.(); };
   }
@@ -102,6 +103,7 @@ export class ProjectPlayer {
     this.player.mutes.fill(false);
     this.player.solo = -1;
     this.player.setProject(proj, { patches: [0, 1].map((i) => this.ownCopy[i] ?? this.o.patchBytes(this.patchSlots[i])) });
+    this.masterFilter = this.player.mix?.filter?.cutoff ?? 64;
     this.levels = [0, 1, 2, 3, 4, 5, 6, 7].map((t) => (t < 2 ? this.player.mix.synth[t].level : t >= 4 ? this.player.mix.drums[t - 4].level : 127));
     this.rerender();
     this.linkSynths();
@@ -215,7 +217,11 @@ export class ProjectPlayer {
     this.linkSynths();
     this.player.applyGains();
     this.applyLevels();
+    this.applyFilter();
   }
+  // Master Filter: below 64 low-pass, above 64 high-pass, 64 off; resonance from the project.
+  setMasterFilter(v) { this.masterFilter = v; this.applyFilter(); }
+  applyFilter() { this.player.mixer?.setFilter(this.masterFilter, this.player.mix?.filter?.resonance ?? 64); }
   stop() {
     this.wantPlay = false;
     this.player.stop();

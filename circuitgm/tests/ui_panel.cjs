@@ -28,7 +28,7 @@ const { chromium } = require('playwright');
     await p.mouse.up();
     check(`${name}: letting go releases it`, (await p.evaluate(() => window.patchworker.S.held.size)) === 0);
     await p.click('.trk[data-track="1"]');
-    check(`${name}: the Synth 2 button chooses Synth 2`, (await p.evaluate(() => [window.patchworker.S.synth, document.body.dataset.synth, document.querySelector('.panel-lcd').textContent].join('|'))) === '1|1|Synth 2 · Note');
+    check(`${name}: the Synth 2 button chooses Synth 2`, (await p.evaluate(() => [window.patchworker.S.synth, document.body.dataset.synth, document.querySelector('.panel-lcd').textContent.split(' · octave')[0]].join('|'))) === '1|1|Synth 2 · Note');
     await p.click('.view[data-view=mixer]');
     await p.click('.trk[data-track="5"]');
     check(`${name}: placeholder views play nothing`, await p.evaluate(() => document.querySelector('.panel-lcd').textContent === 'Drum 2 · Mixer' && document.querySelectorAll('.pad[data-note]').length === 0));

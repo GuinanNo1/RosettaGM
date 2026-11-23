@@ -200,7 +200,7 @@ const { chromium } = require('playwright');
   check('Synth 2 on the Tracks lights Synth 2 in the panel', (await synthNow()) === 1 && await p.evaluate(() => document.querySelector('.trk.on')?.dataset.track === '1'));
   // View changes on the Tracks (04 <view> <track>): the panel follows the view, and the track
   // where the message carries one (not Mixer / FX / Patterns, which send track 00).
-  const viewNow = () => p.evaluate(() => [document.querySelector('.views .view[aria-pressed="true"]')?.dataset.view, document.querySelector('.trk.on')?.dataset.track]);
+  const viewNow = () => p.evaluate(() => [window.patchworker.panel().state.view, document.querySelector('.trk.on')?.dataset.track]);
   await rx([0xf0, 0x00, 0x20, 0x29, 0x01, 0x64, 0x04, 0x0d, 0x00, 0x00, 0xf7]);
   await p.waitForTimeout(200);
   check(`FX on the Tracks shows FX, track stays Synth 2 (${await viewNow()})`, (await viewNow()).join() === 'fx,1');
