@@ -321,6 +321,43 @@ export class ProjectPlayer {
     this.edit();
     return 'added';
   }
+  // Piano roll: notes one at a time. note is the MIDI note as it sounds (in the scale); gate in
+  // sixths of a step (1-96). addNote returns false when the step has 6 notes or that note already.
+  addNote(t, p, k, note, vel, gate = FULL_GATE, { commit = true } = {}) {
+    const s = this.raw(t, p).steps[k];
+    const stored = note + STORED_NOTE_OFFSET - this.root;
+    if (stored < 0 || stored > 127) return false;
+    const have = this.stepNotes(t, p, k);
+    if (have.some((n) => n.note === note)) return false;
+    let j = -1;
+    for (let i = 0; i < MAX_NOTES; i++) if (!((s.mask >> i) & 1)) { j = i; break; }
+    if (j < 0) return false;
+    const tpl = have[0] ? s.notes[have[0].j] : null;
+    s.notes[j] = { note: stored, gate: Math.max(1, Math.min(96, gate)), delay: tpl ? tpl.delay : 0, velocity: Math.max(1, Math.min(127, vel)) };
+    if (!have.length) s.probability = 7;
+    s.mask |= 1 << j;
+    if (commit) this.edit();
+    return true;
+  }
+  removeNote(t, p, k, j, { commit = true } = {}) {
+    this.raw(t, p).steps[k].mask &= ~(1 << j);
+    if (commit) this.edit();
+  }
+  // Move a note to another step and / or pitch, keeping its gate and velocity. False (and nothing
+  // changed) if the target step is full or has that note.
+  moveNote(t, p, k, j, toK, toNote) {
+    const s = this.raw(t, p).steps[k];
+    const n = s.notes[j];
+    const keep = { gate: n.gate & 0x7f, vel: n.velocity };
+    this.removeNote(t, p, k, j, { commit: false });
+    if (this.addNote(t, p, toK, toNote, keep.vel, keep.gate, { commit: false })) { this.edit(); return true; }
+    s.mask |= 1 << j;   // put it back
+    return false;
+  }
+  setNoteGate(t, p, k, j, g) { this.raw(t, p).steps[k].notes[j].gate = Math.max(1, Math.min(96, g)); this.edit(); }
+  setNoteVelocity(t, p, k, j, v) { this.raw(t, p).steps[k].notes[j].velocity = Math.max(1, Math.min(127, v)); this.edit(); }
+  setHitVelocity(t, p, k, v) { const s = this.raw(t, p).steps[k]; if (s.active) { s.velocity = Math.max(1, Math.min(127, v)); this.edit(); } }
+
   // Drum Note view: a tap toggles a hit with the track's sample (0xff: the track's own sample).
   toggleHit(t, p, k, sample, vel) {
     const s = this.raw(t, p).steps[k];

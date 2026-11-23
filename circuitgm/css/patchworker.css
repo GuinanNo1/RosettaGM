@@ -633,3 +633,39 @@ body.doc { display: block; overflow: auto; }
 .ct .pads .pad.step.on.drum.flip { background: #e58bc0; }
 .ct .pads .pad.step.on.drum.flip::after { content: ''; position: absolute; bottom: 5px; left: 50%; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: #12111a99; }
 .ct .pads .pad.step.on.drum.flipmark { background: #e0384a; color: #fff; }
+/* Piano roll and drum grid (0.16), shown instead of the pads. */
+.ct .roll { background: #15151d; border-radius: 10px; box-shadow: inset 0 2px 6px #000c; padding: 6px; box-sizing: border-box; overflow: hidden; display: flex; }
+.ct .roll[hidden] { display: none; }
+.ct .roll-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
+.ct .roll[data-kind=drum] .roll-scroll { overflow: hidden; }
+.ct .roll-body { display: flex; position: relative; }
+.ct .roll-keys { width: 46px; flex: none; position: sticky; left: 0; z-index: 2; }
+.ct .roll-keys .rk { height: 13px; box-sizing: border-box; border-bottom: 1px solid #0006; background: #d9d9e3; color: #12111a; font: 600 9px/12px var(--mono); padding-left: 4px; cursor: pointer; }
+.ct .roll-keys .rk.black { background: #3a3a48; color: #fff; }
+.ct .roll-keys .rk.root { background: color-mix(in srgb, var(--accent) 70%, #fff); color: #12111a; }
+.ct .roll-area { position: relative; flex: none; cursor: crosshair; touch-action: none;
+  background:
+    repeating-linear-gradient(to right, #ffffff10 0 1px, transparent 1px var(--sw)),
+    repeating-linear-gradient(to right, #ffffff26 0 1px, transparent 1px calc(var(--sw) * 4)),
+    repeating-linear-gradient(to bottom, #ffffff0a 0 1px, transparent 1px var(--rh)),
+    #1d1d27; }
+.ct .roll-row.black { position: absolute; left: 0; right: 0; height: 13px; background: #0000002e; pointer-events: none; }
+.ct .roll-shade { position: absolute; inset: 0; pointer-events: none; }
+.ct .rnote { position: absolute; height: 11px; margin-top: 1px; border-radius: 3px; background: var(--trk, #4f8bff); box-shadow: inset 0 0 0 1px #0008; cursor: grab; }
+.ct .rnote::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 6px; cursor: ew-resize; border-left: 1px solid #0005; }
+.ct .rnote.out { filter: saturate(.3); }
+.ct .rnote.ghost { opacity: .7; outline: 1px dashed #fff; }
+.ct .roll[data-trk="0"] .rnote { --trk: var(--s1); }
+.ct .roll[data-trk="1"] .rnote { --trk: var(--s2); }
+.ct .roll[data-trk="2"] .rnote, .ct .roll[data-trk="3"] .rnote { --trk: #ffb057; }
+.ct .roll-head { position: absolute; top: 0; bottom: 0; background: #ffffff1c; border-left: 1px solid #fff8; pointer-events: none; z-index: 1; }
+.ct .roll[data-kind=drum] .roll-keys .dk { box-sizing: border-box; padding: 6px 4px; border-bottom: 1px solid #0006; background: #26262f; color: #c9c9d6; font: 600 10px var(--mono); display: flex; flex-direction: column; justify-content: center; gap: 3px; }
+.ct .roll-keys .dk b { font-size: 12px; color: var(--drum, #ff7a59); }
+.ct .roll-keys .dk.sel { background: #33333f; box-shadow: inset 3px 0 0 var(--drum, #ff7a59); }
+.ct .dcell { position: absolute; border-radius: 5px; background: #24242e; cursor: pointer; font: 700 9px var(--mono); color: #12111a; display: flex; align-items: center; justify-content: center; }
+.ct .dcell.beat { background: #2b2b37; }
+.ct .dcell.out { background: #17171f; }
+.ct .dcell.on { background: color-mix(in srgb, var(--drum, #ff7a59) 80%, #262632); }
+.ct .dcell.on.flip { background: #e58bc0; }
+.ct .dcell.on.out { filter: saturate(.3) brightness(.7); }
+.ct .pad-tools .rollbtn { margin-right: 6px; }

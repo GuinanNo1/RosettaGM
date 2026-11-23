@@ -32,7 +32,7 @@ export const VIEWS = [
   { id: 'preset', label: 'Preset', step: 1, group: 'project' }, { id: 'projects', label: 'Projects', step: 1 },
   { id: 'patterns', label: 'Patterns', step: 1 }, { id: 'mixer', label: 'Mixer', step: 1 },
   { id: 'fx', label: 'FX', step: 4 }, { id: 'sidechain', label: 'Sidechain', step: 4 },
-  { id: 'scales', label: 'Scales', step: 3 }, { id: 'expand', label: 'Expanded Note', step: 3 }, { id: 'tempo', label: 'Tempo', step: 1 },
+  { id: 'scales', label: 'Scales', step: 3 }, { id: 'expand', label: 'Expanded Note', step: 3 }, { id: 'roll', label: 'Piano roll', step: 3 }, { id: 'tempo', label: 'Tempo', step: 1 },
 ];
 const NOTE_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
 const noteName = (n) => `${NOTE_NAMES[n % 12]}${Math.floor(n / 12) - 1}`;
@@ -46,6 +46,7 @@ const FIXED_VELOCITY = 96;
 // Note view keyboard on the bottom two rows of pads: white keys on the bottom row, the black
 // keys above them (null = no key), from C to the next C.
 import { SCALES, CHROMATIC, ROOT_NAMES, inScale, degreeNote } from '../scales.js';
+import { buildRoll } from './roll.js?v=20261123e';
 const WHITE = [0, 2, 4, 5, 7, 9, 11, 12];
 const BLACK = [null, 1, 3, null, 6, 8, 10, null];
 
@@ -88,7 +89,9 @@ export function buildPanel(root, api) {
     dpage: [0, 0, 0, 0],                     // drum Note view: the page of 16 samples shown
     flip: null,                              // drum Note view: the sample armed for a sample flip
     heldStep: null,                          // drum Note view: the step held (its sample shows red)
-    stepFlip: null };                        // drum Note view: the step armed by a long press                            // drum Note view: the sample armed for a sample flip   // the keyboard's scale when no project is loaded
+    stepFlip: null,                          // drum Note view: the step armed by a long press
+    rollFocus: null,                         // { t, p }: the pattern the roll opened on (Patterns view)
+    rollStatus: '' };                        // what is under the pointer in the roll                        // drum Note view: the step armed by a long press                            // drum Note view: the sample armed for a sample flip   // the keyboard's scale when no project is loaded
   const pp = api.proj ?? null;
 
   // ---- the panel, laid out as the Circuit Tracks' top panel (User Guide v3, page 15)
@@ -193,8 +196,23 @@ export function buildPanel(root, api) {
   const hint = h('p', { class: 'panel-hint' });
   const revertBtn = h('button', { type: 'button', class: 'btn small', text: 'Revert', title: 'Put back the patch the pack had in this slot', onclick: () => api.revert() });
   const projRevertBtn = h('button', { type: 'button', class: 'btn small', text: 'Revert project', title: 'Drop the edits made since the project was last saved', onclick: () => { pp?.revert(); flash('Project back to its saved version.'); } });
-  const tools = h('div', { class: 'pad-tools' }, h('span', { class: 'grow' }), revertBtn, projRevertBtn);
+  const rollBtn = h('button', { type: 'button', class: 'btn small rollbtn', title: 'Show the pattern as a piano roll (synth and MIDI tracks) or a drum grid (drum tracks) instead of the pads', onclick: () => {
+    if (st.view === 'roll') { selectView('note'); return; }
+    st.rollFocus = null;
+    selectView('roll');
+  } });
+  const tools = h('div', { class: 'pad-tools' }, rollBtn, h('span', { class: 'grow' }), revertBtn, projRevertBtn);
   const grid = h('div', { class: 'pads', role: 'group', 'aria-label': 'Pads' });
+  // The piano roll / drum grid, shown instead of the pads (roll.js).
+  let lastGridH = 0;
+  const roll = buildRoll({
+    pp: () => pp, track: () => st.track,
+    pattern: (t) => (st.rollFocus?.t === t ? st.rollFocus.p : viewPattern(t)?.index ?? null),
+    velocity: () => velocity(), activeSample: (t) => activeSample(t), sampleName: (i) => api.sampleName(i),
+    noteOn: (n, v) => api.noteOn(n, v), noteOff: (n) => api.noteOff(n), audition: (i) => api.audition(i),
+    octave: () => api.octave(), scale: () => curScale(),
+    status: (text) => { st.rollStatus = text; paintLcd(); }, flash: (text) => flash(text),
+  });
   // Mixer view: a level slider per track under the pads (the hardware uses its macro knobs).
   const levels = TRACKS.map((t, i) => {
     const input = h('input', { type: 'range', min: 0, max: 127, value: 100, 'aria-label': `${t.label} level`, title: `${t.label} level (0-127; the Circuit Tracks' default is 100). Double-click for 100.` });
@@ -283,7 +301,7 @@ export function buildPanel(root, api) {
       h('div', { class: 'c-m r2 tracks-row', role: 'group', 'aria-label': 'Tracks' }, trackBtns),
       h('div', { class: 'c-r r2' }, vPatterns),
       h('div', { class: 'c-l rg stepcol' }, vNote, vVel, vGate, vPat),
-      h('div', { class: 'c-m rg padzone' }, grid, tempobox),
+      h('div', { class: 'c-m rg padzone' }, grid, roll.el, tempobox),
       h('div', { class: 'c-r rg rightcol' }, vMixer, vFx, recBtn, playBtn),
       h('div', { class: 'c-m rs status' }, lcd, tools, mixbox, hint))));
 
@@ -410,6 +428,17 @@ export function buildPanel(root, api) {
     api.noteOff(n);
   };
   // Hovering a preset pad shows its name on the LCD.
+  // Patterns view: double-click a pattern to edit it in the piano roll / drum grid (Patterns again
+  // goes back).
+  grid.addEventListener('dblclick', (e) => {
+    const pad = e.target.closest('.pad');
+    if (st.view !== 'patterns' || pad?.dataset.pattern == null || !pp?.loaded) return;
+    const t = +pad.dataset.ptrack, p = +pad.dataset.pattern;
+    st.rollFocus = { t, p };
+    selectTrack(t);
+    selectView('roll');
+  });
+  window.addEventListener('resize', () => { if (st.view === 'roll' && !root.hidden) roll.paint(true); });
   grid.addEventListener('pointerover', (e) => {
     const pad = e.target.closest('.pad');
     const k = pad?.dataset.slot ?? pad?.dataset.sample ?? (pad?.dataset.project != null ? `p${pad.dataset.project}` : pad?.dataset.dsample != null ? `d${pad.dataset.dsample}` : pad?.dataset.step != null && drumNote() ? `s${pad.dataset.step}` : null);
@@ -605,18 +634,22 @@ export function buildPanel(root, api) {
   function stepPage(dir) {
     const n = pageCount();
     if (n) { setPage(Math.max(0, Math.min(n - 1, getPage() + dir))); paint(); return; }
+    if (st.view === 'roll') { roll.scrollOctave(dir); return; }
     if (st.view === 'note' || st.view === 'expand') api.setOctave?.(api.octave() + dir);
   }
   function paintPages() {
     const n = pageCount();
     const paged = n > 0;
     if (paged) setPage(Math.min(getPage(), n - 1));
-    downBtn.classList.toggle('idle', paged ? getPage() === 0 : !['note', 'expand'].includes(st.view) || api.octave() <= 0);
-    upBtn.classList.toggle('idle', paged ? getPage() >= n - 1 : !['note', 'expand'].includes(st.view) || api.octave() >= 6);
+    downBtn.classList.toggle('idle', paged ? getPage() === 0 : !['note', 'expand', 'roll'].includes(st.view) || api.octave() <= 0);
+    upBtn.classList.toggle('idle', paged ? getPage() >= n - 1 : !['note', 'expand', 'roll'].includes(st.view) || api.octave() >= 6);
     const synth = presetKind() === 'synth';
     const stepView = STEP_VIEWS.includes(st.view);
-    const projEdit = !!pp?.loaded && pp.edited && (stepView || st.view === 'projects');
-    tools.hidden = !synth && !projEdit;
+    const projEdit = !!pp?.loaded && pp.edited && (stepView || st.view === 'projects' || st.view === 'roll');
+    const rollable = !!pp?.loaded && (st.view === 'note' || st.view === 'roll');
+    tools.hidden = !synth && !projEdit && !rollable;
+    rollBtn.hidden = !rollable;
+    rollBtn.textContent = st.view === 'roll' ? 'Pads' : TRACKS[st.track].kind === 'drum' ? 'Drum grid' : 'Piano roll';
     revertBtn.hidden = !synth;
     projRevertBtn.hidden = !projEdit;
     copyBtn.classList.toggle('on', st.copying || st.mode === 'dup');
@@ -706,6 +739,15 @@ export function buildPanel(root, api) {
     }
     if (st.view === 'velocity' && st.fixedVel) text += ' · Fixed Velocity';
     if (pp?.loaded && pp.edited && (STEP_VIEWS.includes(st.view) || st.view === 'projects' || st.view === 'scales')) text += ' · edited, not saved';
+    if (st.view === 'roll') {
+      // "Piano roll" or "Drum grid", the pattern, and what is under the pointer.
+      const drum = TRACKS[st.track].kind === 'drum';
+      if (drum) text = text.replace('Piano roll', 'Drum grid');
+      const pt = st.rollFocus?.t === st.track ? st.rollFocus.p : viewPattern(st.track)?.index;
+      if (pp?.loaded && pt != null && !drum) text += ` · pattern ${pt + 1} · ${scaleText()}`;
+      if (st.rollStatus) text += ` · ${st.rollStatus}`;
+      if (pp?.loaded && pp.edited) text += ' · edited, not saved';
+    }
     const keys = (st.view === 'note' || st.view === 'expand') && TRACKS[st.track].kind !== 'drum';
     if (st.view === 'scales') text += ` · ${scaleText()}`;
     lcd.textContent = text + (keys ? ` · octave C${api.octave()} · ${scaleText()}` : pageText());
@@ -1032,7 +1074,10 @@ export function buildPanel(root, api) {
     playBtn.setAttribute('aria-label', pp?.playing ? 'Stop' : 'Play');
     mixbox.hidden = st.view !== 'mixer';
     tempobox.hidden = st.view !== 'tempo';
-    grid.hidden = st.view === 'tempo';
+    if (!grid.hidden && grid.offsetHeight) lastGridH = grid.offsetHeight;
+    grid.hidden = st.view === 'tempo' || st.view === 'roll';
+    roll.el.hidden = st.view !== 'roll';
+    if (st.view === 'roll') roll.el.style.height = `${lastGridH || 330}px`;
     trackBtns.forEach((b, i) => { const on = i === st.track; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     viewBtns.forEach((b) => { const on = b.dataset.view === st.view || b.dataset.secondary === st.view; b.classList.toggle('on', on); b.classList.toggle('second', b.dataset.secondary === st.view); b.setAttribute('aria-pressed', String(on)); });
     vol.refresh();
@@ -1056,6 +1101,15 @@ export function buildPanel(root, api) {
     if (v.id === 'projects') { setHint((st.saveArm && pp?.loaded ? '' : 'Press a project to load it, then ▶ (or Space) to play it. Synth 1 and 2 play the pack\'s patches as you edit them. Edits stay here until you Save (a dot marks a project with unsaved edits, a ring one saved into the pack here).') + saveHint); paintProjects(); return; }
     if (v.id === 'patterns') { setHint(pp?.loaded ? 'The lit pads are the patterns each track plays. Click a pattern to play it; hold it and press another (or Shift-click) to chain the patterns between them. ▼ ▲ show patterns 1-4 or 5-8. Choosing a scene in Mixer view puts back its patterns.' + saveHint : none); paintPatterns(); return; }
     if (v.id === 'mixer') { setHint(pp?.loaded ? 'Top row: mute each track. Bottom two rows: the 16 scenes (white: saved in the project). Click a scene to play it; hold it and press another (or Shift-click) to chain the scenes between them. The sliders set each track\'s level.' + saveHint : none); paintMixer(); return; }
+    if (v.id === 'roll') {
+      const drum = t.kind === 'drum';
+      setHint(!pp?.loaded ? none : drum
+        ? 'Drum grid: Drum 1-4 against the steps, each row the pattern its track plays. Click a cell to add or remove a hit (with the track\'s sample); scroll the wheel over a hit for its velocity. Pink hits play a sample of their own (its number shown; hover for the name; change it in Note view). Pads (or Note) goes back.' + saveHint
+        : `Piano roll (${scaleText()}): click to add a note (drag right for a longer one), drag a note to move it, drag its right edge to change its length (whole steps; hold Shift for sixths), click it to remove it, scroll the wheel over it for velocity. ▼ ▲ scroll an octave. Pads (or Note) goes back.` + saveHint);
+      roll.paint();
+      roll.playhead(st.pos);
+      return;
+    }
     if (v.id === 'scales') {
       setHint(`Rows 1-2: the root note (bright: notes in the scale). Rows 3-4: the scale. Note view's keyboard follows them. ${pp?.loaded ? 'They belong to the project: changing the root transposes its synth and MIDI notes, and a note not in a new scale plays the nearest one in it (nothing is lost; choose the old scale to hear it as before). Save keeps them.' : 'With no project loaded this only sets the keyboard (Chromatic to start with).'}` + saveHint);
       paintScales();
@@ -1089,7 +1143,11 @@ export function buildPanel(root, api) {
     st.pos = pos;
     if (root.hidden) return;
     const sceneMoved = prev?.scene !== pos?.scene;
-    if (STEP_VIEWS.includes(st.view)) {
+    if (st.view === 'roll') {
+      // Repaint when a track moves to another pattern (chains, scenes), then the play head.
+      if (!st.rollFocus && (!prev || !pos || prev.tracks.some((x, i) => x?.pattern !== pos.tracks[i]?.pattern))) roll.paint(true);
+      roll.playhead(pos);
+    } else if (STEP_VIEWS.includes(st.view)) {
       const vp = viewPattern(st.track);
       const cur = pos?.tracks?.[st.track];
       if ((prev?.tracks?.[st.track]?.pattern) !== cur?.pattern) { if (st.view === 'note') paintPads(); else paint(); }
