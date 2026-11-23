@@ -567,3 +567,47 @@ body.doc { display: block; overflow: auto; }
 .ct .pad.step.on.synth, .ct .pad.step.on.midi { background: color-mix(in srgb, #4f8bff 60%, #262632); }
 .ct .pad.step.on.synth.play, .ct .pad.step.on.midi.play { background: color-mix(in srgb, #4f8bff 90%, #fff); }
 .ct .pad.step { background: color-mix(in srgb, #4f8bff 10%, #22222c); }
+/* Step editing (0.13). Hardware colours where they help: the chosen step and the keys of its notes
+   red, value pads sand. Red is never the only cue (Ian is red/green colour blind): the chosen step
+   also gets a white ring, keys on the step a dot. */
+.ct .pad.step { font: 600 .62rem var(--mono); color: #ffffff38; }
+.ct .pad.step.on { color: #ffffff70; }
+.ct .pads .pad.step.outside { background: #17171f; color: #ffffff1a; }
+.ct .pads .pad.step.outside.has { background: #3a1f25; }
+.ct .pads .pad.step.armed, .ct .pads .pad.step.sel.armed { background: #e0384a; color: #fff; box-shadow: inset 0 0 0 2px #fff; }
+.ct .pad.step.sel { box-shadow: inset 0 0 0 2px #fff; animation: stepsel 1.1s ease-in-out infinite; }
+.ct .pads .pad.step.src { background: var(--s2); color: #12111a; box-shadow: inset 0 0 0 2px #fff; }
+.ct .pads .pad.step.endpt { background: #e8d3a0; color: #12111a; }
+@keyframes stepsel { 50% { box-shadow: inset 0 0 0 2px #4f8bff; } }
+.ct .pad.key.instep { background: #e0384a; }
+.ct .pad.key.instep::after { content: ''; position: absolute; top: 5px; left: 50%; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: #fff; }
+.ct .pad.key.mute { opacity: .45; cursor: default; }
+.ct .pad.lvl { cursor: pointer; background: #24242e; }
+.ct .pad.lvl.on { background: #e8d3a0; }
+.ct .pad.lvl.dim { background: color-mix(in srgb, #e8d3a0 38%, #24242e); }
+.ct .pad.lvl.part { background: color-mix(in srgb, #e8d3a0 calc(var(--part, .5) * 100%), #24242e); }
+.ct .pad.lvl.prob.on { background: color-mix(in srgb, #4f8bff calc(35% + var(--d, 0%)), #24242e); }
+.ct .pad.lvl.prob.p1 { --d: 8%; } .ct .pad.lvl.prob.p2 { --d: 16%; } .ct .pad.lvl.prob.p3 { --d: 24%; }
+.ct .pad.lvl.prob.p4 { --d: 32%; } .ct .pad.lvl.prob.p5 { --d: 40%; } .ct .pad.lvl.prob.p6 { --d: 48%; } .ct .pad.lvl.prob.p7 { --d: 56%; }
+.ct .pad.rate, .ct .pad.dir { cursor: pointer; font: 600 .66rem var(--mono); color: #8a8aa0; background: #26262f; }
+.ct .pad.rate.sel, .ct .pad.dir.sel { background: #e8d3a0; color: #12111a; }
+.ct .pad.project.edited::after { content: ''; position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 0 1px #12111a; }
+.ct .pad.project.saved { box-shadow: inset 0 0 0 2px var(--warn); }
+.ct .pad.project.target { cursor: pointer; animation: padblink 1s steps(2, start) infinite; }
+.ct .pad.project.lit.target { animation: none; outline: 2px dashed #12111a; outline-offset: -5px; }
+.ct .cbtn.clear.on { background: #e0384a; color: #fff; }
+.ct .cbtn.save.armed { animation: savearm .5s steps(2, start) infinite; }
+@keyframes savearm { 50% { background: #e9e9f2; color: #12111a; } }
+.ct .cbtn.save.edited:not(.idle) .nm::after { content: ' •'; color: var(--warn); }
+.ct .cbtn.steppage .nm span { opacity: .55; }
+.ct .cbtn.steppage[data-page="1"] .p1 { opacity: 1; color: #6fa0ff; }
+.ct .cbtn.steppage[data-page="2"] .p2 { opacity: 1; color: #ffa24f; }
+.ct .panel-hint.msg { color: #fff; }
+@media (prefers-reduced-motion: reduce) {
+  .ct .pad.step.sel, .ct .cbtn.save.armed, .ct .pad.project.target { animation: none; }
+  .ct .cbtn.save.armed { background: #e9e9f2; color: #12111a; }
+}
+.ct .pad { position: relative; }
+.ct .pad.project.target { --pc: #e9e9f2; }
+.ct .pad.step.on.drum { background: color-mix(in srgb, var(--drum) 62%, #262632); color: #12111a99; }
+.ct .pad.step.on.drum.play { background: color-mix(in srgb, var(--drum) 90%, #fff); }

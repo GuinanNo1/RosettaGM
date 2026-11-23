@@ -9,7 +9,12 @@
 import { readProject, isEmpty } from '../pack.js?v=20261122b';
 import { songOf, renderSong, STEP_TICKS, PPQ } from '../song.js?v=20261122b';
 import { Player } from '../player.js?v=20261122b';
+import { serializeNCS } from '../vendor/ncs.js';
 
+const NCS_PATCH_SLOT = [0xcd64, 0xcd6c];   // Synth 1 / Synth 2: the pack slot the project plays
+const STORED_NOTE_OFFSET = 12;             // stored synth note = MIDI note + 12 - scale root
+const MAX_NOTES = 6;                       // notes per synth / MIDI step
+export const FULL_GATE = 6;                // a gate of one step, in sixths of a step
 const LOOP_SECONDS = 600;   // the arrangement is repeated to fill this, so loops are seamless
 const MAX_REPEATS = 64;
 const stepTicks = (rate) => STEP_TICKS[rate] ?? 360;
@@ -259,6 +264,187 @@ export class ProjectPlayer {
     this.changed(true);
   }
   sceneStored(i) { return !!this.song?.scenes[i]?.used; }
+
+  // ---- step editing (Note, Velocity, Gate, Probability and Pattern Settings views)
+  // Edits change the project loaded here (its parsed model, entry.project) and are heard at once.
+  // They stay in this visit until saved into the pack (save()), as on the hardware until Save.
+  get edited() { return !!this.entry?.edited; }
+  raw(t, p) { return this.entry.project.patterns[t][p]; }
+  get root() { return (this.entry.project.scaleRoot ?? 0) % 12; }
+  isDrum(t) { return t >= 4; }
+  // After any edit: rebuild the song model, keep what is selected, re-render (at the same point).
+  edit() {
+    this.entry.edited = true;
+    this.song = songOf(songPack(this.pack, this.o.patchName), this.entry);
+    this.changed(false);
+  }
+  // The notes on a synth / MIDI step as MIDI notes: [{ j, note, vel, gate, tie, delay }].
+  stepNotes(t, p, k) {
+    const s = this.raw(t, p).steps[k];
+    if (this.isDrum(t)) return [];
+    const out = [];
+    s.notes.forEach((n, j) => { if ((s.mask >> j) & 1) out.push({ j, note: n.note - STORED_NOTE_OFFSET + this.root, vel: n.velocity, gate: n.gate & 0x7f, tie: (n.gate & 0x80) !== 0, delay: n.delay }); });
+    return out;
+  }
+  stepHas(t, p, k) {
+    const s = this.raw(t, p).steps[k];
+    return this.isDrum(t) ? !!s.active : !!(s.mask & 0x3f);
+  }
+  // Add a note to a synth / MIDI step, or remove it if the step has it. A new note takes the step's
+  // gate and micro step from the notes already there (they belong to the step on the hardware).
+  // Returns 'added', 'removed' or 'full'.
+  toggleNote(t, p, k, note, vel) {
+    const s = this.raw(t, p).steps[k];
+    const stored = note + STORED_NOTE_OFFSET - this.root;
+    if (stored < 0 || stored > 127) return 'full';
+    const have = this.stepNotes(t, p, k);
+    const hit = have.find((n) => n.note === note);
+    if (hit) { s.mask &= ~(1 << hit.j); this.edit(); return 'removed'; }
+    let j = -1;
+    for (let i = 0; i < MAX_NOTES; i++) if (!((s.mask >> i) & 1)) { j = i; break; }
+    if (j < 0) return 'full';
+    const tpl = have[0] ? s.notes[have[0].j] : null;
+    s.notes[j] = { note: stored, gate: tpl ? tpl.gate : FULL_GATE, delay: tpl ? tpl.delay : 0, velocity: Math.max(1, Math.min(127, vel)) };
+    if (!have.length) s.probability = 7;
+    s.mask |= 1 << j;
+    this.edit();
+    return 'added';
+  }
+  // Drum Note view: a tap toggles a hit with the track's sample (0xff: the track's own sample).
+  toggleHit(t, p, k, sample, vel) {
+    const s = this.raw(t, p).steps[k];
+    if (s.active) { s.active = false; s.micro = null; }
+    else {
+      const dflt = this.entry.project.defaultDrums?.[t - 4];
+      Object.assign(s, { active: true, micro: null, velocity: Math.max(1, Math.min(127, vel)), probability: 7, drumChoice: sample == null || sample === dflt ? 0xff : sample });
+    }
+    this.edit();
+    return s.active;
+  }
+  // Clear: every note or hit on the step goes, and its probability returns to 100%.
+  clearStep(t, p, k) {
+    const s = this.raw(t, p).steps[k];
+    if (this.isDrum(t)) Object.assign(s, { active: false, micro: null, probability: 7, drumChoice: 0xff });
+    else { s.mask = 0; s.probability = 7; }
+    this.edit();
+  }
+  // Duplicate: the step's notes and their settings onto another step (replacing what was there).
+  copyStep(t, p, from, to) {
+    if (from === to) return;
+    const steps = this.raw(t, p).steps;
+    steps[to] = structuredClone(steps[from]);
+    this.edit();
+  }
+  setVelocity(t, p, k, v) {
+    const s = this.raw(t, p).steps[k];
+    v = Math.max(1, Math.min(127, v));
+    if (this.isDrum(t)) { if (!s.active) return; s.velocity = v; } else {
+      const have = this.stepNotes(t, p, k);
+      if (!have.length) return;
+      for (const n of have) s.notes[n.j].velocity = v;
+    }
+    this.edit();
+  }
+  // Gate in sixths of a step (1-96). Setting it ends a tie into the next step.
+  setGate(t, p, k, g) {
+    if (this.isDrum(t)) return;
+    const s = this.raw(t, p).steps[k];
+    const have = this.stepNotes(t, p, k);
+    if (!have.length) return;
+    for (const n of have) s.notes[n.j].gate = Math.max(1, Math.min(96, g));
+    this.edit();
+  }
+  // Probability 0-7 (7 = 100%, each step down 12.5%).
+  setProbability(t, p, k, v) {
+    if (!this.stepHas(t, p, k)) return;
+    this.raw(t, p).steps[k].probability = Math.max(0, Math.min(7, v));
+    this.edit();
+  }
+  // Pattern Settings: start and end steps (0-31), sync rate (0-7 as stored: 1/32T ... 1/4) and
+  // play order (0 forward, 1 reverse, 2 ping-pong, 3 random).
+  setEnd(t, p, k) {
+    const st = this.raw(t, p).settings;
+    st.playbackEnd = k;
+    if (st.playbackStart > k) st.playbackStart = k;
+    this.edit();
+  }
+  setStart(t, p, k) {
+    const st = this.raw(t, p).settings;
+    st.playbackStart = k;
+    if (st.playbackEnd < k) st.playbackEnd = k;
+    this.edit();
+  }
+  setRate(t, p, r) { this.raw(t, p).settings.syncRate = r; this.edit(); }
+  setDirection(t, p, d) { this.raw(t, p).settings.direction = d; this.edit(); }
+  // 1-16/17-32: a pattern of 16 steps or fewer becomes 32 steps; with Clear back to 16 (the steps
+  // after 16 are kept, unheard); with Duplicate steps 1-16 (and their automation) are copied to
+  // 17-32 and the pattern becomes 32 steps.
+  extendPattern(t, p) { const st = this.raw(t, p).settings; st.playbackEnd = 31; this.edit(); }
+  shortenPattern(t, p) {
+    const st = this.raw(t, p).settings;
+    st.playbackEnd = Math.min(st.playbackEnd, 15);
+    if (st.playbackStart > st.playbackEnd) st.playbackStart = 0;
+    this.edit();
+  }
+  doublePattern(t, p) {
+    const pat = this.raw(t, p);
+    for (let k = 0; k < 16; k++) pat.steps[k + 16] = structuredClone(pat.steps[k]);
+    for (const locks of Object.values(pat.paramLocks ?? {})) {
+      for (const pos of Object.keys(locks)) if (+pos >= 16) delete locks[pos];
+      for (const [pos, v] of Object.entries(locks)) if (+pos < 16) locks[Math.round((+pos + 16) * 1000) / 1000] = v;
+    }
+    pat.settings.playbackEnd = 31;
+    if (pat.settings.playbackStart > 15) pat.settings.playbackStart = 0;
+    this.edit();
+  }
+
+  // ---- saving into the pack (the pack open in the browser; Download pack writes it out)
+  // Save as on the hardware: the steps, tempo and swing, and the patch each synth plays (its slot
+  // and the project's own copy of it). slot: the project slot to save into (default: this one; the
+  // original stays as it was saved when another slot is chosen). Returns the saved entry.
+  save(slot = this.entry.slot) {
+    const pack = this.pack, src = this.entry, proj = src.project;
+    proj.tempo = this.tempo;
+    proj.swing = this.swing;
+    const patches = [0, 1].map((i) => new Uint8Array(this.ownCopy[i] ?? this.o.patchBytes(this.patchSlots[i])));
+    proj.synth1Patch = patches[0];
+    proj.synth2Patch = patches[1];
+    proj.patchSlots = this.patchSlots.slice();
+    const base = pack.files.get(src.url);
+    const out = serializeNCS(proj, base);
+    NCS_PATCH_SLOT.forEach((o, i) => { out[o] = this.patchSlots[i]; });
+    pack.index.projects ??= [];
+    for (let i = pack.index.projects.length; i < 64; i++) pack.index.projects.push({ name: '', url: `projects/project_${i}.ncs` });
+    const url = pack.index.projects[slot]?.url || `projects/project_${slot}.ncs`;
+    const name = src.name || proj.name || '';
+    pack.index.projects[slot] = { ...pack.index.projects[slot], name, url };
+    pack.files.set(url, out);
+    (pack.savedProjects ??= new Set()).add(slot);
+    const list = packProjects(pack);
+    const fresh = { slot, name, url, empty: false, project: readProject('circuit-tracks', out.slice().buffer), error: null, edited: false };
+    fresh.empty = isEmpty('circuit-tracks', fresh.project);
+    if (slot !== src.slot) this.revertEntry(src);   // the original keeps its saved version
+    list[slot] = fresh;
+    this.entry = fresh;
+    this.song = songOf(songPack(pack, this.o.patchName), fresh);
+    this.ownCopy = this.ownCopy.map((c, i) => (c ? patches[i] : null));
+    this.o.onChange?.();
+    return fresh;
+  }
+  // Put a project slot back as it is saved in the pack (unsaved edits are dropped).
+  revertEntry(entry) {
+    const data = this.pack.files.get(entry.url);
+    entry.project = readProject('circuit-tracks', data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength));
+    entry.empty = isEmpty('circuit-tracks', entry.project);
+    entry.edited = false;
+  }
+  // Revert the loaded project to its saved version, keeping the scene and patterns chosen.
+  revert() {
+    if (!this.edited) return;
+    this.revertEntry(this.entry);
+    this.song = songOf(songPack(this.pack, this.o.patchName), this.entry);
+    this.changed(false);
+  }
   patternHasNotes(track, p) { return !!this.song?.tracks[track].patterns[p]?.steps.some((s) => s.hits.length); }
 
   // ---- mixer

@@ -8,9 +8,9 @@ import { PatchSynth, waveTable, lfoShape, envelopePoints } from './pw/engine.js?
 import { TracksLink, VIEW_CODES } from './pw/midi.js?v=20261114s';
 import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, projectsFollowing, download,
   fileSafe, session, PATCH_SLOTS } from './pw/packio.js?v=20261114s';
-import { buildPanel } from './pw/panel.js?v=20261123a';
+import { buildPanel } from './pw/panel.js?v=20261123b';
 import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
-import { ProjectPlayer, packProjects } from './pw/project.js?v=20261123a';
+import { ProjectPlayer, packProjects } from './pw/project.js?v=20261123b';
 
 const DEFAULT_PACK = '../tracksgm/TracksGM_v1.circuittrackspack';
 // PatchWorker is Offline only for now (plan-patchworker-tracks-first.md, 22 Nov 2026): the browser is
@@ -805,6 +805,14 @@ function discardSlot(i) {
 // Before something replaces the whole pack: the one warning PatchWorker keeps. Resolves true to go on.
 async function okToReplacePack(action) {
   const slots = unsavedSlots();
+  // Projects edited on the TRACKS panel, or saved into this pack and not downloaded since.
+  const projs = S.pack ? packProjects(S.pack).filter((e) => e.edited || S.pack.projectsNotDownloaded?.has(e.slot)).map((e) => e.slot + 1) : [];
+  if (projs.length && !slots.length) {
+    return (await ask(`${action}?`, [
+      `Project${projs.length > 1 ? 's' : ''} ${projs.join(', ')} in "${S.pack.name || 'this pack'}" ha${projs.length > 1 ? 've' : 's'} changes that are not in a downloaded pack.`,
+      `${action} clears them. To keep them, cancel, Save on the TRACKS panel if needed, and use Download pack.`,
+    ], `${action} anyway`)) === true;
+  }
   if (!slots.length) return true;
   const names = slots.slice(0, 5).map((i) => `${pad3(i + 1)} "${getName(S.pack.patches[i])}"`).join(', ') + (slots.length > 5 ? ` and ${slots.length - 5} more` : '');
   const choice = await ask(`${action}?`, [
@@ -941,6 +949,17 @@ async function loadPackBuffer(buffer, fileName, { remember = true, edits = null 
   pack.saved = {};
   for (const [slot, data] of Object.entries(edits?.saved ?? {})) if (data?.length === PATCH_SIZE) pack.saved[+slot] = new Uint8Array(data);
   pack.at = { ...(edits?.at ?? {}) };
+  // Projects saved into the pack here (TRACKS panel, Save) in an earlier visit.
+  pack.savedProjects = new Set();
+  pack.projectsNotDownloaded = new Set();
+  for (const [slot, e] of Object.entries(edits?.projects ?? {})) {
+    if (!e?.url || e.bytes?.length !== 160780) continue;
+    pack.index.projects ??= [];
+    pack.index.projects[+slot] = { ...(pack.index.projects[+slot] ?? {}), name: e.name ?? '', url: e.url };
+    pack.files.set(e.url, new Uint8Array(e.bytes));
+    pack.savedProjects.add(+slot);
+    if (e.notDownloaded) (pack.projectsNotDownloaded ??= new Set()).add(+slot);
+  }
   S.hw = [{ slot: null, dirty: false }, { slot: null, dirty: false }];
   if (remember) { await session.savePack(buffer, fileName); await session.saveEdits(null); }
   selectSlot(edits?.slot ?? 0, { send: false });
@@ -960,7 +979,13 @@ function saveSession() {
     if (S.pack.saved?.[i]) saved[i] = [...S.pack.saved[i]];
     if (S.pack.at?.[i]) at[i] = S.pack.at[i];
   }
-  session.saveEdits({ patches, name: S.pack.name, slot: S.slot, origin, saved, at });
+  const projects = {};
+  for (const slot of S.pack.savedProjects ?? []) {
+    const e = S.pack.index.projects?.[slot];
+    const bytes = e?.url ? S.pack.files.get(e.url) : null;
+    if (bytes) projects[slot] = { name: e.name ?? '', url: e.url, bytes: bytes.slice(), notDownloaded: !!S.pack.projectsNotDownloaded?.has(slot) };
+  }
+  session.saveEdits({ patches, name: S.pack.name, slot: S.slot, origin, saved, at, projects });
 }
 
 // The default pack is fetched each visit, so only edits to it are stored (not the pack file).
@@ -983,12 +1008,17 @@ async function openPackFile(file) {
 async function savePack() {
   const follow = projectsFollowing(S.pack);
   const sync = h('input', { type: 'checkbox', checked: true });
-  const body = [`Downloads "${S.pack.name || 'pack'}" with your patch edits. Samples and projects are copied unchanged. Load it onto the Circuit Tracks with Novation Components.`];
+  const savedProj = [...(S.pack.savedProjects ?? [])].sort((a, b) => a - b);
+  const body = [`Downloads "${S.pack.name || 'pack'}" with your patch edits${savedProj.length ? ` and the project${savedProj.length > 1 ? 's' : ''} saved here (${savedProj.map((i) => i + 1).join(', ')})` : ''}. Samples${savedProj.length ? ' and the other projects' : ' and projects'} are copied unchanged. Load it onto the Circuit Tracks with Novation Components.`];
+  const unsavedProj = packProjects(S.pack).filter((e) => e.edited);
+  if (unsavedProj.length) body.push(h('p', { class: 'hint warn', text: `Project${unsavedProj.length > 1 ? 's' : ''} ${unsavedProj.map((e) => e.slot + 1).join(', ')} ha${unsavedProj.length > 1 ? 've' : 's'} edits not saved yet: they are left out. Press Save on the TRACKS panel first to include them.` }));
   if (follow) body.push(h('label', { class: 'check' }, sync, ` Also update ${follow} project patch cop${follow > 1 ? 'ies' : 'y'}. Projects keep their own copy of each patch; this updates the ones that still matched the pack.`));
   if (!(await ask('Download pack', body, 'Download'))) return;
   const { blob } = await buildPack(S.pack, { name: S.pack.name, syncProjects: sync.checked });
   download(blob, `${fileSafe(S.pack.name || 'Pack')}.circuittrackspack`, 'application/zip');
   markSaved(editedSlots(S.pack));
+  S.pack.projectsNotDownloaded?.clear();
+  saveSession();
 }
 
 // Bring patches from a .syx file or the hardware into pack slots (the user picks where).
@@ -1427,13 +1457,15 @@ async function leaveEdited(cancellable) {
   return true;
 }
 // Choosing a patch here (patch list, Preset pads).
-async function chooseSlot(i) {
+// follow: the editor only follows the patch a synth already plays (project loaded, synth switched),
+// so the synth keeps playing the project's own copy of it.
+async function chooseSlot(i, { follow = false } = {}) {
   if (i === S.slot) return;
   if (hwLive() && !(await leaveEdited(true))) return;   // (Tracks mode)
   // Only wait when there is something to ask: pads select at once, so the note they play survives.
   if (!TRACKS_MODE && needSaveAsk() && !(await askSaveOnLeave())) return;
   selectSlot(i);
-  if (proj.loaded) proj.setPatchSlot(S.synth, i);   // as the Circuit Tracks' Preset view: that synth now plays it
+  if (proj.loaded && !follow) proj.setPatchSlot(S.synth, i);   // as the Circuit Tracks' Preset view: that synth now plays it
 }
 // The Project picker and ▶ in the bottom bar: shown when the open pack has projects, so a song can
 // be played from the editor without going to the TRACKS panel.
@@ -1468,7 +1500,7 @@ async function loadProject(slot, { quiet = false } = {}) {
   tracksPanel?.projectLoaded();
   $('#bpm').value = proj.tempo;
   const want = proj.patchSlots[S.synth];
-  if (want !== S.slot) await chooseSlot(want);
+  if (want !== S.slot) await chooseSlot(want, { follow: true });
   paintSong();
   if (!quiet) toast(`Project ${slot + 1} "${proj.song.name}" loaded: press ▶ or Space to play it.`, 4000);
 }
@@ -1816,7 +1848,7 @@ function bindUI() {
     paintStatus();
     tracksPanel?.paint();
     if (hwLive()) followTracks(S.synth);
-    if (proj.loaded && proj.patchSlots[S.synth] !== S.slot) chooseSlot(proj.patchSlots[S.synth]);   // edit what that synth plays
+    if (proj.loaded && proj.patchSlots[S.synth] !== S.slot) chooseSlot(proj.patchSlots[S.synth], { follow: true });   // edit what that synth plays
   }));
   $('#hw-send').addEventListener('click', () => { if (hwSend()) toast(`Playing "${getName(S.bytes)}" on Synth ${S.synth + 1} (not saved on the Circuit Tracks).`); });
   $('#hw-get').addEventListener('click', getFromTracks);
@@ -1865,7 +1897,9 @@ async function start() {
   tracksPanel = buildPanel($('#tracks'), {
     synth: () => S.synth,
     chooseSynth: (i) => document.querySelector(`#synth-seg [data-synth="${i}"]`)?.click(),
-    noteOn: (n) => noteOn(n),
+    noteOn: (n, v) => noteOn(n, v),
+    velocity: () => S.velocity,
+    projectSaved: (slot) => { (S.pack.projectsNotDownloaded ??= new Set()).add(slot); songList = null; paintSong(); clearTimeout(saveTimer); saveTimer = setTimeout(saveSession, 300); },
     noteOff: (n) => noteOff(n),
     octave: () => S.octave,
     setOctave: (o) => setOctave(o),
