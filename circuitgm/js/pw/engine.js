@@ -456,6 +456,13 @@ export class PatchSynth {
     this.refresh();
   }
   clearMacroPos() { if (this.macroPos?.some((v) => v != null)) { this.macroPos.fill(null); this.refresh(); } }
+  // All eight knob positions at once (an array, or null for the patch's own).
+  setMacroPositions(arr) {
+    const next = arr ? Array.from({ length: 8 }, (_, k) => arr[k] ?? null) : new Array(8).fill(null);
+    if (this.macroPos && next.every((v, k) => v === this.macroPos[k])) return;
+    this.macroPos = next;
+    this.refresh();
+  }
 
   setVolume(v) { this.master.gain.setTargetAtTime(v, this.ctx.currentTime, 0.02); }
 

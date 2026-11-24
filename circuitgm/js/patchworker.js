@@ -4,14 +4,14 @@ import { P, PATCH_SIZE, OSC_WAVES, FILTER_TYPES, DRIVE_TYPES, LFO_WAVES, POLY_MO
   FADE_MODES, CATEGORIES, GENRES, MOD_SOURCES, MOD_DESTS, MACRO_DESTS, MOD_SLOTS, FMT, modAddr,
   macroPosAddr, macroAddr, macroRows, initPatch, getName, setName, parseSyx, toSyx, sanitise,
   cutoffHz, eqDb, eqHz, syncName } from './pw/params.js?v=20261114s';
-import { PatchSynth, waveTable, lfoShape, envelopePoints } from './pw/engine.js?v=20261124b';
+import { PatchSynth, waveTable, lfoShape, envelopePoints } from './pw/engine.js?v=20261124j';
 import { TracksLink, VIEW_CODES } from './pw/midi.js?v=20261114s';
 import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, projectsFollowing, download,
   fileSafe, session, PATCH_SLOTS } from './pw/packio.js?v=20261114s';
 import { buildPanel } from './pw/panel.js?v=20261124h';
 import { drumRate } from './pw/mixlaws.js?v=20261114s';
 import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
-import { ProjectPlayer, packProjects } from './pw/project.js?v=20261124d';
+import { ProjectPlayer, packProjects } from './pw/project.js?v=20261124j';
 
 const DEFAULT_PACK = '../tracksgm/TracksGM_v1.circuittrackspack';
 // PatchWorker is Offline only for now (plan-patchworker-tracks-first.md, 22 Nov 2026): the browser is
@@ -66,7 +66,7 @@ const proj = new ProjectPlayer({
   patchBytes: (slot) => (S.pack.patches[slot] ??= initPatch()),
   patchName: (slot) => (S.pack.patches[slot] ? getName(S.pack.patches[slot]) : 'Initial Patch'),
   original: (slot) => S.pack.original[slot],
-  onChange: () => { tracksPanel?.paint(); paintSong(); },
+  onChange: () => { tracksPanel?.paint(); paintSong(); repaintMacros(); },
   onStep: (pos) => tracksPanel?.step(pos),
 });
 let ctx = null;
@@ -259,8 +259,8 @@ function knob(b, { small = false } = {}) {
     'aria-label': b.aria ?? b.label, 'aria-valuemin': b.lo, 'aria-valuemax': b.hi,
     title: `${b.aria ?? b.label}: drag up or down (Shift = fine), scroll, arrow keys, double-click to reset${b.id && KNOB_NOTE[b.id] ? `. ${KNOB_NOTE[b.id]}` : b.id && NOT_IN_BROWSER.has(b.id) ? '. Heard on the Circuit Tracks only.' : ''}` },
   dial, h('span', { class: 'k-label', text: b.label }), out);
-  const get = () => S.bytes[b.addr];
-  const set = (v) => setByte(b.addr, clamp(Math.round(v), b.lo, b.hi));
+  const get = b.get ?? (() => S.bytes[b.addr]);
+  const set = b.set ? (v) => b.set(clamp(Math.round(v), b.lo, b.hi)) : (v) => setByte(b.addr, clamp(Math.round(v), b.lo, b.hi));
   const bipolar = b.def === 64 && b.lo < 64 && b.hi > 64 && b.fmt !== FMT.raw;
   const paint = () => {
     const v = get();
@@ -645,7 +645,12 @@ function buildMacros() {
   const row = $('#macro-row');
   for (let k = 0; k < 8; k++) {
     const caption = h('span', { class: 'm-cap' });
-    const kn = knob({ addr: macroPosAddr(k), lo: 0, hi: 127, def: 0, label: String(k + 1), aria: `Macro ${k + 1}` });
+    const addr = macroPosAddr(k);
+    // With a project playing this patch on this synth, the knob is the project's (as on the Circuit
+    // Tracks): turning it is a project edit, heard in the song; otherwise it is the patch's.
+    const kn = knob({ addr, lo: 0, hi: 127, def: 0, label: String(k + 1), aria: `Macro ${k + 1}`,
+      get: () => { const i = projMacroSynth(); return i == null ? S.bytes[addr] : proj.macro(i, k); },
+      set: (v) => { const i = projMacroSynth(); if (i == null) { setByte(addr, v); return; } proj.setMacro(i, k, v); syncEditorMacros(); repaint(addr); } });
     const cell = h('div', { class: 'macro', title: `Macro ${k + 1}: click to choose what it controls` }, kn, caption);
     cell.addEventListener('pointerdown', () => { if (S.macro !== k) { S.macro = k; paintMacroSel(); S.paintMacro?.(); } });
     caption.addEventListener('click', () => showPage('mod'));
@@ -656,7 +661,19 @@ function buildMacros() {
     });
     row.append(cell);
   }
+  always.push(syncEditorMacros);
 }
+// The synth whose macro knobs the project holds: the one being edited, when the loaded project
+// plays the patch being edited on it.
+function projMacroSynth() {
+  return proj.loaded && proj.pack === S.pack && proj.patchSlots?.[S.synth] === S.slot ? S.synth : null;
+}
+// The editor's own synth (keyboard) plays at the project's knob positions too.
+function syncEditorMacros() {
+  const i = projMacroSynth();
+  synth?.setMacroPositions?.(i == null ? null : proj.macros[i]);
+}
+function repaintMacros() { syncEditorMacros(); for (let k = 0; k < 8; k++) repaint(macroPosAddr(k)); }
 function paintMacroSel() { [...$('#macro-row').children].forEach((c, k) => c.classList.toggle('sel', k === S.macro)); }
 
 // TRACKS (the Circuit Tracks panel) or EDITOR (the patch editor), remembered between visits.
@@ -2133,5 +2150,5 @@ function bindKb() {
 }
 
 // Handy when testing from the console, and for the automated tests.
-window.patchworker = { S, link, keys, proj, loadProject, unsavedSlots, TRACKS_MODE, audio, selectSlot, copyTo, setByte, toSyx, buildPack, undo, redo, setFace, storeOnTracks, openFromTracks, panel: () => tracksPanel };
+window.patchworker = { S, link, keys, proj, loadProject, unsavedSlots, TRACKS_MODE, audio, selectSlot, copyTo, setByte, toSyx, buildPack, undo, redo, setFace, storeOnTracks, openFromTracks, panel: () => tracksPanel, get synth() { return synth; } };
 start();

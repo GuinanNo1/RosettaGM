@@ -85,8 +85,8 @@ const fs = require('fs');
   check(patchPos === 1, 'the synth still has its patch');
   await p.click('#patchlist li[data-project="26"] .play');
   await p.waitForFunction(() => !window.patchworker.proj.playing);
-  const after = await pw(() => window.patchworker.proj.player.synths[0].macroPos?.every((v) => v == null) ?? true);
-  check(after, 'stopping gives the macros back to the patch');
+  const after = await pw(() => { const pp = window.patchworker.proj; return JSON.stringify(pp.player.synths[0].macroPos) === JSON.stringify(pp.macros[0]); });
+  check(after, 'stopping puts the macros back where the project has them');
 
   // Project 1 (slot 0): Drum 3 pitch automation becomes part of each hit.
   await p.click('#patchlist li[data-project="0"] .nm');

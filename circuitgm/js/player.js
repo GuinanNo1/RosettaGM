@@ -11,7 +11,7 @@
 // set 7), and the two synth tracks can play their patches on PatchWorker's browser synth.
 import { Mixer } from './pw/mixer.js?v=20261124b';
 import { projectMix, drumRate, drumDecaySeconds } from './pw/mixlaws.js?v=20261114s';
-import { PatchSynth } from './pw/engine.js?v=20261124b';
+import { PatchSynth } from './pw/engine.js?v=20261124j';
 
 const LOOKAHEAD = 0.15;
 const TICK_MS = 25;
@@ -61,6 +61,7 @@ export class Player {
         this.synths[i] ??= new PatchSynth(this.ctx, this.trackGains[i]);
         this.synths[i].bpm = this.mix?.tempo ?? 120;
         this.synths[i].setPatch(new Uint8Array(bytes[i]));
+        this.synths[i].setMacroPositions(this.macroBase?.[i] ?? null);
       } else if (this.synths[i]) {
         this.synths[i].allNotesOff();
         this.synths[i] = null;
@@ -166,9 +167,16 @@ export class Player {
     this.held?.clear();
     for (const id of this.autoTimers ?? []) clearTimeout(id);
     this.autoTimers?.clear();
-    for (const syn of this.synths ?? []) { syn?.allNotesOff(); syn?.clearMacroPos?.(); }
+    // Recorded macro movements end: back to the project's knob positions.
+    (this.synths ?? []).forEach((syn, i) => { syn?.allNotesOff(); syn?.setMacroPositions?.(this.macroBase?.[i] ?? null); });
     this.mixer?.reset();
     if (this.mix) this.mixer?.restoreAll();
+  }
+
+  // Synth i's macro knob positions when no recording moves them (the project's), or null.
+  setMacroBase(i, arr) {
+    (this.macroBase ??= [null, null])[i] = arr ? arr.slice() : null;
+    this.synths?.[i]?.setMacroPositions?.(this.macroBase[i]);
   }
 
   // A recorded knob movement (e.autoKey, e.value) on track e.track at audio time `at`: synth

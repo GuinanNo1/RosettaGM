@@ -8,9 +8,11 @@
 // chain (as chosen in Patterns view), mutes, levels, tempo and swing.
 import { readProject, isEmpty } from '../pack.js?v=20261122b';
 import { songOf, renderSong, STEP_TICKS, PPQ } from '../song.js?v=20261124b';
-import { Player } from '../player.js?v=20261124b';
+import { Player } from '../player.js?v=20261124j';
 import { serializeNCS } from '../vendor/ncs.js';
 import { snapToScale, CHROMATIC } from '../scales.js';
+import { macroPosAddr } from './params.js?v=20261114s';
+const MACRO_POS = Array.from({ length: 8 }, (_, k) => macroPosAddr(k));   // knob positions in a patch
 
 const NCS_PATCH_SLOT = [0xcd64, 0xcd6c];   // Synth 1 / Synth 2: the pack slot the project plays
 const NCS_DEFAULT_DRUMS = 0x1a278;          // 4 bytes: each drum track's sample (its active sample)
@@ -94,10 +96,17 @@ export class ProjectPlayer {
     // Which pack slot each synth plays; a project whose own copy has drifted from the pack keeps
     // its copy until another patch is chosen for that synth.
     this.patchSlots = proj.patchSlots.slice(0, 2);
+    // The macro knob positions belong to the project (the Circuit Tracks saves them in its copy of
+    // each patch, and loses them when another patch is chosen): a copy that differs from the pack
+    // only in its knob positions plays the pack's patch (so edits are heard) at the project's
+    // knob positions.
+    this.macros = [[], []];
     this.ownCopy = [0, 1].map((i) => {
       const copy = i === 0 ? proj.synth1Patch : proj.synth2Patch;
       const orig = this.o.original(this.patchSlots[i]);
-      const same = copy && orig && copy.length >= 340 && orig.every((v, k) => v === copy[k]);
+      const ok = copy && copy.length >= 340;
+      this.macros[i] = MACRO_POS.map((a) => (ok ? copy[a] : this.o.patchBytes(this.patchSlots[i])[a]));
+      const same = ok && orig && orig.every((v, k) => v === copy[k] || MACRO_POS.includes(k));
       return same ? null : copy;
     });
     this.scene = 0;
@@ -110,6 +119,7 @@ export class ProjectPlayer {
     this.player.mutes.fill(false);
     this.player.solo = -1;
     this.player.setProject(proj, { patches: [0, 1].map((i) => this.ownCopy[i] ?? this.o.patchBytes(this.patchSlots[i])) });
+    this.applyMacros();
     this.masterFilter = this.player.mix?.filter?.cutoff ?? 64;
     this.levels = [0, 1, 2, 3, 4, 5, 6, 7].map((t) => (t < 2 ? this.player.mix.synth[t].level : t >= 4 ? this.player.mix.drums[t - 4].level : 127));
     this.rerender();
@@ -140,6 +150,23 @@ export class ProjectPlayer {
       syn.setPatch(this.ownCopy[i] ? new Uint8Array(this.ownCopy[i]) : this.o.patchBytes(this.patchSlots[i]));
       syn.bpm = this.tempo;
     }
+    this.applyMacros();
+  }
+  // ---- macro knobs (the project's, see load)
+  // Synth i's macro knob k as the project has it (null with no project).
+  macro(i, k) { return this.loaded ? this.macros[i][k] : null; }
+  // Turn synth i's macro knob k: a project edit (Save keeps it), heard straight away.
+  setMacro(i, k, v) {
+    if (!this.loaded || this.macros[i][k] === v) return;
+    this.macros[i][k] = v;
+    if (this.ownCopy[i]) this.ownCopy[i][MACRO_POS[k]] = v;
+    this.entry.edited = true;
+    this.applyMacros();
+    this.o.onChange?.();
+  }
+  // The player's synths play their patches at the project's knob positions.
+  applyMacros() {
+    for (let i = 0; i < 2; i++) this.player.setMacroBase(i, this.macros[i]);
   }
 
   // A patch was edited: refresh the synth(s) playing that slot.
@@ -152,6 +179,8 @@ export class ProjectPlayer {
     if (!this.loaded || this.patchSlots[i] === slot && !this.ownCopy[i]) return;
     this.patchSlots[i] = slot;
     this.ownCopy[i] = null;
+    // A new patch brings its own knob positions (the hardware loses the project's).
+    this.macros[i] = MACRO_POS.map((a) => this.o.patchBytes(slot)[a]);
     this.player.synths?.[i]?.setPatch(this.o.patchBytes(slot));
     this.o.onChange?.();
   }
@@ -537,6 +566,7 @@ export class ProjectPlayer {
     proj.tempo = this.tempo;
     proj.swing = this.swing;
     const patches = [0, 1].map((i) => new Uint8Array(this.ownCopy[i] ?? this.o.patchBytes(this.patchSlots[i])));
+    patches.forEach((b, i) => MACRO_POS.forEach((a, k) => { b[a] = this.macros[i][k]; }));
     proj.synth1Patch = patches[0];
     proj.synth2Patch = patches[1];
     proj.patchSlots = this.patchSlots.slice();
@@ -573,6 +603,9 @@ export class ProjectPlayer {
   revert() {
     if (!this.edited) return;
     this.revertEntry(this.entry);
+    const pr = this.entry.project;
+    [0, 1].forEach((i) => { const c = i ? pr.synth2Patch : pr.synth1Patch; if (c?.length >= 340 && this.patchSlots[i] === pr.patchSlots[i]) this.macros[i] = MACRO_POS.map((a) => c[a]); });
+    this.applyMacros();
     this.song = songOf(songPack(this.pack, this.o.patchName), this.entry);
     this.changed(false);
   }
