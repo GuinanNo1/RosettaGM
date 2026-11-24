@@ -38,6 +38,8 @@ export function songOf(pack, entry) {
       rate: pat.settings.syncRate,
       dir: pat.settings.direction,
       steps: pat.steps.map((s) => ({ prob: s.probability, hits: hitsOf(kind, s, defaultSample, root, scale) })),
+      // Drum automation (recorded knob movements: pitch, decay, ...), keyed by step position.
+      locks: kind === 'drum' ? lockSteps(pat.paramLocks) : null,
     }));
     const label = rhythm ? `Track ${t + 1}` : TRACKS[t];
     // The track's sound: its patch, or its default sample; if that slot is empty, the
@@ -184,9 +186,33 @@ export function sceneTicks(song, sceneIndex) {
 
 // opts: { order: [scene indices], swing: bool, chance: 'keep' | 'drop', sceneMutes: bool }
 // Returns hits in ticks at PPQ: { tick, dur, track, note, vel, sample }.
+// A pattern's drum automation by step: { pitch: Map(step -> [[position, value], ...]) }, each
+// list sorted by position (a step's locks can sit on its micro steps).
+function lockSteps(paramLocks) {
+  const out = {};
+  for (const key of DRUM_LOCK_KEYS) {
+    const locks = paramLocks?.[key];
+    if (!locks) continue;
+    const m = new Map();
+    for (const [pos, v] of Object.entries(locks)) {
+      const at = Number(pos), step = Math.floor(at + 1e-9);
+      if (!m.has(step)) m.set(step, []);
+      m.get(step).push([at, v]);
+    }
+    for (const list of m.values()) list.sort((a, b) => a[0] - b[0]);
+    out[key] = m;
+  }
+  return Object.keys(out).length ? out : null;
+}
+// The drum automation the player applies to each hit.
+const DRUM_LOCK_KEYS = ['pitch', 'decay'];
+
 export function renderSong(song, opts = {}) {
   const order = opts.order ?? sceneOrder(song, defaultOrderKind(song));
   const hits = [];
+  // Drum automation holds its value until the next recorded one, across steps, patterns and
+  // scenes (User Guide p. 70: the knob movement is heard from the step it was recorded at).
+  const held = song.tracks.map(() => ({}));
   const sceneStarts = [];
   let at = 0;
   for (const si of order) {
@@ -206,15 +232,24 @@ export function renderSong(song, opts = {}) {
           for (const i of stepOrder(pat)) {
             if (t >= len) break;
             const step = pat.steps[i];
+            const hold = held[tr.index];
+            const stepLocks = pat.locks ? Object.entries(pat.locks).map(([k, m]) => [k, m.get(i)]).filter(([, l]) => l) : [];
             if (!(opts.chance === 'drop' && step.prob < 7)) {
               for (const h of step.hits) {
                 let dur;
                 if (h.gate == null) dur = h.multi ? micro : st / 2;
                 else dur = Math.max(1, h.gate) * micro;
                 if (h.multi) dur = Math.min(dur, micro);
-                hits.push({ tick: at + t + h.micro * micro, dur, track: tr.index, note: h.note, vel: Math.max(1, Math.min(127, h.vel)), sample: h.sample, tie: h.tie });
+                const hit = { tick: at + t + h.micro * micro, dur, track: tr.index, note: h.note, vel: Math.max(1, Math.min(127, h.vel)), sample: h.sample, tie: h.tie };
+                if (tr.kind === 'drum') {
+                  const auto = { ...hold };
+                  for (const [k, list] of stepLocks) for (const [pos, v] of list) if (pos <= i + h.micro / 6 + 1e-9) auto[k] = v;
+                  if (Object.keys(auto).length) hit.auto = auto;
+                }
+                hits.push(hit);
               }
             }
+            for (const [k, list] of stepLocks) hold[k] = list[list.length - 1][1];
             t += st;
           }
         }

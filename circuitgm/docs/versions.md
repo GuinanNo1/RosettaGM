@@ -12,7 +12,7 @@ Each tool page shows its version next to its status badge, so you can tell which
 | MIDI2Rhythm | 0.21 | For testing · v0.21 |
 | Circuit2MIDI | 0.7 | alpha 0.7 |
 | CircuitTrim | 0.5 | alpha 0.5 |
-| PatchWorker | 0.16 | For testing · v0.16 (top bar) |
+| PatchWorker | 0.16.1 | For testing · v0.16.1 (top bar) |
 
 Numbering started on 14 Nov 2026. Earlier changes are grouped roughly:
 
@@ -54,6 +54,7 @@ See `midi2rhythm/help.html` (Versions). 0.1–0.6 on 14 Nov 2026; 0.7 (15 Nov): 
 - 0.1 (10 Nov 2026): first alpha.
 
 ## PatchWorker
+- **0.16.1** (24 Nov 2026): drum tracks play their recorded automation (pitch and decay knob movements stored per step), held until the next recorded value. Before, every hit played the track's saved knob setting, so Out Of Space DL's Drum 1 (saved at pitch 117, automated back to 64 at step 1) played about 7 semitones sharp, and Drum 3's pitch moves were lost.
 - **0.16** (23 Nov 2026): piano roll and drum grid (`js/pw/roll.js`), shown instead of the pads: a Piano roll / Drum grid button under the pads in Note view, or double-click a pattern in Patterns view (Patterns, Note or Pads go back). Piano roll: rows are the scale's notes, click to add (drag for length), drag to move, right edge for length (Shift: sixths), click to remove, wheel for velocity, ▼ ▲ scroll an octave. Drum grid: Drum 1-4 rows (each track's pattern), click toggles hits, wheel for velocity, sample flips pink with their number. New `ProjectPlayer` methods: `addNote`, `removeNote`, `moveNote`, `setNoteGate`, `setNoteVelocity`, `setHitVelocity`.
 - **0.15** (23 Nov 2026): drum Note view as on the hardware (User Guide pp. 24, 60-62): the bottom rows are 16 of the 64 samples (▼ ▲ pages, active sample bright); a tap makes a sample the track's sample (a project edit: 0x1A278 and the drum config's first byte, saved), a long press arms a sample flip (steps pressed then get that sample; flipped steps pink); holding a step lights its sample red (turning to its page), a long press arms the step for a sample pad to give it a sample. Names in the status strip on hover. Replaces the eight "Hit" pads, which all played the active sample.
 - **0.14** (23 Nov 2026): Scales view (User Guide v3 pp. 30-32): root pads as a one-octave piano (pads 1, 4, 8, 16 dark), the 16 scales on rows 3-4 in stored-type order (`js/scales.js`; checked against every project in two hardware packs). Note view's keyboard follows the project's scale (Chromatic: piano; others: 8 scale notes a row, top row starting on the bottom row's last note); Expanded Note view (Note again) adds two rows. Root and scale are project edits, saved with Save; changing the root transposes, a note outside a new scale plays the nearest scale note (`snapToScale` in `js/song.js`, ties down, unconfirmed on hardware; hardware and MIDI2Circuit projects never have such notes, so the converters' output is unchanged). Download pack asks for the pack name, suggesting a new one ("Blue Monday 2"); the Save message says nothing is written to disk.

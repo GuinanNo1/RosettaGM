@@ -230,8 +230,9 @@ export class Player {
     const cfg = this.mix && e.track >= 4 ? this.mix.drums[e.track - 4] : null;
     if (cfg) {
       this.mixer.trigger(e.track - 4, at);
-      e = { ...e, rate: (e.rate || 1) * drumRate(cfg.pitch) };
-      const fade = drumDecaySeconds(cfg.decay);
+      // Recorded automation at this step (e.auto) replaces the track's knob settings.
+      e = { ...e, rate: (e.rate || 1) * drumRate(e.auto?.pitch ?? cfg.pitch) };
+      const fade = drumDecaySeconds(e.auto?.decay ?? cfg.decay);
       if (fade) {
         g.gain.setValueAtTime(g.gain.value, at);
         g.gain.setTargetAtTime(0, at, fade / 3.45);   // -30 dB at `fade`

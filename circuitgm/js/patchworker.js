@@ -10,7 +10,7 @@ import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, proje
   fileSafe, session, PATCH_SLOTS } from './pw/packio.js?v=20261114s';
 import { buildPanel } from './pw/panel.js?v=20261123e';
 import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
-import { ProjectPlayer, packProjects } from './pw/project.js?v=20261123e';
+import { ProjectPlayer, packProjects } from './pw/project.js?v=20261124a';
 
 const DEFAULT_PACK = '../tracksgm/TracksGM_v1.circuittrackspack';
 // PatchWorker is Offline only for now (plan-patchworker-tracks-first.md, 22 Nov 2026): the browser is

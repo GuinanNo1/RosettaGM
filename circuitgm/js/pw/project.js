@@ -7,8 +7,8 @@
 // Circuit Tracks has while playing: the selected scene and scene chain, each track's pattern
 // chain (as chosen in Patterns view), mutes, levels, tempo and swing.
 import { readProject, isEmpty } from '../pack.js?v=20261122b';
-import { songOf, renderSong, STEP_TICKS, PPQ } from '../song.js?v=20261123c';
-import { Player } from '../player.js?v=20261122b';
+import { songOf, renderSong, STEP_TICKS, PPQ } from '../song.js?v=20261124a';
+import { Player } from '../player.js?v=20261124a';
 import { serializeNCS } from '../vendor/ncs.js';
 import { snapToScale, CHROMATIC } from '../scales.js';
 
@@ -202,7 +202,7 @@ export class ProjectPlayer {
         const t = off + sec(h.tick);
         const d = sec(h.dur);
         if (tr.kind === 'drum') {
-          if (h.sample != null) events.push({ t, d, track: h.track, note: 60, vel: h.vel, part: `s${h.sample}`, choke: true });
+          if (h.sample != null) events.push({ t, d, track: h.track, note: 60, vel: h.vel, part: `s${h.sample}`, choke: true, auto: h.auto });
         } else events.push({ t, d, track: h.track, note: h.note, vel: h.vel, program: 80, env: tr.env });
       }
     }
