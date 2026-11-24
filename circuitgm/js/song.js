@@ -39,7 +39,7 @@ export function songOf(pack, entry) {
       dir: pat.settings.direction,
       steps: pat.steps.map((s) => ({ prob: s.probability, hits: hitsOf(kind, s, defaultSample, root, scale) })),
       // Drum automation (recorded knob movements: pitch, decay, ...), keyed by step position.
-      locks: kind === 'drum' ? lockSteps(pat.paramLocks) : null,
+      locks: kind === 'drum' || kind === 'synth' ? lockSteps(pat.paramLocks) : null,
     }));
     const label = rhythm ? `Track ${t + 1}` : TRACKS[t];
     // The track's sound: its patch, or its default sample; if that slot is empty, the
@@ -184,14 +184,11 @@ export function sceneTicks(song, sceneIndex) {
   return len;
 }
 
-// opts: { order: [scene indices], swing: bool, chance: 'keep' | 'drop', sceneMutes: bool }
-// Returns hits in ticks at PPQ: { tick, dur, track, note, vel, sample }.
-// A pattern's drum automation by step: { pitch: Map(step -> [[position, value], ...]) }, each
-// list sorted by position (a step's locks can sit on its micro steps).
+// A pattern's automation (recorded knob movements) by step: { key: Map(step -> [[position,
+// value], ...]) }, each list sorted by position (a step's locks can sit on its micro steps).
 function lockSteps(paramLocks) {
   const out = {};
-  for (const key of DRUM_LOCK_KEYS) {
-    const locks = paramLocks?.[key];
+  for (const [key, locks] of Object.entries(paramLocks ?? {})) {
     if (!locks) continue;
     const m = new Map();
     for (const [pos, v] of Object.entries(locks)) {
@@ -204,15 +201,20 @@ function lockSteps(paramLocks) {
   }
   return Object.keys(out).length ? out : null;
 }
-// The drum automation the player applies to each hit.
-const DRUM_LOCK_KEYS = ['pitch', 'decay'];
+// Drum automation that belongs to each hit (it changes how the sample plays); the rest (levels,
+// pans, sends, drum distortion and EQ, synth macros) is returned as a timeline, `autos`.
+const HIT_LOCK_KEYS = new Set(['pitch', 'decay']);
 
+// opts: { order: [scene indices], swing: bool, chance: 'keep' | 'drop', sceneMutes: bool }
+// Returns hits in ticks at PPQ: { tick, dur, track, note, vel, sample, auto? }, and autos:
+// [{ tick, track, key, value }] for every recorded knob movement the arrangement passes.
 export function renderSong(song, opts = {}) {
   const order = opts.order ?? sceneOrder(song, defaultOrderKind(song));
   const hits = [];
   // Drum automation holds its value until the next recorded one, across steps, patterns and
   // scenes (User Guide p. 70: the knob movement is heard from the step it was recorded at).
   const held = song.tracks.map(() => ({}));
+  const autos = [];
   const sceneStarts = [];
   let at = 0;
   for (const si of order) {
@@ -242,14 +244,18 @@ export function renderSong(song, opts = {}) {
                 if (h.multi) dur = Math.min(dur, micro);
                 const hit = { tick: at + t + h.micro * micro, dur, track: tr.index, note: h.note, vel: Math.max(1, Math.min(127, h.vel)), sample: h.sample, tie: h.tie };
                 if (tr.kind === 'drum') {
-                  const auto = { ...hold };
-                  for (const [k, list] of stepLocks) for (const [pos, v] of list) if (pos <= i + h.micro / 6 + 1e-9) auto[k] = v;
+                  const auto = {};
+                  for (const k of HIT_LOCK_KEYS) if (hold[k] != null) auto[k] = hold[k];
+                  for (const [k, list] of stepLocks) if (HIT_LOCK_KEYS.has(k)) for (const [pos, v] of list) if (pos <= i + h.micro / 6 + 1e-9) auto[k] = v;
                   if (Object.keys(auto).length) hit.auto = auto;
                 }
                 hits.push(hit);
               }
             }
-            for (const [k, list] of stepLocks) hold[k] = list[list.length - 1][1];
+            for (const [k, list] of stepLocks) {
+              hold[k] = list[list.length - 1][1];
+              if (!HIT_LOCK_KEYS.has(k) || tr.kind !== 'drum') for (const [pos, v] of list) autos.push({ tick: at + t + (pos - i) * st, track: tr.index, key: k, value: v });
+            }
             t += st;
           }
         }
@@ -264,7 +270,8 @@ export function renderSong(song, opts = {}) {
     for (const h of hits) if (h.tick % (2 * unit) === unit) h.tick += shift;
   }
   const out = hits.filter((h) => !h.dead).sort((a, b) => a.tick - b.tick || a.track - b.track);
-  return { ppq: PPQ, hits: out, sceneStarts, length: at };
+  autos.sort((a, b) => a.tick - b.tick);
+  return { ppq: PPQ, hits: out, sceneStarts, length: at, autos };
 }
 
 // A tied synth note carries on into the same note where it ends.

@@ -12,7 +12,7 @@ Each tool page shows its version next to its status badge, so you can tell which
 | MIDI2Rhythm | 0.21 | For testing · v0.21 |
 | Circuit2MIDI | 0.7 | alpha 0.7 |
 | CircuitTrim | 0.5 | alpha 0.5 |
-| PatchWorker | 0.16.1 | For testing · v0.16.1 (top bar) |
+| PatchWorker | 0.17 | For testing · v0.17 (title line under the menu) |
 
 Numbering started on 14 Nov 2026. Earlier changes are grouped roughly:
 
@@ -54,6 +54,7 @@ See `midi2rhythm/help.html` (Versions). 0.1–0.6 on 14 Nov 2026; 0.7 (15 Nov): 
 - 0.1 (10 Nov 2026): first alpha.
 
 ## PatchWorker
+- **0.17** (24 Nov 2026): a title line under the site menu names the page (PatchWorker, what it is, and the version, moved there from the menu bar). The side list's menu (was All patches / Changed / categories) now chooses what it shows: Patches, Changed patches, Samples (click to hear, again to stop; length shown once heard) or Projects (click loads, ▶ or double-click plays). Projects play all their recorded automation: drum distortion, EQ, level, pan and sends, synth level, pan and sends, and Synth 1 / 2 macros 1-8 (the browser synth's macro positions, not the patch; back to the patch's on Stop); starting mid-song picks up the last recorded values. `renderSong` returns `autos`; `Mixer.automate`/`restore`, `PatchSynth.setMacroPos`. MIDI 1 / 2 automation (CCs out) is not played. Test: `tests/ui_lists.cjs`.
 - **0.16.1** (24 Nov 2026): drum tracks play their recorded automation (pitch and decay knob movements stored per step), held until the next recorded value. Before, every hit played the track's saved knob setting, so Out Of Space DL's Drum 1 (saved at pitch 117, automated back to 64 at step 1) played about 7 semitones sharp, and Drum 3's pitch moves were lost.
 - **0.16** (23 Nov 2026): piano roll and drum grid (`js/pw/roll.js`), shown instead of the pads: a Piano roll / Drum grid button under the pads in Note view, or double-click a pattern in Patterns view (Patterns, Note or Pads go back). Piano roll: rows are the scale's notes, click to add (drag for length), drag to move, right edge for length (Shift: sixths), click to remove, wheel for velocity, ▼ ▲ scroll an octave. Drum grid: Drum 1-4 rows (each track's pattern), click toggles hits, wheel for velocity, sample flips pink with their number. New `ProjectPlayer` methods: `addNote`, `removeNote`, `moveNote`, `setNoteGate`, `setNoteVelocity`, `setHitVelocity`.
 - **0.15** (23 Nov 2026): drum Note view as on the hardware (User Guide pp. 24, 60-62): the bottom rows are 16 of the 64 samples (▼ ▲ pages, active sample bright); a tap makes a sample the track's sample (a project edit: 0x1A278 and the drum config's first byte, saved), a long press arms a sample flip (steps pressed then get that sample; flipped steps pink); holding a step lights its sample red (turning to its page), a long press arms the step for a sample pad to give it a sample. Names in the status strip on hover. Replaces the eight "Hit" pads, which all played the active sample.

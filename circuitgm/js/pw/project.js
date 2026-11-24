@@ -7,8 +7,8 @@
 // Circuit Tracks has while playing: the selected scene and scene chain, each track's pattern
 // chain (as chosen in Patterns view), mutes, levels, tempo and swing.
 import { readProject, isEmpty } from '../pack.js?v=20261122b';
-import { songOf, renderSong, STEP_TICKS, PPQ } from '../song.js?v=20261124a';
-import { Player } from '../player.js?v=20261124a';
+import { songOf, renderSong, STEP_TICKS, PPQ } from '../song.js?v=20261124b';
+import { Player } from '../player.js?v=20261124b';
 import { serializeNCS } from '../vendor/ncs.js';
 import { snapToScale, CHROMATIC } from '../scales.js';
 
@@ -205,7 +205,9 @@ export class ProjectPlayer {
           if (h.sample != null) events.push({ t, d, track: h.track, note: 60, vel: h.vel, part: `s${h.sample}`, choke: true, auto: h.auto });
         } else events.push({ t, d, track: h.track, note: h.note, vel: h.vel, program: 80, env: tr.env });
       }
+      for (const a of rendered.autos ?? []) events.push({ t: off + sec(a.tick), d: 0, track: a.track, autoKey: a.key, value: a.value });
     }
+    events.sort((a, b) => a.t - b.t);
     this.render = { song, order, rendered, loop, reps, events };
   }
 
@@ -220,11 +222,13 @@ export class ProjectPlayer {
     if (!this.render) this.rerender();
     const { events, loop, reps } = this.render;
     if (!loop) return;
+    // Levels and filter first: playing applies the recorded automation over them.
+    this.player.ensure();
+    this.applyLevels();
+    this.applyFilter();
     await this.player.play(events, { from, length: loop * reps });
     this.linkSynths();
     this.player.applyGains();
-    this.applyLevels();
-    this.applyFilter();
   }
   // Master Filter: below 64 low-pass, above 64 high-pass, 64 off; resonance from the project.
   setMasterFilter(v) { this.masterFilter = v; this.applyFilter(); }

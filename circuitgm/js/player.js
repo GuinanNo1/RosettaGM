@@ -9,9 +9,9 @@
 // setProject() is given a Circuit Tracks project: then the project's levels, pans, sends,
 // reverb, delay, drum settings and sidechain apply as measured on the hardware (calibration
 // set 7), and the two synth tracks can play their patches on PatchWorker's browser synth.
-import { Mixer } from './pw/mixer.js?v=20261114s';
+import { Mixer } from './pw/mixer.js?v=20261124b';
 import { projectMix, drumRate, drumDecaySeconds } from './pw/mixlaws.js?v=20261114s';
-import { PatchSynth } from './pw/engine.js?v=20261114s';
+import { PatchSynth } from './pw/engine.js?v=20261124b';
 
 const LOOKAHEAD = 0.15;
 const TICK_MS = 25;
@@ -137,6 +137,11 @@ export class Player {
     if (this.idx < 0) this.idx = events.length;
     this.voices = [];
     this.held = new Map();
+    // Recorded automation: start from the project's settings, then the last value of each knob
+    // movement before `from`.
+    const last = new Map();
+    for (const e of events) { if (e.t >= from) break; if (e.autoKey) last.set(`${e.track}:${e.autoKey}`, e); }
+    for (const e of last.values()) this.automate(e, ctx.currentTime);
     this.timer = setInterval(() => this.schedule(), TICK_MS);
     this.schedule();
     const frame = () => {
@@ -159,8 +164,30 @@ export class Player {
     }
     this.voices = [];
     this.held?.clear();
-    for (const syn of this.synths ?? []) syn?.allNotesOff();
+    for (const id of this.autoTimers ?? []) clearTimeout(id);
+    this.autoTimers?.clear();
+    for (const syn of this.synths ?? []) { syn?.allNotesOff(); syn?.clearMacroPos?.(); }
     this.mixer?.reset();
+    if (this.mix) this.mixer?.restoreAll();
+  }
+
+  // A recorded knob movement (e.autoKey, e.value) on track e.track at audio time `at`: synth
+  // macros turn the browser synth's macro knob; levels, pans, sends and drum distortion / EQ go
+  // to the mixer. Only with a project's mix (a Circuit Tracks project).
+  automate(e, at) {
+    if (!this.mix) return;
+    const m = /^macro(\d)$/.exec(e.autoKey);
+    if (m) {
+      const syn = e.track < 2 ? this.synths?.[e.track] : null;
+      if (!syn?.setMacroPos) return;
+      const k = +m[1] - 1;
+      const wait = (at - this.ctx.currentTime) * 1000;
+      if (wait < 10) { syn.setMacroPos(k, e.value); return; }
+      const id = setTimeout(() => { this.autoTimers.delete(id); syn.setMacroPos(k, e.value); }, wait);
+      (this.autoTimers ??= new Set()).add(id);
+      return;
+    }
+    if (e.track < 2 || e.track >= 4) this.mixer.automate(e.track, e.autoKey, e.value, at);
   }
 
   schedule() {
@@ -170,7 +197,8 @@ export class Player {
       const e = this.events[this.idx++];
       const at = this.startTime + e.t;
       if (at < ctx.currentTime - 0.05) continue;
-      if (e.part) this.drum(e, at); else this.tone(e, at);
+      if (e.autoKey) this.automate(e, at);
+      else if (e.part) this.drum(e, at); else this.tone(e, at);
     }
     // Forget finished voices.
     if (this.voices.length > 256) this.voices = this.voices.filter((v) => v.end > ctx.currentTime);

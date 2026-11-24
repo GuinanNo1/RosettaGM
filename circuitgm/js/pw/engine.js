@@ -447,13 +447,23 @@ export class PatchSynth {
     this.refresh();
   }
 
+  // A macro knob turned by a project's recorded automation (null: back to the patch's position).
+  // The patch itself is not changed.
+  setMacroPos(k, v) {
+    this.macroPos ??= new Array(8).fill(null);
+    if (this.macroPos[k] === v) return;
+    this.macroPos[k] = v;
+    this.refresh();
+  }
+  clearMacroPos() { if (this.macroPos?.some((v) => v != null)) { this.macroPos.fill(null); this.refresh(); } }
+
   setVolume(v) { this.master.gain.setTargetAtTime(v, this.ctx.currentTime, 0.02); }
 
   // --- parameter values: patch byte + what the macro knobs add at their current positions
   computeMacros() {
     const m = new Map();
     for (let k = 0; k < 8; k++) {
-      const pos = this.bytes[macroPosAddr(k)];
+      const pos = this.macroPos?.[k] ?? this.bytes[macroPosAddr(k)];
       for (const r of macroRows(this.bytes, k)) {
         const id = MACRO_DESTS[r.dest]?.id;
         if (!id || !r.depth || r.end <= r.start) continue;

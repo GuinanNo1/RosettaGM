@@ -141,6 +141,47 @@ export class Mixer {
     }
   }
 
+  // A recorded knob movement on track t at audio time `at` (automation keys of js/vendor/ncs.js:
+  // level, pan, reverb_send, delay_send, and on drums distortion and eq). The project's own
+  // setting (s.cfg) is kept, so restore(t) puts it back.
+  automate(t, key, v, at) {
+    const s = this.strips[t];
+    if (!s) return;
+    const now = this.ctx.currentTime;
+    const when = Math.max(now, at);
+    const set = (param, x) => param.setTargetAtTime(x, when, 0.004);
+    if (key === 'level') set(s.level.gain, levelGain(v));
+    else if (key === 'pan') { const [l, r] = balance(v); set(s.left.gain, l); set(s.right.gain, r); }
+    else if (key === 'reverb_send') set(s.reverb.gain, sendGain(v));
+    else if (key === 'delay_send') set(s.delay.gain, sendGain(v));
+    else if (key === 'eq' && s.low) { const tilt = drumTilt(v); set(s.low.gain, tilt.lowDb); set(s.high.gain, tilt.highDb); }
+    else if (key === 'distortion' && s.low) {
+      // A new curve can't be scheduled: change it when the time comes.
+      const go = () => { const cfg = s.cfg; this.setStrip(t, { ...cfg, distortion: v }); s.cfg = cfg; };
+      if (when - now < 0.01) go();
+      else { const id = setTimeout(() => { this.timers.delete(id); go(); }, (when - now) * 1000); (this.timers ??= new Set()).add(id); }
+    }
+  }
+  // Back to the project's own settings for track t (after automation): pending automation is
+  // dropped.
+  restore(t) {
+    const s = this.strips[t];
+    if (!s?.cfg) return;
+    const now = this.ctx.currentTime;
+    for (const p of [s.level.gain, s.left.gain, s.right.gain, s.reverb.gain, s.delay.gain, s.low?.gain, s.high?.gain]) {
+      if (!p) continue;
+      p.cancelScheduledValues(now);
+      p.setValueAtTime(p.value, now);
+    }
+    s.drive = -1;
+    this.setStrip(t, s.cfg);
+  }
+  restoreAll() {
+    for (const id of this.timers ?? []) clearTimeout(id);
+    this.timers?.clear();
+    for (let t = 0; t < 8; t++) this.restore(t);
+  }
+
   setMute(t, audible) { this.set(this.strips[t].mute.gain, audible ? 1 : 0); }
 
   setReverb({ type, decay, damping }) {

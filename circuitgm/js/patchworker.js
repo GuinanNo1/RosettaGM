@@ -4,13 +4,13 @@ import { P, PATCH_SIZE, OSC_WAVES, FILTER_TYPES, DRIVE_TYPES, LFO_WAVES, POLY_MO
   FADE_MODES, CATEGORIES, GENRES, MOD_SOURCES, MOD_DESTS, MACRO_DESTS, MOD_SLOTS, FMT, modAddr,
   macroPosAddr, macroAddr, macroRows, initPatch, getName, setName, parseSyx, toSyx, sanitise,
   cutoffHz, eqDb, eqHz, syncName } from './pw/params.js?v=20261114s';
-import { PatchSynth, waveTable, lfoShape, envelopePoints } from './pw/engine.js?v=20261114s';
+import { PatchSynth, waveTable, lfoShape, envelopePoints } from './pw/engine.js?v=20261124b';
 import { TracksLink, VIEW_CODES } from './pw/midi.js?v=20261114s';
 import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, projectsFollowing, download,
   fileSafe, session, PATCH_SLOTS } from './pw/packio.js?v=20261114s';
 import { buildPanel } from './pw/panel.js?v=20261123e';
 import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
-import { ProjectPlayer, packProjects } from './pw/project.js?v=20261124a';
+import { ProjectPlayer, packProjects } from './pw/project.js?v=20261124b';
 
 const DEFAULT_PACK = '../tracksgm/TracksGM_v1.circuittrackspack';
 // PatchWorker is Offline only for now (plan-patchworker-tracks-first.md, 22 Nov 2026): the browser is
@@ -688,10 +688,23 @@ function showPage(page) {
 }
 
 // ------------------------------------------------------------------ pack list and patch bar
+// The list shows the pack's patches (all, or only changed ones), its samples (click to hear one)
+// or its projects (click to load, ▶ to play).
+const listMode = () => $('#filter').value;
 function paintList() {
+  const mode = listMode();
+  $('#search').placeholder = mode === 'samples' ? 'Search samples' : mode === 'projects' ? 'Search projects' : 'Search patches';
+  $('#patchlist').setAttribute('aria-label', mode === 'samples' ? 'Samples' : mode === 'projects' ? 'Projects' : 'Patches');
+  const top = $('#patchlist').scrollTop;
+  if (mode === 'samples') paintSamples();
+  else if (mode === 'projects') paintProjects();
+  else paintPatches(mode);
+  $('#patchlist').scrollTop = top;
+  tracksPanel?.refresh();
+}
+function paintPatches(filter) {
   const list = $('#patchlist');
   const q = $('#search').value.trim().toLowerCase();
-  const filter = $('#filter').value;
   list.textContent = '';
   for (let i = 0; i < PATCH_SLOTS; i++) {
     const b = S.pack.patches[i];
@@ -699,7 +712,6 @@ function paintList() {
     const edited = slotEdited(S.pack, i);
     if (q && !name.toLowerCase().includes(q) && !pad3(i + 1).includes(q)) continue;
     if (filter === 'edited' && !edited) continue;
-    if (filter.startsWith('c') && (b?.[P.category.a] ?? 0) !== +filter.slice(1)) continue;
     const li = h('li', { class: `${i === S.slot ? 'sel' : ''}${b ? '' : ' empty'}${edited ? ' edited' : ''}`, 'data-slot': i, tabindex: 0, role: 'option', 'aria-selected': i === S.slot },
       h('span', { class: 'n', text: pad3(i + 1) }), h('span', { class: 'nm', text: name || '(no name)' }),
       h('span', { class: 'tag', text: 'Tracks', title: 'Fetched from the Circuit Tracks' }),
@@ -707,8 +719,53 @@ function paintList() {
     li.classList.toggle('from-hw', edited && S.pack.origin?.[i]?.kind === 'tracks');
     list.append(li);
   }
-  if (!list.children.length) list.append(h('li', { class: 'none', text: 'No patches match.' }));
-  tracksPanel?.refresh();
+  if (!list.children.length) list.append(h('li', { class: 'none', text: filter === 'edited' ? 'No changed patches.' : 'No patches match.' }));
+}
+function paintSamples() {
+  const list = $('#patchlist');
+  const q = $('#search').value.trim().toLowerCase();
+  list.textContent = '';
+  const n = Math.max(64, S.pack.index.samples?.length ?? 0);
+  for (let i = 0; i < n; i++) {
+    const e = sampleEntry(i);
+    const name = e ? (e.name || `Sample ${i + 1}`) : '(empty)';
+    if (q && !name.toLowerCase().includes(q) && !String(i + 1).padStart(2, '0').includes(q)) continue;
+    const len = sampleBufs.get(S.pack)?.get(i)?.duration;
+    const li = h('li', { class: `${e ? '' : 'empty'}${playingSample === i ? ' playing' : ''}`, 'data-sample': i, tabindex: 0, role: 'option',
+      title: e ? 'Click to hear this sample (click again to stop)' : 'No sample in this slot' },
+      h('span', { class: 'n', text: String(i + 1).padStart(2, '0') }), h('span', { class: 'nm', text: name }),
+      h('span', { class: 'len', text: len != null ? `${len.toFixed(2)} s` : '' }),
+      h('span', { class: 'play', text: e ? (playingSample === i ? '■' : '▶') : '' }));
+    list.append(li);
+  }
+  if (!list.children.length) list.append(h('li', { class: 'none', text: 'No samples match.' }));
+}
+function paintProjects() {
+  const list = $('#patchlist');
+  const q = $('#search').value.trim().toLowerCase();
+  list.textContent = '';
+  const cur = proj.loaded && proj.pack === S.pack ? proj.entry.slot : -1;
+  for (const e of packProjects(S.pack)) {
+    const name = e.empty ? '(empty)' : (e.name || '(no name)');
+    if (q && !name.toLowerCase().includes(q) && !String(e.slot + 1).padStart(2, '0').includes(q)) continue;
+    const playing = cur === e.slot && proj.playing;
+    const li = h('li', { class: `${cur === e.slot ? 'sel' : ''}${e.empty ? ' empty' : ''}${e.edited ? ' edited' : ''}${playing ? ' playing' : ''}`, 'data-project': e.slot, tabindex: 0, role: 'option',
+      title: e.empty ? 'Empty project slot' : 'Click to load this project; ▶ plays it' },
+      h('span', { class: 'n', text: String(e.slot + 1).padStart(2, '0') }), h('span', { class: 'nm', text: name }),
+      h('span', { class: 'dot', title: 'Changed since the pack was opened' }),
+      h('span', { class: 'play', text: e.empty ? '' : playing ? '■' : '▶' }));
+    list.append(li);
+  }
+  if (!list.children.length) list.append(h('li', { class: 'none', text: 'No projects match.' }));
+}
+async function listProject(slot, play) {
+  const e = packProjects(S.pack)[slot];
+  if (!e || e.empty) return;
+  const cur = proj.loaded && proj.pack === S.pack && proj.entry.slot === slot;
+  if (play && cur && proj.playing) { proj.stop(); paintSong(); return; }
+  if (!cur) await loadProject(slot, { quiet: play });
+  if (play && proj.loaded) proj.play();
+  paintSong();
 }
 function paintSlot(i) {
   const li = $(`#patchlist li[data-slot="${i}"]`);
@@ -1165,6 +1222,7 @@ const sampleEntry = (i) => {
   const e = S.pack?.index.samples?.[i];
   return e?.url && S.pack.files.has(e.url) ? e : null;
 };
+let playingSample = null;   // the sample the list is playing (its row shows ■)
 function stopAudition() { try { sampleSrc?.stop(); } catch { /* already ended */ } sampleSrc = null; }
 async function auditionSample(i) {
   const e = sampleEntry(i);
@@ -1184,6 +1242,15 @@ async function auditionSample(i) {
   sampleSrc.buffer = buf;
   sampleSrc.connect(sampleGain);
   sampleSrc.start();
+  return sampleSrc;
+}
+// The Samples list: click to hear a sample, click again to stop.
+async function listSample(i) {
+  if (playingSample === i) { stopAudition(); playingSample = null; paintList(); return; }
+  const src = await auditionSample(i);
+  playingSample = src ? i : null;
+  if (src) src.onended = () => { if (playingSample === i && sampleSrc === src) { playingSample = null; if (listMode() === 'samples') paintList(); } };
+  if (listMode() === 'samples') paintList();
 }
 
 // ------------------------------------------------------------------ Circuit Tracks link
@@ -1506,6 +1573,7 @@ function paintSong() {
   btn.textContent = proj.playing ? '■' : '▶';
   btn.classList.toggle('on', proj.playing);
   btn.setAttribute('aria-label', proj.playing ? 'Stop project' : 'Play project');
+  if (listMode() === 'projects') { const l = $('#patchlist'), top = l.scrollTop; paintProjects(); l.scrollTop = top; }
 }
 async function playSong() {
   if (proj.playing) { proj.stop(); return; }
@@ -1767,13 +1835,27 @@ function bindUI() {
   document.querySelectorAll('.tabs [role=tab]').forEach((t) => t.addEventListener('click', () => showPage(t.dataset.page)));
   document.querySelectorAll('#face [data-face]').forEach((b) => b.addEventListener('click', () => setFace(b.dataset.face)));
 
-  $('#filter').append(h('option', { value: '', text: 'All patches' }), h('option', { value: 'edited', text: 'Changed' }),
-    h('optgroup', { label: 'Category' }, CATEGORIES.map((c, i) => h('option', { value: `c${i}`, text: c }))));
+  $('#filter').append(h('option', { value: '', text: 'Patches' }), h('option', { value: 'edited', text: 'Changed patches' }),
+    h('option', { value: 'samples', text: 'Samples' }), h('option', { value: 'projects', text: 'Projects' }));
   $('#search').addEventListener('input', paintList);
-  $('#filter').addEventListener('change', paintList);
+  $('#filter').addEventListener('change', () => { $('#search').value = ''; paintList(); });
   const list = $('#patchlist');
-  list.addEventListener('click', (e) => { const li = e.target.closest('li[data-slot]'); if (li) chooseSlot(+li.dataset.slot); });
+  list.addEventListener('click', (e) => {
+    const sm = e.target.closest('li[data-sample]');
+    if (sm) { listSample(+sm.dataset.sample); return; }
+    const pj = e.target.closest('li[data-project]');
+    if (pj) { listProject(+pj.dataset.project, !!e.target.closest('.play')); return; }
+    const li = e.target.closest('li[data-slot]'); if (li) chooseSlot(+li.dataset.slot);
+  });
+  list.addEventListener('dblclick', (e) => { const pj = e.target.closest('li[data-project]'); if (pj) listProject(+pj.dataset.project, true); });
   list.addEventListener('keydown', (e) => {
+    const other = e.target.closest('li[data-sample], li[data-project]');
+    if (other) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (other.dataset.sample != null) listSample(+other.dataset.sample); else listProject(+other.dataset.project, e.key === ' '); }
+      const nx = e.key === 'ArrowDown' ? other.nextElementSibling : e.key === 'ArrowUp' ? other.previousElementSibling : null;
+      if (nx?.tabIndex === 0) { e.preventDefault(); nx.focus(); }
+      return;
+    }
     const li = e.target.closest('li[data-slot]');
     if (!li) return;
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); chooseSlot(+li.dataset.slot).then(() => $(`#patchlist li[data-slot="${S.slot}"]`)?.focus()); }
