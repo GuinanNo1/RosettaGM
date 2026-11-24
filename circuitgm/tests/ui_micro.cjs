@@ -49,7 +49,9 @@ const fs = require('fs');
   check(!mic[0] && mic[3], 'pad 17 turns micro step 0 off: the hit is only on micro step 3');
   const raw = await pw(({ t, p: pt, k }) => window.patchworker.proj.raw(t, pt).steps[k], tg);
   check(raw.active && JSON.stringify(raw.micro) === JSON.stringify([false, false, false, true, false, false]), 'stored as the micro mask the file uses');
-  check(/micro steps 3/.test(await p.innerText('.ct').catch(() => '')), 'the status strip shows micro step 3');
+  check(/micro steps 4\b/.test(await p.innerText('.ct').catch(() => '')), 'the status strip shows it as micro step 4 (numbered 1-6)');
+  const labels = await p.$$eval('.pads .pad.micro', (x) => x.map((d) => `${d.textContent}:${d.classList.contains('on') ? 'on' : d.classList.contains('dim') ? 'dim' : '?'}`));
+  check(labels.join(' ') === '1:dim 2:dim 3:dim 4:on 5:dim 6:dim', `micro step pads numbered 1-6, dim, the one played bright (${labels.join(' ')})`);
   // An empty step: a micro step adds a hit.
   const empty = await pw(({ t, p: pt }) => { const pp = window.patchworker.proj; for (let k = 0; k < 16; k++) if (!pp.stepHas(t, pt, k)) return k; return -1; }, tg);
   if (empty >= 0) {

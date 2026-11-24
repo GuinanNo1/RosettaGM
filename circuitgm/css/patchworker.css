@@ -599,6 +599,8 @@ body.doc { display: block; overflow: auto; }
 .ct .pad.lvl.prob.p4 { --d: 32%; } .ct .pad.lvl.prob.p5 { --d: 40%; } .ct .pad.lvl.prob.p6 { --d: 48%; } .ct .pad.lvl.prob.p7 { --d: 56%; }
 .ct .pad.lvl.micro { font: 600 .7rem var(--mono); color: #8a8aa0; }
 .ct .pad.lvl.micro.on { color: #12111a; }
+.ct .pad.lvl.micro.mid { background: color-mix(in srgb, #e8d3a0 60%, #24242e); color: #12111a; }
+.ct .pad.lvl.micro.dim { background: color-mix(in srgb, #e8d3a0 22%, #24242e); color: #c9c3a8; }
 .ct .pad.noteslot, .ct .pad.tie { cursor: pointer; font: 600 .66rem var(--mono); color: #b9b6d6; background: color-mix(in srgb, #9c8bff 30%, #24242e); }
 .ct .pad.noteslot.on { background: #9c8bff; color: #12111a; }
 .ct .pad.tie { background: #26262f; font-size: .95rem; }
@@ -694,6 +696,7 @@ body.doc { display: block; overflow: auto; }
 .micropop { position: absolute; z-index: 5; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; max-width: 230px; padding: 6px; border-radius: 8px; background: #1b1a24; border: 1px solid var(--line); box-shadow: 0 6px 18px #0008; }
 .micropop .mp-title { flex-basis: 100%; font: 600 .72rem var(--head); color: var(--muted); }
 .micropop button { font: 600 .74rem var(--mono); min-width: 26px; height: 26px; border-radius: 5px; border: 1px solid var(--line); background: #26262f; color: #b9b6d6; cursor: pointer; }
+.micropop .mp-tick { background: color-mix(in srgb, #e8d3a0 22%, #24242e); color: #c9c3a8; }
 .micropop .mp-tick.on { background: #e8d3a0; color: #12111a; border-color: #e8d3a0; }
 .micropop .mp-clear { margin-left: 6px; padding: 0 8px; }
 .micropop .mp-close { margin-left: auto; }

@@ -147,7 +147,7 @@ export function buildRoll(o) {
           c.append(marks);
           if (extra) c.classList.add('multi');
         }
-        c.title = `Drum ${i + 1} · step ${k + 1}${s.active ? ` · ${String(smp + 1).padStart(3, '0')} ${o.sampleName(smp) || ''}${smp !== act ? ' (its own sample)' : ''} · velocity ${s.velocity} · micro step${mic.filter(Boolean).length > 1 ? 's' : ''} ${mic.flatMap((on, m) => (on ? [m] : [])).join(', ')}` : ''}${extra ? ' · click to edit its micro steps' : ' · Shift-click for micro steps'}`;
+        c.title = `Drum ${i + 1} · step ${k + 1}${s.active ? ` · ${String(smp + 1).padStart(3, '0')} ${o.sampleName(smp) || ''}${smp !== act ? ' (its own sample)' : ''} · velocity ${s.velocity} · micro step${mic.filter(Boolean).length > 1 ? 's' : ''} ${mic.flatMap((on, m) => (on ? [m + 1] : [])).join(', ')}` : ''}${extra ? ' · click to edit its micro steps' : ' · Shift-click for micro steps'}`;
         area.append(c);
       }
     });
@@ -175,7 +175,7 @@ export function buildRoll(o) {
     const mic = pp.stepMicro(t, p, k);
     pop.replaceChildren(
       el('span', 'mp-title', `Drum ${t - 3} · step ${k + 1}: micro steps`),
-      ...mic.map((on, m) => { const b = el('button', `mp-tick${on ? ' on' : ''}`, String(m)); b.type = 'button'; b.dataset.m = m; b.title = m ? `Micro step ${m}: ${m}/6 of a step late` : 'Micro step 0: on the step'; return b; }),
+      ...mic.map((on, m) => { const b = el('button', `mp-tick${on ? ' on' : ''}`, String(m + 1)); b.type = 'button'; b.dataset.m = m; b.title = m ? `Micro step ${m + 1}: ${m}/6 of a step late` : 'Micro step 1: on the step'; return b; }),
       Object.assign(el('button', 'mp-clear', 'Clear'), { type: 'button', title: 'Remove every hit on this step', disabled: !mic.some(Boolean) }),
       Object.assign(el('button', 'mp-close', '×'), { type: 'button', title: 'Close (Esc)' }));
   }

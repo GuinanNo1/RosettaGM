@@ -46,7 +46,7 @@ const FIXED_VELOCITY = 96;
 // Note view keyboard on the bottom two rows of pads: white keys on the bottom row, the black
 // keys above them (null = no key), from C to the next C.
 import { SCALES, CHROMATIC, ROOT_NAMES, inScale, degreeNote } from '../scales.js';
-import { buildRoll } from './roll.js?v=20261124g';
+import { buildRoll } from './roll.js?v=20261124h';
 const WHITE = [0, 2, 4, 5, 7, 9, 11, 12];
 const BLACK = [null, 1, 3, null, 6, 8, 10, null];
 
@@ -614,7 +614,7 @@ export function buildPanel(root, api) {
       if (i > 5) return;
       const mic = pp.toggleMicro(t, p, k, i, activeSample(t), velocity());
       if (mic[i]) api.audition(pp.stepSample(t, p, k), t);
-      flash(mic.some(Boolean) ? `Step ${k + 1} plays on micro step${mic.filter(Boolean).length > 1 ? 's' : ''} ${mic.flatMap((on, m) => (on ? [m] : [])).join(', ')}.` : `Step ${k + 1} is empty now.`);
+      flash(mic.some(Boolean) ? `Step ${k + 1} plays on micro step${mic.filter(Boolean).length > 1 ? 's' : ''} ${mic.flatMap((on, m) => (on ? [m + 1] : [])).join(', ')}.` : `Step ${k + 1} is empty now.`);
       return;
     }
     const notes = pp.stepNotes(t, p, k);
@@ -968,16 +968,17 @@ export function buildPanel(root, api) {
         // a hit, on or off. Synth / MIDI: pads 25-30 the step's notes (chosen bright), pads 17-22
         // where the chosen notes start, pad 24 tie forward.
         if (v < 6) {
-          if (kind === 'drum') {
-            if (has && pp.stepMicro(tg.t, tg.p, k)[v]) cls += ' on';
-          } else {
+          // All six dimly lit; bright where the step (drums) or the chosen notes play.
+          if (kind === 'drum') cls += has && pp.stepMicro(tg.t, tg.p, k)[v] ? ' on' : ' dim';
+          else {
             const sel = microSel(tg, k, notes);
             if (notes.some((n) => sel.has(n.j) && n.delay % 6 === v)) cls += ' on';
-            else if (notes.some((n) => n.delay % 6 === v)) cls += ' dim';
+            else if (notes.some((n) => n.delay % 6 === v)) cls += ' mid';
+            else cls += ' dim';
           }
           cls += ' micro';
-          p.textContent = String(v);
-          p.title = v ? `Micro step ${v}: ${v}/6 of a step late` : 'Micro step 0: on the step';
+          p.textContent = String(v + 1);
+          p.title = v ? `Micro step ${v + 1}: ${v}/6 of a step late` : 'Micro step 1: on the step';
         } else if (kind !== 'drum' && v === 7) {
           if (!has) { p.className = 'pad off'; return; }
           cls = `pad tie${pp.stepTie(tg.t, tg.p, k) ? ' on' : ''}`;
@@ -987,7 +988,7 @@ export function buildPanel(root, api) {
           const n = notes[v - 8];
           cls = `pad noteslot${microSel(tg, k, notes).has(n.j) ? ' on' : ' dim'}`;
           p.textContent = noteName(n.note);
-          p.title = `${noteName(n.note)}, micro step ${n.delay % 6}: click to choose it (Shift-click to add or remove it)`;
+          p.title = `${noteName(n.note)}, micro step ${n.delay % 6 + 1}: click to choose it (Shift-click to add or remove it)`;
         } else { p.className = 'pad off'; return; }
         p.className = cls;
         p.dataset.val = v;
@@ -1062,7 +1063,7 @@ export function buildPanel(root, api) {
     }
     if (st.view === 'probability') return `${text} · probability ${((raw.probability + 1) * 12.5).toString()}%`;
     if (microView()) {
-      if (TRACKS[t].kind === 'drum') return `${text} · micro steps ${pp.stepMicro(t, p, k).flatMap((on, m) => (on ? [m] : [])).join(', ')}`;
+      if (TRACKS[t].kind === 'drum') return `${text} · micro steps ${pp.stepMicro(t, p, k).flatMap((on, m) => (on ? [m + 1] : [])).join(', ')}`;
       return `${text}: ${notes.map((n) => `${noteName(n.note)}${n.delay % 6 ? ` +${n.delay % 6}/6` : ''}`).join(' ')}${pp.stepTie(t, p, k) ? ' · tied' : ''}`;
     }
     return text;
@@ -1203,7 +1204,7 @@ export function buildPanel(root, api) {
     else if (st.mode === 'dup') setHint(st.dupSrc == null ? 'Duplicate is on: press the step to copy (1-16/17-32 copies steps 1-16 to 17-32). Press Duplicate again or Esc to stop.' : `Duplicate: press the steps to copy step ${st.dupSrc + 1} to. Press Duplicate again or Esc to stop.`);
     else if (v.id === 'velocity') setHint(`Press a step (top rows), then a pad on the bottom rows to set its velocity: pad 1 is 8, pad 12 is 96, pad 16 is 127. With several notes on the step, bright pads show the lowest velocity and dim ones the highest. Shift + Velocity: Fixed Velocity (${st.fixedVel ? 'on' : 'off'}).`);
     else if (v.id === 'gate' && t.kind !== 'drum') setHint('Press a step (top rows), then a pad on the bottom rows: the number of steps its notes sound for. Press the highest lit pad again to shorten it by a sixth of a step at a time. Press Gate again for Micro Step.');
-    else if (microView()) setHint(t.kind === 'drum' ? `Micro steps: press a step (top rows), then pads 17-22 turn its six micro steps on or off (0 is on the step, each one a sixth of a step later). Several can be on: each plays the hit. A micro step on an empty step adds a hit with ${t.label}'s sample. All of a step's hits share its velocity, sample and probability.` : 'Micro steps: press a step (top rows). Pads 25-30 are its notes, in the order they were added (bright: chosen; click one to choose it, Shift-click to choose several). Pads 17-22 set when the chosen notes start: 0 on the step, 1-5 sixths of a step late. Pad 24 ties the step forward. Press Gate again to go back.');
+    else if (microView()) setHint(t.kind === 'drum' ? `Micro steps: press a step (top rows), then pads 17-22 turn its six micro steps on or off (1 is on the step, each one a sixth of a step later than the one before; bright where the step plays). Several can be on: each plays the hit. A micro step on an empty step adds a hit with ${t.label}'s sample. All of a step's hits share its velocity, sample and probability.` : 'Micro steps: press a step (top rows). Pads 25-30 are its notes, in the order they were added (bright: chosen; click one to choose it, Shift-click to choose several). Pads 17-22 set when the chosen notes start: 1 on the step, 2-6 one to five sixths of a step late (bright: the chosen notes, mid: the others). Pad 24 ties the step forward. Press Gate again to go back.');
     else if (v.id === 'probability') setHint('Press a step (top rows), then a pad on row 3: the chance the step plays on each pass (8 pads 100%, 4 pads 50%, 1 pad 12.5%). Press Pattern Settings again to go back.');
     else if (v.id === 'pattern') setHint('Press a step to make it the last step of the pattern (hold Shift, or click Shift first, to move the first step). Row 3: sync rate (1/16 is the default). Pads 29-32: play order forward, reverse, ping-pong, random. Press Pattern Settings again for Probability.');
     else if (t.kind === 'midi') setHint(`Press a step to choose it (it turns red), then the keys to add or remove its notes; press the step again to let go. MIDI tracks play other gear from the Circuit Tracks; here they are sketched with a simple tone. Clear, Duplicate and 1-16/17-32 work on steps.`);
