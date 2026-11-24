@@ -11,7 +11,7 @@ import { songOf, renderSong, STEP_TICKS, PPQ } from '../song.js?v=20261124b';
 import { Player } from '../player.js?v=20261124j';
 import { serializeNCS } from '../vendor/ncs.js';
 import { snapToScale, CHROMATIC } from '../scales.js';
-import { macroPosAddr } from './params.js?v=20261114s';
+import { macroPosAddr, P } from './params.js?v=20261114s';
 const MACRO_POS = Array.from({ length: 8 }, (_, k) => macroPosAddr(k));   // knob positions in a patch
 
 const NCS_PATCH_SLOT = [0xcd64, 0xcd6c];   // Synth 1 / Synth 2: the pack slot the project plays
@@ -106,7 +106,9 @@ export class ProjectPlayer {
       const orig = this.o.original(this.patchSlots[i]);
       const ok = copy && copy.length >= 340;
       this.macros[i] = MACRO_POS.map((a) => (ok ? copy[a] : this.o.patchBytes(this.patchSlots[i])[a]));
-      const same = ok && orig && orig.every((v, k) => v === copy[k] || MACRO_POS.includes(k));
+      // The patch's Keyboard Octave only sets where the Tracks previews it (not how the song
+      // plays), so a copy that differs in that too still counts as the pack's patch.
+      const same = ok && orig && orig.every((v, k) => v === copy[k] || MACRO_POS.includes(k) || k === P.octave.a);
       return same ? null : copy;
     });
     this.scene = 0;
