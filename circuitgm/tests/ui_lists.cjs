@@ -30,6 +30,11 @@ const fs = require('fs');
 
   await p.setInputFiles('#file-pack', packFile);
   await p.waitForFunction(() => window.patchworker.S.pack.fileName !== 'TracksGM_v1.circuittrackspack');
+  // Opening a pack loads a project, as the Circuit Tracks does: the first with notes the first time.
+  await p.waitForFunction(() => window.patchworker.proj.loaded, null, { timeout: 5000 }).catch(() => {});
+  check(await pw(() => window.patchworker.proj.loaded && window.patchworker.proj.entry.slot === 0), 'opening the pack loads its first project');
+  await p.waitForFunction(() => window.patchworker.S.slot === window.patchworker.proj.patchSlots[window.patchworker.S.synth], null, { timeout: 3000 }).catch(() => {});
+  check(await pw(() => window.patchworker.S.slot === window.patchworker.proj.patchSlots[window.patchworker.S.synth]), 'and the editor follows its synth patch');
 
   // ---- Show menu
   const opts = await p.$$eval('#filter option', (o) => o.map((x) => x.value));
@@ -127,6 +132,16 @@ const fs = require('fs');
 
   await p.selectOption('#filter', '');
   check(await p.$$eval('#patchlist li[data-slot]', (x) => x.length) === 128, 'Patches brings the patch list back');
+
+  // The last project used with a pack comes back with it: load project 27, reload the page.
+  await p.selectOption('#filter', 'projects');
+  await p.click('#patchlist li[data-project="26"] .nm');
+  await p.waitForFunction(() => window.patchworker.proj.entry?.slot === 26);
+  await p.waitForTimeout(400);
+  await p.reload();
+  await p.waitForFunction(() => window.patchworker?.S.pack && window.patchworker.S.pack.fileName !== 'TracksGM_v1.circuittrackspack');
+  await p.waitForFunction(() => window.patchworker.proj.loaded, null, { timeout: 5000 }).catch(() => {});
+  check(await pw(() => window.patchworker.proj.entry?.slot) === 26, 'reopening the pack loads the project used last (27)');
   await p.screenshot({ path: `${out}/lists-patches.png` });
 
   check(!errors.length, `no console errors (${errors.join(' | ') || 'none'})`);

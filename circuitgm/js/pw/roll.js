@@ -10,7 +10,8 @@
 // Shift for sixths).
 // Drum grid: Drum 1-4 rows, each the pattern its track plays. Click an empty cell to add a hit, a
 // hit to hear it, double-click a hit to remove it;
-// wheel for velocity. Hits with a sample of their own (a sample flip) are pink with its number.
+// wheel for velocity. Hits with a sample of their own (a sample flip) are pink (hover or click to
+// hear which).
 // Marks along a hit's foot show its micro steps (six per step). Shift-click a cell, or click a hit
 // that has micro-step hits, for a box that turns each micro step on or off (0.18).
 // Piano roll: Shift-drag a note to move it in sixths of a step (its micro step, 0.18).
@@ -134,7 +135,7 @@ export function buildRoll(o) {
       for (let k = 0; k < n; k++) {
         const s = pp.raw(t, p).steps[k];
         const smp = pp.stepSample(t, p, k);
-        const c = el('div', `dcell${k < lo || k > hi ? ' out' : ''}${k % 4 === 0 ? ' beat' : ''}${s.active ? ' on' : ''}${s.active && smp !== act ? ' flip' : ''}${o.track() === t ? ' sel' : ''}`, s.active && smp !== act ? String(smp + 1) : '');
+        const c = el('div', `dcell${k < lo || k > hi ? ' out' : ''}${k % 4 === 0 ? ' beat' : ''}${s.active ? ' on' : ''}${s.active && smp !== act ? ' flip' : ''}${o.track() === t ? ' sel' : ''}`, '');
         Object.assign(c.style, { left: `${k * sw + 1}px`, top: `${i * rh + 2}px`, width: `${sw - 2}px`, height: `${rh - 4}px` });
         if (s.active) c.style.opacity = String(0.5 + 0.5 * (s.velocity / 127));
         c.dataset.t = t; c.dataset.k = k;

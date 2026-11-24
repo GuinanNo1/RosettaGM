@@ -46,7 +46,7 @@ const FIXED_VELOCITY = 96;
 // Note view keyboard on the bottom two rows of pads: white keys on the bottom row, the black
 // keys above them (null = no key), from C to the next C.
 import { SCALES, CHROMATIC, ROOT_NAMES, inScale, degreeNote } from '../scales.js';
-import { buildRoll } from './roll.js?v=20261124f';
+import { buildRoll } from './roll.js?v=20261124g';
 const WHITE = [0, 2, 4, 5, 7, 9, 11, 12];
 const BLACK = [null, 1, 3, null, 6, 8, 10, null];
 
@@ -1180,7 +1180,7 @@ export function buildPanel(root, api) {
     if (v.id === 'roll') {
       const drum = t.kind === 'drum';
       setHint(!pp?.loaded ? none : drum
-        ? 'Drum grid: Drum 1-4 against the steps, each row the pattern its track plays. Click an empty cell to add a hit (with the track\'s sample), click a hit to hear it, double-click it to remove it; scroll the wheel over a hit for its velocity. Marks along a hit\'s foot are its six micro steps: Shift-click a cell (or click a hit with micro-step hits, outlined) to turn them on or off. Pink hits play a sample of their own (its number shown; hover for the name; change it in Note view). Pads (or Note) goes back.' + saveHint
+        ? 'Drum grid: Drum 1-4 against the steps, each row the pattern its track plays. Click an empty cell to add a hit (with the track\'s sample), click a hit to hear it, double-click it to remove it; scroll the wheel over a hit for its velocity. Marks along a hit\'s foot are its six micro steps: Shift-click a cell (or click a hit with micro-step hits, outlined) to turn them on or off. Pink hits play a sample of their own (click one to hear it, hover for its name; change it in Note view). Pads (or Note) goes back.' + saveHint
         : `Piano roll (${scaleText()}): click to add a note (drag right for a longer one), drag a note to move it, drag its right edge to change its length (whole steps; hold Shift for sixths), Shift-drag it to move it in sixths of a step (its micro step), click it to hear it, double-click it to remove it, scroll the wheel over it for velocity. ▼ ▲ scroll an octave. Pads (or Note) goes back.` + saveHint);
       roll.paint();
       roll.playhead(st.pos);

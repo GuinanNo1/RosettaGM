@@ -8,7 +8,7 @@ import { PatchSynth, waveTable, lfoShape, envelopePoints } from './pw/engine.js?
 import { TracksLink, VIEW_CODES } from './pw/midi.js?v=20261114s';
 import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, projectsFollowing, download,
   fileSafe, session, PATCH_SLOTS } from './pw/packio.js?v=20261114s';
-import { buildPanel } from './pw/panel.js?v=20261124f';
+import { buildPanel } from './pw/panel.js?v=20261124g';
 import { drumRate } from './pw/mixlaws.js?v=20261114s';
 import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
 import { ProjectPlayer, packProjects } from './pw/project.js?v=20261124d';
@@ -1024,7 +1024,21 @@ async function loadPackBuffer(buffer, fileName, { remember = true, edits = null 
   selectSlot(edits?.slot ?? 0, { send: false });
   paintPack();
   paintSong();
+  // As the Circuit Tracks opens on a project, load one: the last one used with this pack here,
+  // else the first with notes. (The pack file doesn't say which project the Tracks last had.)
+  // A reopened session keeps the patch it was editing; a newly opened pack follows the project.
+  const list = packProjects(pack).filter((e) => !e.empty);
+  if (list.length) {
+    const last = lastProject(pack);
+    const slot = list.some((e) => e.slot === last) ? last : list[0].slot;
+    await loadProject(slot, { quiet: !!edits, follow: edits?.slot == null });
+  }
 }
+// The project last loaded for a pack (by its name), kept in the browser.
+const LAST_PROJECT = 'circuitgm-patchworker-project:';
+const packKey = (pack) => LAST_PROJECT + (pack.openedName ?? pack.index?.name ?? pack.name ?? '');
+function lastProject(pack) { try { const v = localStorage.getItem(packKey(pack)); return v == null ? null : +v; } catch { return null; } }
+function rememberProject(pack, slot) { try { localStorage.setItem(packKey(pack), String(slot)); } catch { /* private mode */ } }
 
 function saveSession() {
   if (!S.pack) return;
@@ -1588,14 +1602,15 @@ async function playSong() {
 }
 
 // Load a project into the player; the editor follows the patch the chosen synth plays.
-async function loadProject(slot, { quiet = false } = {}) {
+async function loadProject(slot, { quiet = false, follow = true } = {}) {
   try {
     if (!(await proj.load(S.pack, slot))) { toast('That project slot is empty.'); return; }
   } catch (e) { toast(`The project could not be read: ${e.message}`, 6000); return; }
+  rememberProject(S.pack, slot);
   tracksPanel?.projectLoaded();
   $('#bpm').value = proj.tempo;
   const want = proj.patchSlots[S.synth];
-  if (want !== S.slot) await chooseSlot(want, { follow: true });
+  if (follow && want !== S.slot) await chooseSlot(want, { follow: true });
   paintSong();
   if (!quiet) toast(`Project ${slot + 1} "${proj.song.name}" loaded: press ▶ or Space to play it.`, 4000);
 }

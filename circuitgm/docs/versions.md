@@ -12,7 +12,7 @@ Each tool page shows its version next to its status badge, so you can tell which
 | MIDI2Rhythm | 0.21 | For testing · v0.21 |
 | Circuit2MIDI | 0.7 | alpha 0.7 |
 | CircuitTrim | 0.5 | alpha 0.5 |
-| PatchWorker | 0.18 | For testing · v0.18 (title line under the menu) |
+| PatchWorker | 0.18.1 | For testing · v0.18.1 (title line under the menu) |
 
 Numbering started on 14 Nov 2026. Earlier changes are grouped roughly:
 
@@ -54,6 +54,7 @@ See `midi2rhythm/help.html` (Versions). 0.1–0.6 on 14 Nov 2026; 0.7 (15 Nov): 
 - 0.1 (10 Nov 2026): first alpha.
 
 ## PatchWorker
+- **0.18.1** (24 Nov 2026): opening a pack loads a project, as the Circuit Tracks opens on one: the project last loaded with that pack in this browser (kept by pack name), else the first with notes. The pack file doesn't record which project the Tracks last had. A newly opened pack's editor follows the project's synth patch; a reopened session keeps the patch it was editing. Drum grid: sample flips are pink without the sample number (click a hit to hear it, hover for its name).
 - **0.18** (24 Nov 2026): micro steps (User Guide pp. 48-51, 66). Micro Step view: on drum tracks it is Gate view (pads 17-22 turn the step's six micro steps on or off, several allowed; one on an empty step adds a hit); on synth / MIDI tracks Gate pressed again (pads 25-30 the step's notes, chosen bright, Shift-click for several; pads 17-22 the chosen notes' micro step; pad 24 tie forward). Setting a gate now keeps the tie (it used to clear it). Drum grid: marks along each hit's foot show its micro steps; a hit with micro-step hits is outlined and a click opens a box to turn them on or off (Shift-click opens it on any cell). Piano roll: Shift-drag moves a note in sixths (its micro step); a plain drag keeps it; moving keeps the tie. Drum grid and piano roll: a click on a hit or note plays it, a double-click removes it (a click used to remove it). `ProjectPlayer`: `stepMicro`, `toggleMicro`, `setNoteDelay`, `stepTie`, `setStepTie`; `moveNote` takes a micro step. Test: `tests/ui_micro.cjs`.
 - **0.17.1** (24 Nov 2026): pressing a drum's sample pad, tapping a drum step or a drum grid cell plays the sample at that drum's pitch in the loaded project, as the hardware does (the Samples list still plays samples as recorded). Tests: `ui_mixer` fetches `Empty.ncs` from its new place; `ui_edit` accepts a note added to a track the scene mutes (Out Of Space DL).
 - **0.17** (24 Nov 2026): a title line under the site menu names the page (PatchWorker, what it is, and the version, moved there from the menu bar). The side list's menu (was All patches / Changed / categories) now chooses what it shows: Patches, Changed patches, Samples (click to hear, again to stop; length shown once heard) or Projects (click loads, ▶ or double-click plays). Projects play all their recorded automation: drum distortion, EQ, level, pan and sends, synth level, pan and sends, and Synth 1 / 2 macros 1-8 (the browser synth's macro positions, not the patch; back to the patch's on Stop); starting mid-song picks up the last recorded values. `renderSong` returns `autos`; `Mixer.automate`/`restore`, `PatchSynth.setMacroPos`. MIDI 1 / 2 automation (CCs out) is not played. Test: `tests/ui_lists.cjs`.
