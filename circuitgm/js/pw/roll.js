@@ -22,7 +22,7 @@ function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.
 
 // o: { pp: () => ProjectPlayer, track: () => 0-7, pattern: (t) => index or null, velocity: () =>
 // 1-127, activeSample: (t) => slot, sampleName: (slot) => name, noteOn(n, v), noteOff(n),
-// audition(slot), status(text), flash(text), scale: () => { root, type } }
+// audition(slot, track), status(text), flash(text), scale: () => { root, type } }
 export function buildRoll(o) {
   const root = el('div', 'roll');
   root.hidden = true;
@@ -151,7 +151,7 @@ export function buildRoll(o) {
       if (!c) return;
       const t = +c.dataset.t, k = +c.dataset.k, p = o.pattern(t);
       const on = pp.toggleHit(t, p, k, o.activeSample(t), o.velocity());
-      if (on) o.audition(pp.stepSample(t, p, k));
+      if (on) o.audition(pp.stepSample(t, p, k), t);
       return;
     }
     const { t, p, rows, sw } = view;

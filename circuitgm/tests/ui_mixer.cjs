@@ -93,7 +93,7 @@ const { chromium } = require('playwright');
     {
       const { Player } = await import('/circuitgm/js/player.js');
       const { parseNCS } = await import('/circuitgm/js/vendor/ncs.js');
-      const buf = await (await fetch('/data/Empty.ncs')).arrayBuffer();
+      const buf = await (await fetch('/circuitgm/data/Empty.ncs')).arrayBuffer();
       const proj = parseNCS(buf);
       const p = new Player();
       p.setProject(proj);

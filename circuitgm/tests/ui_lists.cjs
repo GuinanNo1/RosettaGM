@@ -106,6 +106,25 @@ const fs = require('fs');
   check(r.g >= lo - 0.03 && r.g <= hi + 0.03, `and Synth 2's reverb send follows it (gain ${r.g.toFixed(3)}, recorded ${r.lo}-${r.hi} in the last 0.25 s = ${lo.toFixed(3)}-${hi.toFixed(3)})`);
   await pw(() => window.patchworker.proj.stop());
 
+  // Drum pads play at the track's pitch: project 1's Drum 2 is at pitch 53 (about -4 semitones).
+  await p.click('#patchlist li[data-project="0"] .nm');
+  await p.waitForFunction(() => window.patchworker.proj.entry.slot === 0);
+  await pw(() => {
+    window._rates = [];
+    const start = AudioBufferSourceNode.prototype.start;
+    AudioBufferSourceNode.prototype.start = function (...a) { window._rates.push(this.playbackRate.value); return start.apply(this, a); };
+  });
+  await p.click('#face [data-face=tracks]');
+  await p.click('.trk[data-track="5"]');
+  if (await pw(() => window.patchworker.panel().state.view) !== 'note') await p.click('.view[data-view=note]');
+  await p.dispatchEvent('.pad[data-dsample]', 'pointerdown');
+  await p.dispatchEvent('.pad[data-dsample]', 'pointerup');
+  await p.waitForTimeout(300);
+  const want = await pw(async () => { const { drumRate } = await import('/circuitgm/js/pw/mixlaws.js?v=20261114s'); return drumRate(53); });
+  const rates = await pw(() => window._rates);
+  check(rates.some((r) => Math.abs(r - want) < 0.001), `a Drum 2 sample pad plays at the drum's pitch (rate ${rates.map((r) => r.toFixed(3)).join(', ')}; want ${want.toFixed(3)})`);
+  await p.click('#face [data-face=editor]');
+
   await p.selectOption('#filter', '');
   check(await p.$$eval('#patchlist li[data-slot]', (x) => x.length) === 128, 'Patches brings the patch list back');
   await p.screenshot({ path: `${out}/lists-patches.png` });

@@ -54,7 +54,15 @@ const fs = require('fs');
   let notes = await pw(([pt, k]) => window.patchworker.proj.stepNotes(0, pt, k).map((n) => n.note), [p0, empty]);
   check(notes.length === 1 && notes[0] === key, `a key adds its note to the step (${notes})`);
   check(await p.$eval('.pad.key.root', (x) => x.classList.contains('instep')), 'the key lights as on the step');
-  check(await pw(() => window.patchworker.proj.render.events.length) > evBefore, 'the new note is in what plays');
+  // A project can mute Synth 1 in its scenes (Out Of Space DL's opening scenes do): then the
+  // note is in the song but nothing more plays.
+  const heard = await pw(([pt, k, ev]) => {
+    const pp = window.patchworker.proj;
+    if (pp.render.events.length > ev) return 'heard';
+    const muted = !pp.custom && pp.song.muteRecall !== 0 && pp.render.order.every((sc) => (pp.song.scenes[sc].mask & 1));
+    return muted && pp.song.tracks[0].patterns[pt].steps[k].hits.length ? 'muted' : 'missing';
+  }, [p0, empty, evBefore]);
+  check(heard !== 'missing', `the new note is in what plays${heard === 'muted' ? ' (in the song; Synth 1 is muted by the scene)' : ''}`);
   check(/edited, not saved/.test(await p.innerText('.panel-lcd')), 'the LCD says the project is edited');
   await p.click(pad(27));
   notes = await pw(([pt, k]) => window.patchworker.proj.stepNotes(0, pt, k).length, [p0, empty]);

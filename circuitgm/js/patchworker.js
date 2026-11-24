@@ -8,7 +8,8 @@ import { PatchSynth, waveTable, lfoShape, envelopePoints } from './pw/engine.js?
 import { TracksLink, VIEW_CODES } from './pw/midi.js?v=20261114s';
 import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, projectsFollowing, download,
   fileSafe, session, PATCH_SLOTS } from './pw/packio.js?v=20261114s';
-import { buildPanel } from './pw/panel.js?v=20261123e';
+import { buildPanel } from './pw/panel.js?v=20261124c';
+import { drumRate } from './pw/mixlaws.js?v=20261114s';
 import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
 import { ProjectPlayer, packProjects } from './pw/project.js?v=20261124b';
 
@@ -1224,7 +1225,9 @@ const sampleEntry = (i) => {
 };
 let playingSample = null;   // the sample the list is playing (its row shows ■)
 function stopAudition() { try { sampleSrc?.stop(); } catch { /* already ended */ } sampleSrc = null; }
-async function auditionSample(i) {
+// track: a drum track (4-7) of the loaded project plays the sample at that drum's pitch, as the
+// Circuit Tracks does when a pad is pressed; otherwise it plays as recorded.
+async function auditionSample(i, track = null) {
   const e = sampleEntry(i);
   if (!e) return;
   audio();
@@ -1240,6 +1243,8 @@ async function auditionSample(i) {
   sampleGain.gain.value = 0.8 * ($('#vol').value / 100);
   sampleSrc = ctx.createBufferSource();
   sampleSrc.buffer = buf;
+  const drum = track >= 4 && track < 8 && proj.loaded && proj.pack === S.pack ? proj.player.mix?.drums?.[track - 4] : null;
+  if (drum) sampleSrc.playbackRate.value = drumRate(drum.pitch ?? 64);
   sampleSrc.connect(sampleGain);
   sampleSrc.start();
   return sampleSrc;
@@ -2021,7 +2026,7 @@ async function start() {
     revert: () => patchAction('revert'),
     sampleCount: () => 64,
     sampleName: (i) => sampleEntry(i)?.name || (sampleEntry(i) ? `Sample ${i + 1}` : ''),
-    audition: (i) => auditionSample(i),
+    audition: (i, t) => auditionSample(i, t),
     stopAudition,
     hardware: TRACKS_MODE,
     proj,

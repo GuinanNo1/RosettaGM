@@ -46,7 +46,7 @@ const FIXED_VELOCITY = 96;
 // Note view keyboard on the bottom two rows of pads: white keys on the bottom row, the black
 // keys above them (null = no key), from C to the next C.
 import { SCALES, CHROMATIC, ROOT_NAMES, inScale, degreeNote } from '../scales.js';
-import { buildRoll } from './roll.js?v=20261123e';
+import { buildRoll } from './roll.js?v=20261124c';
 const WHITE = [0, 2, 4, 5, 7, 9, 11, 12];
 const BLACK = [null, 1, 3, null, 6, 8, 10, null];
 
@@ -73,7 +73,7 @@ const pad3 = (n) => String(n).padStart(3, '0');
 // velocity the keys play at, projectSaved(slot) after Save,
 // slot() -> pack slot being edited, slotCount() -> 128, slotInfo(i) -> { name, empty, edited, fetched },
 // selectSlot(i), copyTo(i) (asks before replacing a patch), revert(),
-// sampleCount() -> 64, sampleName(i) -> name or '' for an empty slot, audition(i), stopAudition(),
+// sampleCount() -> 64, sampleName(i) -> name or '' for an empty slot, audition(i, track), stopAudition(),
 // proj: the ProjectPlayer (js/pw/project.js) or null, projects() -> its 64 slots, loadProject(slot) }.
 export function buildPanel(root, api) {
   const st = { track: api.synth(), view: 'note', pads: [], page: [0, 0, 0, 0, 0, 0, 0, 0], vpage: { projects: 0, patterns: 0 }, drum: DRUM_DEFAULT.slice(), copying: false, hover: null, lastSlot: null, pos: null,
@@ -209,7 +209,7 @@ export function buildPanel(root, api) {
     pp: () => pp, track: () => st.track,
     pattern: (t) => (st.rollFocus?.t === t ? st.rollFocus.p : viewPattern(t)?.index ?? null),
     velocity: () => velocity(), activeSample: (t) => activeSample(t), sampleName: (i) => api.sampleName(i),
-    noteOn: (n, v) => api.noteOn(n, v), noteOff: (n) => api.noteOff(n), audition: (i) => api.audition(i),
+    noteOn: (n, v) => api.noteOn(n, v), noteOff: (n) => api.noteOff(n), audition: (i, t) => api.audition(i, t),
     octave: () => api.octave(), scale: () => curScale(),
     status: (text) => { st.rollStatus = text; paintLcd(); }, flash: (text) => flash(text),
   });
@@ -328,7 +328,7 @@ export function buildPanel(root, api) {
     if (pad.dataset.sample != null) {
       e.preventDefault();
       chooseSample(st.track, +pad.dataset.sample);
-      api.audition(+pad.dataset.sample);
+      api.audition(+pad.dataset.sample, st.track);
       paint();
       return;
     }
@@ -337,7 +337,7 @@ export function buildPanel(root, api) {
     if (pad.dataset.dsample != null) {
       e.preventDefault();
       const slot = +pad.dataset.dsample, t = st.track, down = performance.now();
-      api.audition(slot);
+      api.audition(slot, t);
       pad.classList.add('down');
       const up = () => {
         pad.classList.remove('down');
@@ -404,7 +404,7 @@ export function buildPanel(root, api) {
       return;
     }
     if (pad.dataset.mute != null) { e.preventDefault(); const t = +pad.dataset.mute; pp?.setMute(t, !pp.mutes[t]); return; }
-    if (pad.dataset.drumhit != null) { e.preventDefault(); api.audition(+pad.dataset.drumhit); pad.classList.add('down'); setTimeout(() => pad.classList.remove('down'), 120); return; }
+    if (pad.dataset.drumhit != null) { e.preventDefault(); api.audition(+pad.dataset.drumhit, st.track); pad.classList.add('down'); setTimeout(() => pad.classList.remove('down'), 120); return; }
     if (pad.dataset.note == null) return;
     e.preventDefault();
     const note = +pad.dataset.note;
@@ -541,7 +541,7 @@ export function buildPanel(root, api) {
       st.heldStep = null;
       if (performance.now() - down < 500) {
         const on = pp.toggleHit(t, vp.index, k, activeSample(t), velocity());
-        if (on) api.audition(activeSample(t));
+        if (on) api.audition(activeSample(t), t);
         paint();
       } else {
         st.stepFlip = k;
@@ -570,9 +570,9 @@ export function buildPanel(root, api) {
     }
     if (st.view === 'note') {
       if (kind === 'drum') {
-        if (st.flip != null) { if (pp.flipStep(t, p, k, st.flip, velocity())) api.audition(st.flip); return; }
+        if (st.flip != null) { if (pp.flipStep(t, p, k, st.flip, velocity())) api.audition(st.flip, t); return; }
         const on = pp.toggleHit(t, p, k, activeSample(t), velocity());
-        if (on) api.audition(activeSample(t));
+        if (on) api.audition(activeSample(t), t);
         return;
       }
       if (st.armed && st.sel === k) { st.armed = false; paint(); return; }
