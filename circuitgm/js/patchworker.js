@@ -8,10 +8,10 @@ import { PatchSynth, waveTable, lfoShape, envelopePoints } from './pw/engine.js?
 import { TracksLink, VIEW_CODES } from './pw/midi.js?v=20261114s';
 import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, projectsFollowing, download,
   fileSafe, session, PATCH_SLOTS } from './pw/packio.js?v=20261114s';
-import { buildPanel } from './pw/panel.js?v=20261124c';
+import { buildPanel } from './pw/panel.js?v=20261124f';
 import { drumRate } from './pw/mixlaws.js?v=20261114s';
 import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
-import { ProjectPlayer, packProjects } from './pw/project.js?v=20261124b';
+import { ProjectPlayer, packProjects } from './pw/project.js?v=20261124d';
 
 const DEFAULT_PACK = '../tracksgm/TracksGM_v1.circuittrackspack';
 // PatchWorker is Offline only for now (plan-patchworker-tracks-first.md, 22 Nov 2026): the browser is

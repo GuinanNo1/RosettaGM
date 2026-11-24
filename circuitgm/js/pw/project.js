@@ -347,20 +347,69 @@ export class ProjectPlayer {
     this.raw(t, p).steps[k].mask &= ~(1 << j);
     if (commit) this.edit();
   }
-  // Move a note to another step and / or pitch, keeping its gate and velocity. False (and nothing
-  // changed) if the target step is full or has that note.
-  moveNote(t, p, k, j, toK, toNote) {
+  // Move a note to another step and / or pitch (and micro step, 0-5: its delay; by default it
+  // keeps its own), keeping its gate, tie and velocity. False (and nothing changed) if the target
+  // step is full or has that note.
+  moveNote(t, p, k, j, toK, toNote, toDelay = null) {
     const s = this.raw(t, p).steps[k];
     const n = s.notes[j];
-    const keep = { gate: n.gate & 0x7f, vel: n.velocity };
+    const keep = { gate: n.gate & 0x7f, tie: n.gate & 0x80, vel: n.velocity, delay: toDelay ?? n.delay % 6 };
     this.removeNote(t, p, k, j, { commit: false });
-    if (this.addNote(t, p, toK, toNote, keep.vel, keep.gate, { commit: false })) { this.edit(); return true; }
+    if (this.addNote(t, p, toK, toNote, keep.vel, keep.gate, { commit: false })) {
+      const d = this.raw(t, p).steps[toK];
+      const nj = this.stepNotes(t, p, toK).find((x) => x.note === toNote).j;
+      d.notes[nj].delay = keep.delay;
+      d.notes[nj].gate |= keep.tie;
+      this.edit();
+      return true;
+    }
     s.mask |= 1 << j;   // put it back
     return false;
   }
-  setNoteGate(t, p, k, j, g) { this.raw(t, p).steps[k].notes[j].gate = Math.max(1, Math.min(96, g)); this.edit(); }
+  setNoteGate(t, p, k, j, g) { const n = this.raw(t, p).steps[k].notes[j]; n.gate = (n.gate & 0x80) | Math.max(1, Math.min(96, g)); this.edit(); }
   setNoteVelocity(t, p, k, j, v) { this.raw(t, p).steps[k].notes[j].velocity = Math.max(1, Math.min(127, v)); this.edit(); }
   setHitVelocity(t, p, k, v) { const s = this.raw(t, p).steps[k]; if (s.active) { s.velocity = Math.max(1, Math.min(127, v)); this.edit(); } }
+
+  // ---- micro steps (User Guide pp. 48-50, 66)
+  // A drum step's six micro steps as booleans (all off for an empty step; a plain hit is tick 0).
+  stepMicro(t, p, k) {
+    const s = this.raw(t, p).steps[k];
+    if (!s.active) return [false, false, false, false, false, false];
+    return s.micro ? s.micro.slice(0, 6) : [true, false, false, false, false, false];
+  }
+  // Turn one of a drum step's micro steps on or off. An empty step gets a hit there with this
+  // velocity and sample (the micro hits share the step's velocity, sample and probability); turning
+  // the last one off empties the step. Returns the step's micro steps.
+  toggleMicro(t, p, k, m, sample, vel) {
+    const s = this.raw(t, p).steps[k];
+    const mic = this.stepMicro(t, p, k);
+    if (!s.active) {
+      const dflt = this.entry.project.defaultDrums?.[t - 4];
+      Object.assign(s, { velocity: Math.max(1, Math.min(127, vel)), probability: 7, drumChoice: sample == null || sample === dflt ? 0xff : sample });
+    }
+    mic[m] = !mic[m];
+    this.setMicro(s, mic);
+    this.edit();
+    return this.stepMicro(t, p, k);
+  }
+  // Store micro steps on a drum step (null for a plain on-the-step hit, as the file does).
+  setMicro(s, mic) {
+    s.active = mic.some(Boolean);
+    s.micro = s.active && !(mic[0] && !mic.slice(1).some(Boolean)) ? mic.slice(0, 6) : null;
+  }
+  // A synth / MIDI note's micro step (its delay in sixths of a step, 0-5), for notes js of a step.
+  setNoteDelay(t, p, k, js, m) {
+    const s = this.raw(t, p).steps[k];
+    for (const j of js) if ((s.mask >> j) & 1) s.notes[j].delay = Math.max(0, Math.min(5, m));
+    this.edit();
+  }
+  // Tie forward (User Guide p. 51): a step setting, stored on each of its notes (gate bit 7).
+  stepTie(t, p, k) { return this.stepNotes(t, p, k).some((n) => n.tie); }
+  setStepTie(t, p, k, on) {
+    const s = this.raw(t, p).steps[k];
+    for (let j = 0; j < MAX_NOTES; j++) if ((s.mask >> j) & 1) s.notes[j].gate = (s.notes[j].gate & 0x7f) | (on ? 0x80 : 0);
+    this.edit();
+  }
 
   // Drum Note view: a tap toggles a hit with the track's sample (0xff: the track's own sample).
   toggleHit(t, p, k, sample, vel) {
@@ -432,7 +481,7 @@ export class ProjectPlayer {
     const s = this.raw(t, p).steps[k];
     const have = this.stepNotes(t, p, k);
     if (!have.length) return;
-    for (const n of have) s.notes[n.j].gate = Math.max(1, Math.min(96, g));
+    for (const n of have) s.notes[n.j].gate = (s.notes[n.j].gate & 0x80) | Math.max(1, Math.min(96, g));   // keeps tie forward
     this.edit();
   }
   // Probability 0-7 (7 = 100%, each step down 12.5%).

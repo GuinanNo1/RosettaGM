@@ -80,9 +80,11 @@ const fs = require('fs');
   const moved = await pw(([x, k, nt]) => window.patchworker.proj.stepNotes(0, x, k).some((n) => n.note === nt), [pt, cell.k + 1, below]);
   const gone = !(await pw(([x, k, nt]) => window.patchworker.proj.stepNotes(0, x, k).some((n) => n.note === nt), [pt, cell.k, cell.note]));
   check(moved && gone, `dragging moves it to step ${cell.k + 2}, one row down`);
-  // Click it: removed.
+  // Click it: still there (a click plays it). Double-click: removed.
   await p.click(`.rnote[data-k="${cell.k + 1}"][data-note="${below}"]`, { position: { x: 3, y: 5 } });
-  check(await count() === n0, 'clicking a note removes it');
+  check(await count() === n0 + 1, 'clicking a note keeps it (it plays)');
+  await p.dblclick(`.rnote[data-k="${cell.k + 1}"][data-note="${below}"]`, { position: { x: 3, y: 5 } });
+  check(await count() === n0, 'double-clicking a note removes it');
   await p.screenshot({ path: `${out}/roll-piano.png` });
   // ▼ ▲ scroll an octave.
   const top0 = await p.$eval('.roll-scroll', (x) => x.scrollTop);
@@ -106,7 +108,9 @@ const fs = require('fs');
   await p.mouse.wheel(0, 100);
   check(await pw((k) => window.patchworker.proj.raw(5, 0).steps[k].velocity, emptyCell) === Math.max(1, dv0 - 8), 'the wheel lowers its velocity');
   await p.click(`.dcell[data-t="5"][data-k="${emptyCell}"]`);
-  check(!(await pw((k) => window.patchworker.proj.stepHas(5, 0, k), emptyCell)), 'clicking it again removes it');
+  check(await pw((k) => window.patchworker.proj.stepHas(5, 0, k), emptyCell), 'clicking the hit keeps it (it plays)');
+  await p.dblclick(`.dcell[data-t="5"][data-k="${emptyCell}"]`);
+  check(!(await pw((k) => window.patchworker.proj.stepHas(5, 0, k), emptyCell)), 'double-clicking it removes it');
   await p.screenshot({ path: `${out}/roll-drum.png` });
   await p.click('.view[data-view=patterns]');
   check(await view() === 'patterns', 'Patterns goes back to Patterns view');

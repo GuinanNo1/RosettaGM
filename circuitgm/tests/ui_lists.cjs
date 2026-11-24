@@ -26,7 +26,7 @@ const fs = require('fs');
 
   // ---- title line
   check((await p.innerText('.pagetitle h1')).startsWith('PatchWorker'), 'a line under the menu names PatchWorker');
-  check(/v0\.17/.test(await p.innerText('.pagetitle .navver')), 'with the version next to it');
+  check(/v0\.\d+/.test(await p.innerText('.pagetitle .navver')), 'with the version next to it');
 
   await p.setInputFiles('#file-pack', packFile);
   await p.waitForFunction(() => window.patchworker.S.pack.fileName !== 'TracksGM_v1.circuittrackspack');

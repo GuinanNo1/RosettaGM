@@ -6,10 +6,14 @@
 // Piano roll: one row per note (only the scale's notes unless Chromatic), one column per step (16,
 // or 32 for longer patterns; steps outside the pattern shaded). Click an empty cell to add a note
 // (drag right to make it longer), drag a note to move it, drag its right edge to change its length,
-// click it to remove it, scroll the wheel over it for velocity. Lengths snap to whole steps (hold
+// click it to hear it, double-click it to remove it, scroll the wheel over it for velocity. Lengths snap to whole steps (hold
 // Shift for sixths).
-// Drum grid: Drum 1-4 rows, each the pattern its track plays. Click a cell to add or remove a hit;
+// Drum grid: Drum 1-4 rows, each the pattern its track plays. Click an empty cell to add a hit, a
+// hit to hear it, double-click a hit to remove it;
 // wheel for velocity. Hits with a sample of their own (a sample flip) are pink with its number.
+// Marks along a hit's foot show its micro steps (six per step). Shift-click a cell, or click a hit
+// that has micro-step hits, for a box that turns each micro step on or off (0.18).
+// Piano roll: Shift-drag a note to move it in sixths of a step (its micro step, 0.18).
 import { SCALES, CHROMATIC, inScale } from '../scales.js';
 const FULL_GATE = 6;   // one step, in sixths (as in project.js)
 
@@ -83,8 +87,8 @@ export function buildRoll(o) {
         const d = el('div', `rnote${k < lo || k > hi ? ' out' : ''}`);
         const micro = (nt.delay % 6) / 6;
         Object.assign(d.style, { left: `${(k + micro) * sw}px`, top: `${r * ROW_H}px`, width: `${Math.max(5, (nt.gate / 6) * sw - 1)}px`, opacity: String(0.45 + 0.55 * (nt.vel / 127)) });
-        d.dataset.k = k; d.dataset.j = nt.j; d.dataset.note = nt.note;
-        d.title = `${nn(nt.note)} · step ${k + 1} · ${gateText(nt.gate)} · velocity ${nt.vel}`;
+        d.dataset.k = k; d.dataset.j = nt.j; d.dataset.note = nt.note; d.dataset.delay = nt.delay % 6;
+        d.title = `${nn(nt.note)} · step ${k + 1}${nt.delay % 6 ? ` +${nt.delay % 6}/6` : ''} · ${gateText(nt.gate)} · velocity ${nt.vel}${nt.tie ? ' · tied' : ''}`;
         area.append(d);
       }
     }
@@ -134,11 +138,62 @@ export function buildRoll(o) {
         Object.assign(c.style, { left: `${k * sw + 1}px`, top: `${i * rh + 2}px`, width: `${sw - 2}px`, height: `${rh - 4}px` });
         if (s.active) c.style.opacity = String(0.5 + 0.5 * (s.velocity / 127));
         c.dataset.t = t; c.dataset.k = k;
-        c.title = `Drum ${i + 1} · step ${k + 1}${s.active ? ` · ${String(smp + 1).padStart(3, '0')} ${o.sampleName(smp) || ''}${smp !== act ? ' (its own sample)' : ''} · velocity ${s.velocity}` : ''}`;
+        const mic = pp.stepMicro(t, p, k);
+        const extra = s.active && (mic.filter(Boolean).length > 1 || !mic[0]);
+        if (s.active) {
+          const marks = el('span', 'dmicro');
+          mic.forEach((on) => marks.append(el('i', on ? 'on' : '')));
+          c.append(marks);
+          if (extra) c.classList.add('multi');
+        }
+        c.title = `Drum ${i + 1} · step ${k + 1}${s.active ? ` · ${String(smp + 1).padStart(3, '0')} ${o.sampleName(smp) || ''}${smp !== act ? ' (its own sample)' : ''} · velocity ${s.velocity} · micro step${mic.filter(Boolean).length > 1 ? 's' : ''} ${mic.flatMap((on, m) => (on ? [m] : [])).join(', ')}` : ''}${extra ? ' · click to edit its micro steps' : ' · Shift-click for micro steps'}`;
         area.append(c);
       }
     });
   }
+
+  // ---- micro steps of a drum step: a small box over the grid
+  const pop = el('div', 'micropop');
+  pop.hidden = true;
+  root.append(pop);
+  let popAt = null;   // { t, p, k }
+  function openMicro(t, p, k, cell) {
+    popAt = { t, p, k };
+    const r = cell.getBoundingClientRect(), b = root.getBoundingClientRect();
+    pop.style.left = `${Math.max(0, Math.min(b.width - 230, r.left - b.left))}px`;
+    pop.hidden = false;
+    paintPop();
+    // Below the cell, or above it if the grid has no room below (the panel clips it).
+    const h = pop.offsetHeight;
+    pop.style.top = `${r.bottom - b.top + 2 + h <= b.height ? r.bottom - b.top + 2 : Math.max(0, r.top - b.top - h - 2)}px`;
+  }
+  function closeMicro() { pop.hidden = true; popAt = null; }
+  function paintPop() {
+    if (!popAt) return;
+    const pp = o.pp(), { t, p, k } = popAt;
+    const mic = pp.stepMicro(t, p, k);
+    pop.replaceChildren(
+      el('span', 'mp-title', `Drum ${t - 3} · step ${k + 1}: micro steps`),
+      ...mic.map((on, m) => { const b = el('button', `mp-tick${on ? ' on' : ''}`, String(m)); b.type = 'button'; b.dataset.m = m; b.title = m ? `Micro step ${m}: ${m}/6 of a step late` : 'Micro step 0: on the step'; return b; }),
+      Object.assign(el('button', 'mp-clear', 'Clear'), { type: 'button', title: 'Remove every hit on this step', disabled: !mic.some(Boolean) }),
+      Object.assign(el('button', 'mp-close', '×'), { type: 'button', title: 'Close (Esc)' }));
+  }
+  pop.addEventListener('pointerdown', (e) => e.stopPropagation());
+  pop.addEventListener('click', (e) => {
+    const pp = o.pp();
+    if (!popAt) return;
+    const { t, p, k } = popAt;
+    const b = e.target.closest('button');
+    if (!b) return;
+    if (b.classList.contains('mp-close')) { closeMicro(); return; }
+    if (b.classList.contains('mp-clear')) { pp.clearStep(t, p, k); closeMicro(); return; }
+    const m = +b.dataset.m;
+    const mic = pp.toggleMicro(t, p, k, m, o.activeSample(t), o.velocity());
+    if (mic[m]) o.audition(pp.stepSample(t, p, k), t);
+    paintPop();
+  });
+  document.addEventListener('pointerdown', (e) => { if (popAt && !pop.contains(e.target) && !e.target.closest?.('.dcell')) closeMicro(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && popAt) closeMicro(); });
 
   // ---- input
   const at = (e) => { const b = area.getBoundingClientRect(); return { x: e.clientX - b.left, y: e.clientY - b.top }; };
@@ -150,8 +205,12 @@ export function buildRoll(o) {
       const c = e.target.closest('.dcell');
       if (!c) return;
       const t = +c.dataset.t, k = +c.dataset.k, p = o.pattern(t);
-      const on = pp.toggleHit(t, p, k, o.activeSample(t), o.velocity());
-      if (on) o.audition(pp.stepSample(t, p, k), t);
+      // Micro steps: Shift-click, or a hit with micro-step hits (a click would lose them).
+      if (e.shiftKey || c.classList.contains('multi')) { openMicro(t, p, k, c); return; }
+      // A click on a hit plays it; a double-click removes it. A click on an empty cell adds one.
+      if (pp.stepHas(t, p, k)) { o.audition(pp.stepSample(t, p, k), t); return; }
+      pp.toggleHit(t, p, k, o.activeSample(t), o.velocity());
+      o.audition(pp.stepSample(t, p, k), t);
       return;
     }
     const { t, p, rows, sw } = view;
@@ -160,7 +219,7 @@ export function buildRoll(o) {
     if (nd) {
       const r = nd.getBoundingClientRect();
       const resize = e.clientX > r.right - EDGE;
-      drag = { mode: resize ? 'resize' : 'move', nd, k: +nd.dataset.k, j: +nd.dataset.j, note: +nd.dataset.note, x0: pos.x, y0: pos.y, w0: nd.offsetWidth, l0: nd.offsetLeft, t0: nd.offsetTop, moved: false };
+      drag = { mode: resize ? 'resize' : 'move', nd, k: +nd.dataset.k, j: +nd.dataset.j, note: +nd.dataset.note, delay: +(nd.dataset.delay ?? 0), x0: pos.x, y0: pos.y, w0: nd.offsetWidth, l0: nd.offsetLeft, t0: nd.offsetTop, moved: false };
       if (!resize && t < 2) o.noteOn(drag.note, 100);
     } else {
       const k = Math.floor(pos.x / sw), r = Math.floor(pos.y / ROW_H);
@@ -188,13 +247,19 @@ export function buildRoll(o) {
       drag.nd.style.width = `${Math.max(5, (drag.gate / 6) * sw - 1)}px`;
       o.status(`${nn(drag.note)} · ${gateText(drag.gate)}`);
     } else if (drag.moved) {
-      const dk = Math.round(dx / sw), dr = Math.round((pos.y - drag.y0) / ROW_H);
+      // Positions in sixths of a step: whole steps, keeping the note's micro step, or (Shift)
+      // sixths, which moves its micro step (0-5) and its step.
+      const from = drag.k * 6 + drag.delay;
+      const to = e.shiftKey ? from + Math.round((dx / sw) * 6) : from + Math.round(dx / sw) * 6;
+      const pos6 = Math.max(0, Math.min(view.n * 6 - 1, to));
+      const dr = Math.round((pos.y - drag.y0) / ROW_H);
       const r0 = rows.indexOf(drag.note);
-      drag.toK = Math.max(0, Math.min(view.n - 1, drag.k + dk));
+      drag.toK = Math.floor(pos6 / 6);
+      drag.toDelay = pos6 % 6;
       drag.toNote = rows[Math.max(0, Math.min(rows.length - 1, r0 + dr))];
-      drag.nd.style.left = `${drag.l0 + (drag.toK - drag.k) * sw}px`;
+      drag.nd.style.left = `${drag.l0 + ((pos6 - from) / 6) * sw}px`;
       drag.nd.style.top = `${rows.indexOf(drag.toNote) * ROW_H}px`;
-      o.status(`${nn(drag.toNote)} · step ${drag.toK + 1}`);
+      o.status(`${nn(drag.toNote)} · step ${drag.toK + 1}${drag.toDelay ? ` +${drag.toDelay}/6` : ''}`);
     }
   });
   const end = () => {
@@ -206,11 +271,31 @@ export function buildRoll(o) {
       if (!pp.addNote(t, p, d.k, d.note, o.velocity(), d.gate)) { d.nd.remove(); o.flash(`Step ${d.k + 1} can't take ${nn(d.note)}: a step holds up to 6 notes, each once.`); }
     } else if (d.mode === 'resize') {
       if (d.gate != null) pp.setNoteGate(t, p, d.k, d.j, d.gate);
-    } else if (!d.moved) pp.removeNote(t, p, d.k, d.j);
-    else if (d.toK != null && (d.toK !== d.k || d.toNote !== d.note)) {
-      if (!pp.moveNote(t, p, d.k, d.j, d.toK, d.toNote)) { o.flash(`Step ${d.toK + 1} can't take ${nn(d.toNote)}.`); paint(true); }
+    } else if (!d.moved) { /* a click on a note only plays it; a double-click removes it */ }
+    else if (d.toK != null && (d.toK !== d.k || d.toNote !== d.note || d.toDelay !== d.delay)) {
+      if (!pp.moveNote(t, p, d.k, d.j, d.toK, d.toNote, d.toDelay)) { o.flash(`Step ${d.toK + 1} can't take ${nn(d.toNote)}.`); paint(true); }
     } else paint(true);
   };
+  // Double-click removes a note or a hit (a single click plays it).
+  area.addEventListener('dblclick', (e) => {
+    if (!view) return;
+    const pp = o.pp();
+    if (view.kind === 'drum') {
+      const c = document.elementFromPoint(e.clientX, e.clientY)?.closest('.dcell');
+      if (!c || e.shiftKey) return;
+      const t = +c.dataset.t, k = +c.dataset.k, p = o.pattern(t);
+      if (!pp.stepHas(t, p, k)) return;
+      closeMicro();
+      pp.clearStep(t, p, k);
+      o.flash(`Drum ${t - 3} step ${k + 1}: hit removed.`);
+      return;
+    }
+    // Pointer capture makes the area the target: find the note under the pointer.
+    const nd = document.elementFromPoint(e.clientX, e.clientY)?.closest('.rnote:not(.ghost)');
+    if (!nd) return;
+    pp.removeNote(view.t, view.p, +nd.dataset.k, +nd.dataset.j);
+    o.flash(`${nn(+nd.dataset.note)} removed from step ${+nd.dataset.k + 1}.`);
+  });
   area.addEventListener('pointerup', end);
   area.addEventListener('pointercancel', end);
   area.addEventListener('wheel', (e) => {
