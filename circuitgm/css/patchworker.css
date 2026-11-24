@@ -152,6 +152,7 @@ input[type=number], input[type=search], input[type=text] { background: var(--wel
 .ed-state { font: 600 .7rem var(--head); letter-spacing: .06em; text-transform: uppercase; border: 1px solid currentColor; border-radius: 3px; padding: 1px 6px; color: var(--muted); }
 .ed-state[data-state=edited] { color: var(--warn); }
 .ed-save { display: inline-flex; gap: 6px; }
+.copy-chip { font: 600 .7rem var(--head); letter-spacing: .06em; text-transform: uppercase; border: 1px solid currentColor; border-radius: 3px; padding: 2px 7px; color: var(--warn); white-space: nowrap; }
 /* Unsaved edits tray (side panel). */
 .tray { border-bottom: 1px solid var(--edge); padding: 6px 12px 8px; font-size: .84rem; }
 .tray summary { cursor: pointer; font: 600 .74rem var(--head); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); list-style-position: inside; }

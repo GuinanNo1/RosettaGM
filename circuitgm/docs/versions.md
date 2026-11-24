@@ -12,7 +12,7 @@ Each tool page shows its version next to its status badge, so you can tell which
 | MIDI2Rhythm | 0.21 | For testing · v0.21 |
 | Circuit2MIDI | 0.7 | alpha 0.7 |
 | CircuitTrim | 0.5 | alpha 0.5 |
-| PatchWorker | 0.18.3 | For testing · v0.18.3 (title line under the menu) |
+| PatchWorker | 0.19 | For testing · v0.19 (title line under the menu) |
 
 Numbering started on 14 Nov 2026. Earlier changes are grouped roughly:
 
@@ -54,6 +54,7 @@ See `midi2rhythm/help.html` (Versions). 0.1–0.6 on 14 Nov 2026; 0.7 (15 Nov): 
 - 0.1 (10 Nov 2026): first alpha.
 
 ## PatchWorker
+- **0.19** (24 Nov 2026): a project copy that really differs from the pack's patch (Out Of Space DL project 1, Blue Monday projects 2-4 and 27) is what the editor edits while that project plays it, as on the Circuit Tracks, so the preview and the song are the same synth. A "Project copy" label shows it; its edits are project edits (Save in the TRACKS panel keeps them; the pack's patch is unchanged), with their own undo. Save to pack slot (status line, or Patch ▸ Save to pack slot…) puts the copy in a pack slot (the project's own slot by default) and the project then plays it; Edit the pack's patch switches the editor to the slot's patch (the song still plays the copy). Revert project brings back the saved copy. Test: `tests/ui_copy.cjs <Blue Monday pack>`.
 - **0.18.3** (24 Nov 2026): a project's macro knob positions are the project's, as on the Circuit Tracks (it saves them in its copy of each synth patch). A project copy that differs from the pack's patch only in knob positions (or Keyboard Octave, which only sets the preview octave) now plays the pack's patch (so editor edits are heard in the song) at the project's positions; before, it played the copy, so the editor's preview and the song were different synths (Apricots project 1, Synth 2). With the project playing the patch being edited, the macro knobs show and turn the project's positions (heard in the song and on the keyboard; a project edit that Save keeps; the pack's patch is unchanged). Choosing another patch for a synth brings that patch's own positions. Test: `tests/ui_macros.cjs <Apricots pack>`.
 - **0.18.2** (24 Nov 2026): micro steps numbered 1-6 (1 = on the step), on the pads, in the drum grid's box and in the status text. Micro Step view lights all six pads dimly and the ones played brightly (synth: chosen notes bright, other notes' micro steps in between).
 - **0.18.1** (24 Nov 2026): opening a pack loads a project, as the Circuit Tracks opens on one: the project last loaded with that pack in this browser (kept by pack name), else the first with notes. The pack file doesn't record which project the Tracks last had. A newly opened pack's editor follows the project's synth patch; a reopened session keeps the patch it was editing. Drum grid: sample flips are pink without the sample number (click a hit to hear it, hover for its name).

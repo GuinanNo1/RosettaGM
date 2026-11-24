@@ -11,7 +11,7 @@ import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, proje
 import { buildPanel } from './pw/panel.js?v=20261124h';
 import { drumRate } from './pw/mixlaws.js?v=20261114s';
 import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
-import { ProjectPlayer, packProjects } from './pw/project.js?v=20261124k';
+import { ProjectPlayer, packProjects } from './pw/project.js?v=20261124m';
 
 const DEFAULT_PACK = '../tracksgm/TracksGM_v1.circuittrackspack';
 // PatchWorker is Offline only for now (plan-patchworker-tracks-first.md, 22 Nov 2026): the browser is
@@ -47,7 +47,9 @@ const pad3 = (n) => String(n).padStart(3, '0');
 const S = {
   pack: null,
   slot: 0,
-  bytes: initPatch(),          // the patch being edited: the pack's own array for the slot
+  bytes: initPatch(),          // the patch being edited: the pack's own array for the slot, or a project's copy
+  copy: null,                  // the synth (0/1) whose project copy is being edited (see bindEditor), else null
+  packView: null,              // the project copy (copyKey) whose pack patch the user chose to edit instead
   undo: new Map(),             // slot -> { past: [], future: [], key, at }
   macro: 0,                    // macro shown on the Modulation page
   synth: 0,                    // Circuit Tracks synth the link talks to
@@ -66,7 +68,7 @@ const proj = new ProjectPlayer({
   patchBytes: (slot) => (S.pack.patches[slot] ??= initPatch()),
   patchName: (slot) => (S.pack.patches[slot] ? getName(S.pack.patches[slot]) : 'Initial Patch'),
   original: (slot) => S.pack.original[slot],
-  onChange: () => { tracksPanel?.paint(); paintSong(); repaintMacros(); },
+  onChange: () => { bindEditor(); tracksPanel?.paint(); paintSong(); repaintMacros(); },
   onStep: (pos) => tracksPanel?.step(pos),
 });
 let ctx = null;
@@ -121,8 +123,9 @@ function panic() {
 
 // ------------------------------------------------------------------ editing
 function hist() {
-  if (!S.undo.has(S.slot)) S.undo.set(S.slot, { past: [], future: [], key: null, at: 0 });
-  return S.undo.get(S.slot);
+  const key = S.copy != null ? copyKey(S.copy) : S.slot;   // a project copy has its own history
+  if (!S.undo.has(key)) S.undo.set(key, { past: [], future: [], key: null, at: 0 });
+  return S.undo.get(key);
 }
 // Remember the patch before a change. Changes to the same control within a second are one step.
 function checkpoint(key) {
@@ -153,11 +156,14 @@ function replacePatch(bytes, note = null) {
 let saveTimer = null;
 let sendTimer = null;
 function changed(addr) {
-  (S.pack.at ??= {})[S.slot] = Date.now();
   synth?.refresh();
-  proj.patchChanged(S.slot);
+  if (S.copy != null) proj.copyChanged(S.copy);   // a project edit: the pack's patch is untouched
+  else {
+    (S.pack.at ??= {})[S.slot] = Date.now();
+    proj.patchChanged(S.slot);
+  }
   repaint(addr);
-  paintSlot(S.slot);
+  if (S.copy == null) paintSlot(S.slot);
   paintBar();
   sendLive(addr);
   if (!hwLive() && S.hw[S.synth].slot === S.slot) S.hw[S.synth].dirty = true;   // the synth now has an older version
@@ -213,12 +219,71 @@ function redo() {
   replacePatch(u.future.pop());
 }
 
+// ------------------------------------------------------------------ project copies
+// A project keeps its own copy of each synth's patch. When the loaded project's copy really differs
+// from the pack's patch (not just in knob positions), that copy is what the song plays, so the
+// editor edits it, as the Circuit Tracks does: changes are project edits (Save keeps them) and
+// Save to pack slot puts the copy in the pack. The user can switch to the pack's patch instead.
+const copyKey = (i) => `copy:${proj.entry?.url}:${i}`;
+function copySynth() {
+  const i = S.synth;
+  if (!proj.loaded || proj.pack !== S.pack || proj.patchSlots?.[i] !== S.slot || !proj.ownCopy?.[i]) return null;
+  return S.packView === copyKey(i) ? null : i;
+}
+// Point the editor at the right array for the patch shown (the pack's or the project's copy).
+function bindEditor(paint = true) {
+  if (!S.pack) return;
+  const c = copySynth();
+  const bytes = c == null ? S.pack.patches[S.slot] : proj.ownCopy[c];
+  if (!bytes || (bytes === S.bytes && c === S.copy)) return;
+  S.copy = c;
+  S.bytes = bytes;
+  if (!paint) return;
+  synth?.setPatch(S.bytes);
+  repaint();
+  paintBar();
+  paintStatus();
+}
+// Switch between the project's copy and the pack's patch in the editor.
+function editCopy(on) {
+  const i = S.synth;
+  panic();
+  S.packView = on ? null : copyKey(i);
+  bindEditor();
+}
+// Put the project copy being edited into a pack slot: that synth then plays the pack's patch there.
+async function saveCopyToSlot() {
+  const i = S.copy;
+  if (i == null) return;
+  const sel = slotSelect(proj.patchSlots[i]);
+  const note = h('p', { class: 'hint' });
+  const paintNote = () => { note.textContent = replaceNote(+sel.value); note.classList.toggle('warn', slotEdited(S.pack, +sel.value)); };
+  sel.addEventListener('change', paintNote);
+  paintNote();
+  if (!(await ask(`Save Synth ${i + 1}'s project copy to the pack`, [h('label', { class: 'field' }, 'To pack slot ', sel), note,
+    h('p', { class: 'hint', text: `Project ${proj.entry.slot + 1} then plays that pack patch on Synth ${i + 1}, so the editor, the patch list and the song all have the same patch. Save the project to keep it that way.` })], 'Save to slot'))) return;
+  const target = +sel.value;
+  const bytes = S.bytes.slice();
+  const p = proj.entry.slot;
+  setSlotBytes(target, bytes);
+  setOrigin(target, 'copy', `Synth ${i + 1}'s copy in project ${p + 1}`);
+  proj.setPatchSlot(i, target);
+  if (target !== S.slot) selectSlot(target, { send: false }); else bindEditor();
+  paintSlot(target);
+  paintStatus();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveSession, 300);
+  toast(`Saved to slot ${pad3(target + 1)}. Project ${p + 1} now plays it on Synth ${i + 1}: save the project to keep that. Undo (on the slot) brings back what was there.`, 6000);
+}
+
 let pcSent = null;
 function selectSlot(slot, { send = true } = {}) {
   panic();
   S.slot = clamp(slot, 0, PATCH_SLOTS - 1);
   if (!S.pack.patches[S.slot]) S.pack.patches[S.slot] = initPatch();   // an empty slot edits as the Initial Patch
   S.bytes = S.pack.patches[S.slot];
+  S.copy = null;
+  bindEditor(false);
   synth?.setPatch(S.bytes);
   repaint();
   paintList();
@@ -666,7 +731,8 @@ function buildMacros() {
 // The synth whose macro knobs the project holds: the one being edited, when the loaded project
 // plays the patch being edited on it.
 function projMacroSynth() {
-  return proj.loaded && proj.pack === S.pack && proj.patchSlots?.[S.synth] === S.slot ? S.synth : null;
+  if (!proj.loaded || proj.pack !== S.pack || proj.patchSlots?.[S.synth] !== S.slot) return null;
+  return proj.ownCopy?.[S.synth] && S.copy == null ? null : S.synth;   // the pack's patch while the song plays the copy: its own knobs
 }
 // The editor's own synth (keyboard) plays at the project's knob positions too.
 function syncEditorMacros() {
@@ -802,7 +868,12 @@ function paintBar() {
   const u = hist();
   $('#undo').disabled = !u.past.length;
   $('#redo').disabled = !u.future.length;
-  $('#compare').hidden = !(S.pack.original[S.slot] && slotEdited(S.pack, S.slot));
+  $('#compare').hidden = S.copy != null || !(S.pack.original[S.slot] && slotEdited(S.pack, S.slot));
+  $('#copy-chip').hidden = S.copy == null;
+  document.body.classList.toggle('editing-copy', S.copy != null);
+  const menu = (act, pack, copy) => { const b = $(`#patch-menu [data-act=${act}]`); if (b) b.textContent = S.copy != null ? copy : pack; };
+  menu('copy', 'Duplicate to slot…', 'Save to pack slot…');
+  menu('revert', 'Revert to how the pack had it', 'Revert to how the project has it');
   paintPack();
 }
 // Where a slot's patch came from, if it was brought in during this session.
@@ -937,13 +1008,28 @@ function paintTray() {
 // saved, and (Tracks mode only) what the linked synth is playing.
 function paintStatus() {
   if (!S.pack) return;
+  const plays = proj.loaded && proj.pack === S.pack && proj.patchSlots?.[S.synth] === S.slot && proj.ownCopy?.[S.synth];
+  $('#ed-copy').hidden = !plays;
+  $('#ed-copy-save').hidden = S.copy == null;
+  $('#ed-copy-switch').textContent = S.copy != null ? 'Edit the pack\'s patch' : 'Edit the project copy';
+  if (S.copy != null) {
+    const n = `Synth ${S.synth + 1}`, p = proj.entry;
+    $('#ed-what').textContent = `${n}'s own copy in project ${p.slot + 1} "${p.name || proj.song?.name || ''}": what the song plays. It differs from slot ${slotLabel(S.slot)} in the pack.`;
+    $('#ed-state').textContent = proj.edited ? 'Project edited · not saved' : 'As the project has it';
+    $('#ed-state').dataset.state = proj.edited ? 'edited' : 'saved';
+    $('#ed-state').title = proj.edited ? 'The project has changes since it was saved: Save in the TRACKS panel keeps them (this copy included).' : 'The same as the project saved in the pack.';
+    $('#ed-save').hidden = true;
+    paintTray();
+    if (TRACKS_MODE) $('#ed-hw').textContent = '';
+    return;
+  }
   const edited = slotEdited(S.pack, S.slot);
   const o = S.pack.origin?.[S.slot];
   let from;
   if (!edited) from = S.pack.original[S.slot] ? 'as the pack has it' : 'an empty slot';
   else if (o) from = `${o.label}${sameBytes(o.bytes, S.bytes) ? '' : ', then changed here'}`;
   else from = 'changed here since the pack was opened';
-  $('#ed-what').textContent = `Slot ${pad3(S.slot + 1)} of "${S.pack.name || 'this pack'}": ${from}`;
+  $('#ed-what').textContent = `Slot ${pad3(S.slot + 1)} of "${S.pack.name || 'this pack'}": ${from}${plays ? `. Project ${proj.entry.slot + 1} plays its own, different copy of it on Synth ${S.synth + 1}` : ''}`;
   const unsaved = slotUnsaved(S.slot);
   $('#ed-state').textContent = unsaved ? 'Edited · not saved' : 'Saved';
   $('#ed-state').dataset.state = unsaved ? 'edited' : 'saved';
@@ -1206,11 +1292,17 @@ async function openSyxFiles(files) {
 
 async function patchAction(act) {
   if (act === 'open-syx') $('#file-syx').click();
-  else if (act === 'save-syx') saveSlotSyx();
-  else if (act === 'init') {
+  else if (act === 'save-syx') { if (S.copy != null) download(toSyx(S.bytes), `${fileSafe(getName(S.bytes))}.syx`); else saveSlotSyx(); }
+  else if (act === 'copy' && S.copy != null) saveCopyToSlot();
+  else if (act === 'revert' && S.copy != null) {
+    const back = proj.savedCopy(S.copy);
+    if (!back) return;
+    checkpoint(null);
+    replacePatch(back, 'Reverted to the copy the project has saved. Undo brings your changes back.');
+  } else if (act === 'init') {
     checkpoint(null);
     S.bytes.set(initPatch());
-    setOrigin(S.slot, 'init', 'started from the Initial Patch');
+    if (S.copy == null) setOrigin(S.slot, 'init', 'started from the Initial Patch');
     changed(null);
     toast('Initial Patch loaded. Undo brings the old patch back.');
   } else if (act === 'revert') {
@@ -1642,7 +1734,7 @@ function setAskOnLeave(on) {
   try { localStorage.setItem(ASK_KEY, on ? 'on' : 'off'); } catch { /* private mode */ }
   $('#tray-ask').checked = on;
 }
-const needSaveAsk = () => askOnLeave() && slotUnsaved(S.slot) && askedAt.get(S.slot) !== (S.pack.at?.[S.slot] ?? 0);
+const needSaveAsk = () => S.copy == null && askOnLeave() && slotUnsaved(S.slot) && askedAt.get(S.slot) !== (S.pack.at?.[S.slot] ?? 0);
 async function askSaveOnLeave() {
   const i = S.slot;
   askedAt.set(i, S.pack.at?.[i] ?? 0);
@@ -1944,6 +2036,8 @@ function bindUI() {
   $('#pack-save').addEventListener('click', savePack);
   $('#pack-bank').addEventListener('click', () => { download(bankSyx(S.pack), `${fileSafe(S.pack.name || 'Pack')} patches.syx`); markSaved(editedSlots(S.pack)); });
   $('#ed-syx').addEventListener('click', () => saveSlotSyx());
+  $('#ed-copy-switch').addEventListener('click', () => editCopy(S.copy == null));
+  $('#ed-copy-save').addEventListener('click', saveCopyToSlot);
   $('#ed-pack').addEventListener('click', savePack);
   $('#tray-bank').addEventListener('click', () => saveUnsavedBank());
   $('#tray-ask').checked = askOnLeave();
@@ -1990,6 +2084,7 @@ function bindUI() {
     tracksPanel?.paint();
     if (hwLive()) followTracks(S.synth);
     if (proj.loaded && proj.patchSlots[S.synth] !== S.slot) chooseSlot(proj.patchSlots[S.synth], { follow: true });   // edit what that synth plays
+    else bindEditor();   // the same slot: that synth's project copy, if it has one
   }));
   $('#hw-send').addEventListener('click', () => { if (hwSend()) toast(`Playing "${getName(S.bytes)}" on Synth ${S.synth + 1} (not saved on the Circuit Tracks).`); });
   $('#hw-get').addEventListener('click', getFromTracks);
@@ -2150,5 +2245,5 @@ function bindKb() {
 }
 
 // Handy when testing from the console, and for the automated tests.
-window.patchworker = { S, link, keys, proj, loadProject, unsavedSlots, TRACKS_MODE, audio, selectSlot, copyTo, setByte, toSyx, buildPack, undo, redo, setFace, storeOnTracks, openFromTracks, panel: () => tracksPanel, get synth() { return synth; } };
+window.patchworker = { S, link, keys, proj, editCopy, saveCopyToSlot, loadProject, unsavedSlots, TRACKS_MODE, audio, selectSlot, copyTo, setByte, toSyx, buildPack, undo, redo, setFace, storeOnTracks, openFromTracks, panel: () => tracksPanel, get synth() { return synth; } };
 start();

@@ -101,16 +101,7 @@ export class ProjectPlayer {
     // only in its knob positions plays the pack's patch (so edits are heard) at the project's
     // knob positions.
     this.macros = [[], []];
-    this.ownCopy = [0, 1].map((i) => {
-      const copy = i === 0 ? proj.synth1Patch : proj.synth2Patch;
-      const orig = this.o.original(this.patchSlots[i]);
-      const ok = copy && copy.length >= 340;
-      this.macros[i] = MACRO_POS.map((a) => (ok ? copy[a] : this.o.patchBytes(this.patchSlots[i])[a]));
-      // The patch's Keyboard Octave only sets where the Tracks previews it (not how the song
-      // plays), so a copy that differs in that too still counts as the pack's patch.
-      const same = ok && orig && orig.every((v, k) => v === copy[k] || MACRO_POS.includes(k) || k === P.octave.a);
-      return same ? null : copy;
-    });
+    this.ownCopy = [0, 1].map((i) => this.readCopy(proj, i));
     this.scene = 0;
     const c = this.song.sceneChain;
     this.sceneChain = { start: c.start, end: c.end };
@@ -132,6 +123,26 @@ export class ProjectPlayer {
     return true;
   }
 
+  // Synth i's copy in a parsed project: sets this.macros[i] and returns the copy (its own array, so
+  // the editor can edit it) when it really differs from the pack's patch, else null.
+  readCopy(proj, i) {
+    const copy = i === 0 ? proj.synth1Patch : proj.synth2Patch;
+    const orig = this.o.original(this.patchSlots[i]);
+    const ok = copy && copy.length >= 340;
+    this.macros[i] = MACRO_POS.map((a) => (ok ? copy[a] : this.o.patchBytes(this.patchSlots[i])[a]));
+    // The patch's Keyboard Octave only sets where the Tracks previews it (not how the song
+    // plays), so a copy that differs in that too still counts as the pack's patch.
+    const same = ok && orig && orig.every((v, k) => v === copy[k] || MACRO_POS.includes(k) || k === P.octave.a);
+    return same ? null : new Uint8Array(copy);
+  }
+  // Synth i's copy as the project is saved (null when another patch has been chosen since).
+  savedCopy(i) {
+    const pr = this.entry?.project;
+    if (!pr || pr.patchSlots[i] !== this.patchSlots[i]) return null;
+    const c = i ? pr.synth2Patch : pr.synth1Patch;
+    return c?.length >= 340 ? new Uint8Array(c) : null;
+  }
+
   // Forget the project (another pack was opened).
   unload() {
     this.stop();
@@ -149,7 +160,7 @@ export class ProjectPlayer {
     for (let i = 0; i < 2; i++) {
       const syn = this.player.synths[i];
       if (!syn) continue;
-      syn.setPatch(this.ownCopy[i] ? new Uint8Array(this.ownCopy[i]) : this.o.patchBytes(this.patchSlots[i]));
+      syn.setPatch(this.ownCopy[i] ?? this.o.patchBytes(this.patchSlots[i]));   // the copy itself, so edits to it are heard
       syn.bpm = this.tempo;
     }
     this.applyMacros();
@@ -176,9 +187,19 @@ export class ProjectPlayer {
     for (let i = 0; i < 2; i++) if (!this.ownCopy?.[i] && this.patchSlots?.[i] === slot) this.player.synths?.[i]?.refresh();
   }
 
+  // The editor changed synth i's own copy (project copy): a project edit, heard straight away.
+  copyChanged(i) {
+    if (!this.ownCopy?.[i]) return;
+    this.macros[i] = MACRO_POS.map((a) => this.ownCopy[i][a]);
+    this.entry.edited = true;
+    this.player.synths?.[i]?.refresh();
+    this.applyMacros();
+  }
+
   // Choose the patch Synth i plays (as in the Circuit Tracks' Preset view). Not saved in the project.
   setPatchSlot(i, slot) {
     if (!this.loaded || this.patchSlots[i] === slot && !this.ownCopy[i]) return;
+    if (this.ownCopy[i]) this.entry.edited = true;   // the project no longer plays its own copy: Save keeps that
     this.patchSlots[i] = slot;
     this.ownCopy[i] = null;
     // A new patch brings its own knob positions (the hardware loses the project's).
@@ -606,8 +627,9 @@ export class ProjectPlayer {
     if (!this.edited) return;
     this.revertEntry(this.entry);
     const pr = this.entry.project;
-    [0, 1].forEach((i) => { const c = i ? pr.synth2Patch : pr.synth1Patch; if (c?.length >= 340 && this.patchSlots[i] === pr.patchSlots[i]) this.macros[i] = MACRO_POS.map((a) => c[a]); });
-    this.applyMacros();
+    // Each synth still on the project's saved patch gets its saved copy and knob positions back.
+    [0, 1].forEach((i) => { if (this.patchSlots[i] === pr.patchSlots[i]) this.ownCopy[i] = this.readCopy(pr, i); });
+    this.linkSynths();
     this.song = songOf(songPack(this.pack, this.o.patchName), this.entry);
     this.changed(false);
   }
