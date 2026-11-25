@@ -580,6 +580,40 @@ export class ProjectPlayer {
     this.edit();
   }
 
+  // ---- recorded automation (0.20): a pattern's paramLocks, { key: { position: value } }, where a
+  // position is a step with its fraction (3, 3.5, 3.833: the micro positions of a knob recording).
+  // Each lane has 192 positions, so a step has floor(192 / steps) of them (12 in a 16-step pattern).
+  // Keys: macro1-8, level, pan, reverb_send, delay_send (synth and MIDI tracks); pitch, decay,
+  // distortion, eq, reverb_send, delay_send, level, pan (drum tracks). A value holds until the next.
+  lanePositions(t, p) { return Math.max(1, Math.floor(192 / ((this.raw(t, p).settings.playbackEnd ?? 15) + 1))); }
+  // [[position, value], ...] sorted, or [] when the lane has nothing recorded.
+  laneLocks(t, p, key) {
+    const locks = this.raw(t, p).paramLocks?.[key];
+    return locks ? Object.entries(locks).map(([pos, v]) => [Number(pos), v]).sort((a, b) => a[0] - b[0]) : [];
+  }
+  laneHasData(t, p, key) { const l = this.raw(t, p).paramLocks?.[key]; return !!l && Object.keys(l).length > 0; }
+  // Set step k's value (sixth null: the whole step, replacing its micro-position values; sixth 0-5:
+  // that sixth of the step only). Call commitLanes() when a drawing gesture ends.
+  setLaneValue(t, p, key, k, sixth, v) {
+    const pat = this.raw(t, p);
+    const locks = ((pat.paramLocks ??= {})[key] ??= {});
+    const from = sixth == null ? k : k + sixth / 6, to = sixth == null ? k + 1 : k + (sixth + 1) / 6;
+    for (const pos of Object.keys(locks)) if (+pos >= from - 1e-6 && +pos < to - 1e-6) delete locks[pos];
+    locks[Math.round(from * 1000) / 1000] = Math.max(0, Math.min(127, Math.round(v)));
+    this.entry.edited = true;
+  }
+  // Clear step k (every value on it): back to no value, the last one holds over it.
+  clearLaneStep(t, p, key, k) {
+    const locks = this.raw(t, p).paramLocks?.[key];
+    if (!locks) return false;
+    let any = false;
+    for (const pos of Object.keys(locks)) if (+pos >= k - 1e-6 && +pos < k + 1 - 1e-6) { delete locks[pos]; any = true; }
+    if (!Object.keys(locks).length) delete this.raw(t, p).paramLocks[key];
+    if (any) this.edit();
+    return any;
+  }
+  commitLanes() { this.edit(); }
+
   // ---- saving into the pack (the pack open in the browser; Download pack writes it out)
   // Save as on the hardware: the steps, tempo and swing, and the patch each synth plays (its slot
   // and the project's own copy of it). slot: the project slot to save into (default: this one; the

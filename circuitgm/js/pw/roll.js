@@ -15,7 +15,12 @@
 // Marks along a hit's foot show its micro steps (six per step). Shift-click a cell, or click a hit
 // that has micro-step hits, for a box that turns each micro step on or off (0.18).
 // Piano roll: Shift-drag a note to move it in sixths of a step (its micro step, 0.18).
+// Automation lane (0.20): under the roll or grid, on the same steps, one recorded knob at a time
+// (chosen in the list): bars for the recorded values (thin ones for a knob recording's micro
+// positions), a dashed line where the last value holds. Drag to draw a value per step (Shift: per
+// sixth of a step), double-click a step to clear it.
 import { SCALES, CHROMATIC, inScale } from '../scales.js';
+import { MACRO_DESTS, macroRows } from './params.js?v=20261114s';
 const FULL_GATE = 6;   // one step, in sixths (as in project.js)
 
 const NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
@@ -42,6 +47,30 @@ export function buildRoll(o) {
   root.append(scroll);
   let view = null;       // what was last drawn: { kind, t, p, rows, n, sw }
   let drag = null;
+
+  // ---- automation lane: a list of the track's lanes, then the lane on the roll's steps
+  const laneSel = el('select', 'lane-sel');
+  laneSel.setAttribute('aria-label', 'Automation lane');
+  laneSel.title = 'Which recorded knob the lane shows and edits (• has values in this pattern)';
+  const laneInfo = el('span', 'lane-info');
+  const laneBar = el('div', 'lane-bar');
+  laneBar.append(el('span', 'lane-title', 'Automation'), laneSel, laneInfo);
+  const laneAxis = el('div', 'lane-axis');
+  laneAxis.append(el('span', '', '127'), el('span', '', '0'));
+  const laneArea = el('div', 'lane-area');
+  const laneSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  laneSvg.setAttribute('class', 'lane-svg');
+  const laneHead = el('div', 'roll-head lane-head');
+  laneArea.append(laneSvg, laneHead);
+  const laneRow = el('div', 'lane-row');
+  laneRow.append(laneAxis, laneArea);
+  const lane = el('div', 'lane');
+  lane.append(laneBar, laneRow);
+  root.append(lane);
+  const LANE_H = 90;
+  const chosen = new Map();   // track -> lane key chosen in the list
+  let lv = null;              // the lane as drawn: { t, p, key, n, sw, per }
+  let ldrag = null;
 
   const isLong = (set) => set.playbackEnd > 15 || set.playbackStart > 15;
   // ---- piano roll
@@ -113,7 +142,7 @@ export function buildRoll(o) {
     const sw = width / n;
     view = { kind: 'drum', n, sw, pats };
     root.dataset.kind = 'drum';
-    const rh = Math.max(40, Math.floor((root.clientHeight - 6) / 4));
+    const rh = Math.max(40, Math.floor((scroll.clientHeight - 2) / 4));
     body.style.height = `${rh * 4}px`;
     area.style.width = `${width}px`;
     area.style.setProperty('--sw', `${sw}px`);
@@ -336,25 +365,179 @@ export function buildRoll(o) {
     window.addEventListener('pointerup', up);
   });
 
+  // ---- automation lane
+  const MIX_LANES = [['level', 'Level'], ['pan', 'Pan'], ['reverb_send', 'Reverb send'], ['delay_send', 'Delay send']];
+  const DRUM_LANES = [['pitch', 'Pitch'], ['decay', 'Decay'], ['distortion', 'Distortion'], ['eq', 'EQ'], ['reverb_send', 'Reverb send'], ['delay_send', 'Delay send'], ['level', 'Level'], ['pan', 'Pan']];
+  // The lanes a track has, with labels: a synth's macros say what they control in the patch it plays.
+  function laneList(t) {
+    if (t >= 4) return DRUM_LANES.map(([key, label]) => ({ key, label }));
+    const bytes = t < 2 ? o.pp().player?.synths?.[t]?.bytes : null;
+    const macros = Array.from({ length: 8 }, (_, k) => {
+      if (!bytes) return { key: `macro${k + 1}`, label: t < 2 ? `Macro ${k + 1}` : `Knob ${k + 1}` };
+      const live = macroRows(bytes, k).filter((r) => r.dest && r.depth);
+      const what = live.length ? `${MACRO_DESTS[live[0].dest]?.label ?? '?'}${live.length > 1 ? ` +${live.length - 1}` : ''}` : 'not assigned';
+      return { key: `macro${k + 1}`, label: `Macro ${k + 1} · ${what}` };
+    });
+    return [...macros, ...MIX_LANES.map(([key, label]) => ({ key, label }))];
+  }
+  const valueText = (key, v) => (key === 'pan' ? (v === 64 ? 'centre' : v < 64 ? `L${64 - v}` : `R${v - 64}`) : String(v));
+  // The track and pattern the lane follows: the piano roll's, or the selected drum's.
+  function laneTarget() {
+    if (!view) return null;
+    if (view.kind === 'piano') return { t: view.t, p: view.p };
+    const t = o.track();
+    const p = view.pats[t - 4];
+    return p == null ? null : { t, p };
+  }
+  function paintLane() {
+    const pp = o.pp(), tg = laneTarget();
+    lane.hidden = !tg;
+    if (!tg) { lv = null; return; }
+    const { t, p } = tg, { n, sw } = view;
+    const list = laneList(t);
+    let key = chosen.get(t);
+    if (!list.some((x) => x.key === key)) {
+      // Default: the first macro (or drum lane) with values in this pattern, else the first lane.
+      key = (list.find((x) => pp.laneHasData(t, p, x.key)) ?? list[0]).key;
+    }
+    laneSel.replaceChildren(...list.map((x) => {
+      const opt = el('option', '', `${pp.laneHasData(t, p, x.key) ? '• ' : ''}${x.label}`);
+      opt.value = x.key;
+      return opt;
+    }));
+    laneSel.value = key;
+    const per = pp.lanePositions(t, p);
+    lv = { t, p, key, n, sw, per };
+    const w = n * sw;
+    laneArea.style.width = `${w}px`;
+    laneArea.style.height = `${LANE_H}px`;
+    laneArea.style.setProperty('--sw', `${sw}px`);
+    laneSvg.setAttribute('viewBox', `0 0 ${w} ${LANE_H}`);
+    laneSvg.setAttribute('width', w);
+    laneSvg.setAttribute('height', LANE_H);
+    const y = (v) => LANE_H - 1 - (v / 127) * (LANE_H - 3);
+    const locks = pp.laneLocks(t, p, key).filter(([pos]) => pos < n);
+    const set = pp.raw(t, p).settings;
+    const lo = Math.min(set.playbackStart, set.playbackEnd), hi = Math.max(set.playbackStart, set.playbackEnd);
+    let svg = `<rect class="lane-out" x="0" y="0" width="${lo * sw}" height="${LANE_H}"/><rect class="lane-out" x="${(hi + 1) * sw}" y="0" width="${Math.max(0, w - (hi + 1) * sw)}" height="${LANE_H}"/>`;
+    if (key === 'pan' || key === 'pitch') svg += `<line class="lane-mid" x1="0" x2="${w}" y1="${y(64)}" y2="${y(64)}"/>`;
+    const ends = [];
+    locks.forEach(([pos, v], i) => {
+      const step = Math.floor(pos + 1e-9);
+      const next = locks[i + 1]?.[0];
+      // A bar to the next value on the same step, or to the step's end.
+      const endPos = next != null && next < step + 1 - 1e-9 ? next : step + 1;
+      const x0 = pos * sw, x1 = endPos * sw;
+      const bw = Math.max(2, x1 - x0 - (endPos === step + 1 ? 2 : 0.5));
+      svg += `<rect class="lane-bar-v${pos !== step ? ' micro' : ''}" x="${x0 + (pos === step ? 1 : 0)}" y="${y(v)}" width="${bw}" height="${LANE_H - y(v)}" rx="${pos === step ? 2 : 0}"><title>Step ${step + 1}${pos !== step ? ` + ${Math.round((pos - step) * per)}/${per}` : ''}: ${valueText(key, v)}</title></rect>`;
+      ends.push([x0 + bw + (pos === step ? 1 : 0), v, next]);
+    });
+    // Where the last value holds: to the next value, and from the pattern's start (it loops) to the first.
+    ends.forEach(([x, v, next]) => {
+      const x2 = next != null ? next * sw : w;
+      if (x2 - x > 1) svg += `<line class="lane-hold" x1="${x}" x2="${x2}" y1="${y(v)}" y2="${y(v)}"/>`;
+    });
+    if (locks.length && locks[0][0] * sw > 1) svg += `<line class="lane-hold wrap" x1="0" x2="${locks[0][0] * sw}" y1="${y(locks.at(-1)[1])}" y2="${y(locks.at(-1)[1])}"/>`;
+    laneSvg.innerHTML = svg;
+    const label = list.find((x) => x.key === key)?.label ?? key;
+    laneInfo.textContent = locks.length ? '' : 'Nothing recorded: drag to draw';
+    lane.dataset.trk = t;
+    laneArea.title = `${label}: drag to draw a value on each step (hold Shift for sixths of a step), double-click a step to clear it`;
+  }
+  laneSel.addEventListener('change', () => { if (lv) { chosen.set(lv.t, laneSel.value); paintLane(); } });
+  const laneAt = (e) => {
+    const b = laneArea.getBoundingClientRect();
+    const x = Math.max(0, Math.min(b.width - 0.01, e.clientX - b.left));
+    const v = Math.round((1 - (e.clientY - b.top - 1) / (LANE_H - 3)) * 127);
+    return { x, v: Math.max(0, Math.min(127, v)) };
+  };
+  // A cell is a step (whole-step drawing) or a sixth of one (Shift): its index in sixths or steps.
+  function drawCell(e, sixths) {
+    const { x, v } = laneAt(e);
+    const c = sixths ? Math.floor((x / lv.sw) * 6) : Math.floor(x / lv.sw);
+    return { c: Math.min(c, (sixths ? lv.n * 6 : lv.n) - 1), v };
+  }
+  function putCell(c, v, sixths) {
+    const { t, p, key } = lv;
+    if (sixths) o.pp().setLaneValue(t, p, key, Math.floor(c / 6), c % 6, v);
+    else o.pp().setLaneValue(t, p, key, c, null, v);
+  }
+  laneArea.addEventListener('pointerdown', (e) => {
+    if (!lv || e.button !== 0) return;
+    e.preventDefault();
+    const sixths = e.shiftKey;
+    const { c, v } = drawCell(e, sixths);
+    ldrag = { sixths, c, v, any: true };
+    putCell(c, v, sixths);
+    laneStatus(c, v, sixths);
+    paintLane();
+    laneArea.setPointerCapture(e.pointerId);
+  });
+  laneArea.addEventListener('pointermove', (e) => {
+    if (!lv) return;
+    if (!ldrag) {
+      const { x, v } = laneAt(e);
+      const k = Math.floor(x / lv.sw);
+      const at = o.pp().laneLocks(lv.t, lv.p, lv.key).filter(([pos]) => pos >= k && pos < k + 1);
+      o.status(`${laneSel.selectedOptions[0]?.textContent.replace(/^• /, '') ?? ''} · step ${k + 1}${at.length ? ` · ${at.map(([, x]) => valueText(lv.key, x)).join(' → ')}` : ''} · pointer ${valueText(lv.key, v)}`);
+      return;
+    }
+    const { c, v } = drawCell(e, ldrag.sixths);
+    if (c === ldrag.c && v === ldrag.v) return;
+    // Fill every cell passed since the last one, on a straight line between the two values.
+    const span = Math.abs(c - ldrag.c);
+    for (let i = 1; i <= span; i++) {
+      const ci = ldrag.c + Math.sign(c - ldrag.c) * i;
+      putCell(ci, ldrag.v + ((v - ldrag.v) * i) / span, ldrag.sixths);
+    }
+    if (!span) putCell(c, v, ldrag.sixths);
+    ldrag.c = c; ldrag.v = v;
+    laneStatus(c, v, ldrag.sixths);
+    paintLane();
+  });
+  function laneStatus(c, v, sixths) {
+    const k = sixths ? Math.floor(c / 6) : c;
+    o.status(`${laneSel.selectedOptions[0]?.textContent.replace(/^• /, '') ?? ''} · step ${k + 1}${sixths && c % 6 ? ` +${c % 6}/6` : ''} · ${valueText(lv.key, v)}`);
+  }
+  const laneEnd = () => {
+    if (!ldrag) return;
+    ldrag = null;
+    o.pp().commitLanes();
+  };
+  laneArea.addEventListener('pointerup', laneEnd);
+  laneArea.addEventListener('pointercancel', laneEnd);
+  laneArea.addEventListener('pointerleave', () => { if (!ldrag) o.status(''); });
+  laneArea.addEventListener('dblclick', (e) => {
+    if (!lv) return;
+    const k = Math.floor(laneAt(e).x / lv.sw);
+    o.pp().clearLaneStep(lv.t, lv.p, lv.key, k);
+    o.flash(`Step ${k + 1}: ${laneSel.selectedOptions[0]?.textContent.replace(/^• /, '').split(' · ')[0]} cleared.`);
+  });
+
   // ---- drawing
   function paint(keepScroll = false) {
     if (root.hidden || drag) return;
     const pp = o.pp();
     const t = o.track();
-    if (!pp?.loaded) { view = null; for (const c of [...area.children]) if (c !== head) c.remove(); keys.replaceChildren(); return; }
+    if (!pp?.loaded) { view = null; lv = null; lane.hidden = true; for (const c of [...area.children]) if (c !== head) c.remove(); keys.replaceChildren(); return; }
     root.dataset.trk = t;
+    lane.hidden = false;   // before the grid measures its height
     if (t >= 4) paintDrums();
     else { const p = o.pattern(t); if (p != null) paintPiano(t, p, keepScroll); }
+    if (!ldrag) paintLane();
   }
   // The play head: the step each track is on (pos.tracks[t].step), drawn for the track shown.
   function playhead(pos) {
-    if (root.hidden || !view) { head.hidden = true; return; }
+    if (root.hidden || !view) { head.hidden = true; laneHead.hidden = true; return; }
     const t = view.kind === 'drum' ? o.track() : view.t;
     const tp = pos?.tracks?.[t];
-    if (!tp || tp.step == null || (view.kind === 'piano' && tp.pattern !== view.p)) { head.hidden = true; return; }
+    if (!tp || tp.step == null || (view.kind === 'piano' && tp.pattern !== view.p)) { head.hidden = true; laneHead.hidden = true; return; }
     head.hidden = false;
     head.style.left = `${tp.step * view.sw}px`;
     head.style.width = `${view.sw}px`;
+    laneHead.hidden = !lv || tp.pattern !== lv.p;
+    laneHead.style.left = head.style.left;
+    laneHead.style.width = head.style.width;
   }
   // ▼ ▲: scroll the piano roll by an octave.
   function scrollOctave(dir) {
@@ -362,5 +545,5 @@ export function buildRoll(o) {
     const per = o.scale().type === CHROMATIC ? 12 : SCALES[o.scale().type].steps.length;
     scroll.scrollTop -= dir * per * ROW_H;
   }
-  return { el: root, paint, playhead, scrollOctave, get kind() { return view?.kind; } };
+  return { el: root, paint, playhead, scrollOctave, get kind() { return view?.kind; }, get lane() { return lv && { ...lv }; }, chooseLane: (key) => { if (lv) { chosen.set(lv.t, key); paintLane(); } } };
 }
