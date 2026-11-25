@@ -9,7 +9,7 @@
 // setProject() is given a Circuit Tracks project: then the project's levels, pans, sends,
 // reverb, delay, drum settings and sidechain apply as measured on the hardware (calibration
 // set 7), and the two synth tracks can play their patches on PatchWorker's browser synth.
-import { Mixer } from './pw/mixer.js?v=20261124b';
+import { Mixer } from './pw/mixer.js?v=20261125e';
 import { projectMix, drumRate, drumDecaySeconds } from './pw/mixlaws.js?v=20261114s';
 import { PatchSynth } from './pw/engine.js?v=20261124j';
 
@@ -117,6 +117,12 @@ export class Player {
   }
 
   setMute(track, on) { this.mutes[track] = on; this.applyGains(); }
+  // All eight mutes at once, heard from audio time `at` (a scene recalling its saved mutes).
+  setMutesAt(mutes, at) {
+    mutes.forEach((m, t) => { this.mutes[t] = !!m; });
+    if (!this.ctx) return;
+    for (let t = 0; t < 8; t++) this.mixer.setMute(t, this.solo >= 0 ? t === this.solo : !this.mutes[t], at);
+  }
   setSolo(track) { this.solo = this.solo === track ? -1 : track; this.applyGains(); }
   applyGains() {
     if (!this.ctx) return;
@@ -141,8 +147,12 @@ export class Player {
     // Recorded automation: start from the project's settings, then the last value of each knob
     // movement before `from`.
     const last = new Map();
-    for (const e of events) { if (e.t >= from) break; if (e.autoKey) last.set(`${e.track}:${e.autoKey}`, e); }
+    let mutesBefore = null;
+    for (const e of events) { if (e.t >= from) break; if (e.autoKey) last.set(`${e.track}:${e.autoKey}`, e); if (e.sceneMutes != null) mutesBefore = e; }
     for (const e of last.values()) this.automate(e, ctx.currentTime);
+    // Starting inside a scene: the scene's saved mutes, as if it had just started (the owner
+    // decides whether they still apply).
+    if (mutesBefore) this.onSceneMutes?.(mutesBefore, ctx.currentTime, true);
     this.timer = setInterval(() => this.schedule(), TICK_MS);
     this.schedule();
     const frame = () => {
@@ -205,7 +215,8 @@ export class Player {
       const e = this.events[this.idx++];
       const at = this.startTime + e.t;
       if (at < ctx.currentTime - 0.05) continue;
-      if (e.autoKey) this.automate(e, at);
+      if (e.sceneMutes != null) this.onSceneMutes?.(e, at, false);
+      else if (e.autoKey) this.automate(e, at);
       else if (e.part) this.drum(e, at); else this.tone(e, at);
     }
     // Forget finished voices.

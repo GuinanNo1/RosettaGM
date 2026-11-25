@@ -182,7 +182,7 @@ export class Mixer {
     for (let t = 0; t < 8; t++) this.restore(t);
   }
 
-  setMute(t, audible) { this.set(this.strips[t].mute.gain, audible ? 1 : 0); }
+  setMute(t, audible, at) { this.strips[t].mute.gain.setTargetAtTime(audible ? 1 : 0, Math.max(at ?? 0, this.ctx.currentTime), TAU); }
 
   setReverb({ type, decay, damping }) {
     const rt = reverbRt60(type, decay);

@@ -413,6 +413,7 @@ export function buildPanel(root, api) {
       return;
     }
     if (pad.dataset.mute != null) { e.preventDefault(); const t = +pad.dataset.mute; pp?.setMute(t, !pp.mutes[t]); return; }
+    if (pad.dataset.recall != null) { e.preventDefault(); pp?.setMuteRecall(!pp.muteRecall); flash(`Mute Recall ${pp?.muteRecall ? 'on: scenes bring back the mutes saved with them' : 'off: scenes keep the current mutes'}.`); return; }
     if (pad.dataset.drumhit != null) { e.preventDefault(); api.audition(+pad.dataset.drumhit, st.track); pad.classList.add('down'); setTimeout(() => pad.classList.remove('down'), 120); return; }
     if (pad.dataset.note == null) return;
     e.preventDefault();
@@ -887,7 +888,7 @@ export function buildPanel(root, api) {
     st.pads.forEach((p, i) => {
       const row = Math.floor(i / 8), col = i % 8;
       let note = null, cls = 'pad', label = '';
-      delete p.dataset.drumhit; delete p.dataset.dsample; delete p.dataset.project; delete p.dataset.pattern; delete p.dataset.ptrack; delete p.dataset.scene; delete p.dataset.mute; delete p.dataset.val;
+      delete p.dataset.drumhit; delete p.dataset.dsample; delete p.dataset.project; delete p.dataset.pattern; delete p.dataset.ptrack; delete p.dataset.scene; delete p.dataset.mute; delete p.dataset.recall; delete p.dataset.val;
       const expand = st.view === 'expand';
       if (st.view === 'note' && row < 2) {
         const k = base + row * 8 + col;
@@ -1117,7 +1118,7 @@ export function buildPanel(root, api) {
     return text;
   }
 
-  const clearPad = (p) => { for (const k of ['note', 'slot', 'sample', 'step', 'drumhit', 'project', 'pattern', 'ptrack', 'scene', 'mute']) delete p.dataset[k]; p.removeAttribute('title'); p.removeAttribute('aria-pressed'); p.removeAttribute('aria-label'); p.textContent = ''; };
+  const clearPad = (p) => { for (const k of ['note', 'slot', 'sample', 'step', 'drumhit', 'project', 'pattern', 'ptrack', 'scene', 'mute', 'recall']) delete p.dataset[k]; p.removeAttribute('title'); p.removeAttribute('aria-pressed'); p.removeAttribute('aria-label'); p.textContent = ''; };
 
   // Projects view: the pack's 64 project slots as two pages; the lit pad is the project loaded.
   function paintProjects() {
@@ -1157,8 +1158,9 @@ export function buildPanel(root, api) {
     });
   }
 
-  // Mixer view: row 1 mutes each track; rows 3-4 are the 16 scenes (click to select, Shift-click to
-  // chain from the selected one).
+  // Mixer view: row 1 mutes each track; pad 9 (row 2, first pad) is Mute Recall (firmware 1.2:
+  // bright white = scenes recall the mutes saved with them); rows 3-4 are the 16 scenes (click to
+  // select, Shift-click to chain from the selected one).
   function paintMixer() {
     st.pads.forEach((p, k) => {
       clearPad(p);
@@ -1171,6 +1173,13 @@ export function buildPanel(root, api) {
         p.textContent = muted ? 'Muted' : TRACKS[col].label.replace('Synth ', 'S').replace('MIDI ', 'M').replace('Drum ', 'D');
         p.title = `${TRACKS[col].label}: ${muted ? 'muted, click to unmute' : 'click to mute'}`;
         p.setAttribute('aria-pressed', String(muted));
+      } else if (row === 1 && col === 0) {
+        const on = pp.muteRecall;
+        p.className = `pad recall${on ? ' on' : ''}`;
+        p.dataset.recall = '1';
+        p.textContent = 'Mute recall';
+        p.title = `Mute Recall ${on ? 'on: each scene brings back the mutes saved with it (click to turn off)' : 'off: scenes keep the current mutes (click to turn on)'}`;
+        p.setAttribute('aria-pressed', String(on));
       } else if (row >= 2) {
         const i = (row - 2) * 8 + col;
         const inChain = !pp.custom && i >= pp.sceneChain.start && i <= pp.sceneChain.end;
@@ -1228,7 +1237,7 @@ export function buildPanel(root, api) {
     const saveHint = st.saveArm && pp?.loaded ? ` Save is waiting: press Save again to save over project ${pp.entry.slot + 1}${v.id === 'projects' ? ', or press another project\'s pad to save there' : ', or go to Projects view and press Save, then a pad, to save to another project'}. Esc cancels.` : '';
     if (v.id === 'projects') { setHint((st.saveArm && pp?.loaded ? '' : 'Press a project to load it, then ▶ (or Space) to play it. Synth 1 and 2 play the pack\'s patches as you edit them. Edits stay here until you Save (a dot marks a project with unsaved edits, a ring one saved into the pack here).') + saveHint); paintProjects(); return; }
     if (v.id === 'patterns') { setHint(pp?.loaded ? 'The lit pads are the patterns each track plays. Click a pattern to play it; hold it and press another (or Shift-click) to chain the patterns between them. ▼ ▲ show patterns 1-4 or 5-8. Choosing a scene in Mixer view puts back its patterns.' + saveHint : none); paintPatterns(); return; }
-    if (v.id === 'mixer') { setHint(pp?.loaded ? `Top row: mute each track. Bottom two rows: the 16 scenes (white: saved in the project). Click a scene to play it; hold it and press another (or Shift-click) to chain the scenes between them. The macro knobs set each track\'s ${st.mixMode === 'pan' ? 'pan (▲ for levels)' : 'level (▼ for pan)'}, as do the faders (level) and sliders (pan) below; Save keeps them. With Clear on, turning a knob deletes that track\'s recorded ${st.mixMode === 'pan' ? 'pan movements (clockwise: back to the centre)' : 'level movements'} in the pattern it plays.` + saveHint : none); paintMixer(); return; }
+    if (v.id === 'mixer') { setHint(pp?.loaded ? `Top row: mute each track. Pad 9 (Mute recall): when lit, each scene brings back the mutes saved with it as it starts; when dim, scenes keep the current mutes. Bottom two rows: the 16 scenes (white: saved in the project). Click a scene to play it; hold it and press another (or Shift-click) to chain the scenes between them. The macro knobs set each track\'s ${st.mixMode === 'pan' ? 'pan (▲ for levels)' : 'level (▼ for pan)'}, as do the faders (level) and sliders (pan) below; Save keeps them. With Clear on, turning a knob deletes that track\'s recorded ${st.mixMode === 'pan' ? 'pan movements (clockwise: back to the centre)' : 'level movements'} in the pattern it plays.` + saveHint : none); paintMixer(); return; }
     if (v.id === 'roll') {
       const drum = t.kind === 'drum';
       setHint(!pp?.loaded ? none : drum

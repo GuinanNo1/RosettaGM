@@ -437,6 +437,8 @@ body.doc { display: block; overflow: auto; }
 .pad.mute[data-mute="0"] { --c: var(--s1); }
 .pad.mute[data-mute="1"] { --c: var(--s2); }
 .pad.mute.muted { background: color-mix(in srgb, var(--c) 14%, #1f1f29); color: #8a8aa0; }
+.pad.recall { cursor: pointer; font: 600 .62rem var(--head); line-height: 1.1; text-align: center; color: #8a8aa0; background: #34343f; }
+.pad.recall.on { background: #e9e9f2; color: #12111a; box-shadow: 0 0 12px #ffffff60; }
 .pad.scene { cursor: pointer; font: 600 .72rem var(--mono); color: #6d6d82; background: #23232e; }
 .pad.scene.stored { background: #4a4a5e; color: #e9e9f2; }
 .pad.scene.chain { background: color-mix(in srgb, var(--s2) 45%, #2a2a36); color: #12111a; }

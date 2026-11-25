@@ -8,7 +8,7 @@
 // chain (as chosen in Patterns view), mutes, levels, tempo and swing.
 import { readProject, isEmpty } from '../pack.js?v=20261122b';
 import { songOf, renderSong, STEP_TICKS, PPQ } from '../song.js?v=20261124b';
-import { Player } from '../player.js?v=20261124j';
+import { Player } from '../player.js?v=20261125e';
 import { serializeNCS } from '../vendor/ncs.js';
 import { snapToScale, CHROMATIC } from '../scales.js';
 import { macroPosAddr, P } from './params.js?v=20261114s';
@@ -70,11 +70,14 @@ export class ProjectPlayer {
     this.entry = null;       // the project slot entry
     this.song = null;
     this.mutes = new Array(8).fill(false);
+    this.muteRecall = true;  // Mixer view pad 9 (firmware 1.2): scenes recall their saved mutes
+    this.recalled = null;    // the scene whose saved mutes were last recalled
     this.levels = null;      // per track 0-127, as saved in the project (Mixer view)
     this.pans = null;        // per track 0-127, 64 = centre
     this.render = null;      // { order, rendered, scenes (song with the live scene), loop, events }
     this.masterFilter = 64;  // the panel's Master Filter knob (64 = off), as CC 74 on channel 16
     this.player.onPosition = (pos) => this.tickAt(pos);
+    this.player.onSceneMutes = (e, at, resume) => this.sceneMutesAt(e, at, resume);
     this.player.onEnd = () => { if (this.wantPlay) this.start(0); else this.o.onChange?.(); };
   }
 
@@ -112,10 +115,13 @@ export class ProjectPlayer {
     this.mutes.fill(false);
     this.player.mutes.fill(false);
     this.player.solo = -1;
+    this.muteRecall = proj.muteRecall !== 0;
+    this.recalled = null;
     this.player.setProject(proj, { patches: [0, 1].map((i) => this.ownCopy[i] ?? this.o.patchBytes(this.patchSlots[i])) });
     this.applyMacros();
     this.masterFilter = this.player.mix?.filter?.cutoff ?? 64;
     this.readMix(proj);
+    if (this.muteRecall) this.recallMutes(this.scene);
     this.rerender();
     this.linkSynths();
     await this.loadSamples();
@@ -242,14 +248,17 @@ export class ProjectPlayer {
 
   rerender() {
     const { song, order } = this.arrangement();
-    const sceneMutes = !this.custom && this.song.muteRecall !== 0;
-    const rendered = renderSong(song, { order, swing: true, chance: 'keep', sceneMutes });
+    // Every hit is rendered; scene mutes come from the mute gains, switched at each scene start
+    // (sceneMutes events) when Mute Recall is on, so a track can still be unmuted by hand.
+    const recall = !this.custom && this.muteRecall;
+    const rendered = renderSong(song, { order, swing: true, chance: 'keep' });
     const sec = (tick) => (tick / PPQ) * (60 / this.tempo);
     const loop = sec(rendered.length);
     const reps = loop > 0 ? Math.max(1, Math.min(MAX_REPEATS, Math.ceil(LOOP_SECONDS / loop))) : 1;
     const events = [];
     for (let r = 0; r < reps; r++) {
       const off = r * loop;
+      if (recall) for (const sc of rendered.sceneStarts) events.push({ t: off + sec(sc.tick), d: 0, track: -1, scene: sc.scene, sceneMutes: song.scenes[sc.scene]?.mask ?? 0 });
       for (const h of rendered.hits) {
         const tr = this.song.tracks[h.track];
         const t = off + sec(h.tick);
@@ -311,6 +320,9 @@ export class ProjectPlayer {
     this.scene = this.sceneChain.start;
     this.sel = this.song.scenes[this.scene].chains.map((x) => ({ ...x }));
     this.custom = false;
+    // A chosen scene recalls its mutes (at once when stopped; from its start when playing).
+    this.recalled = null;
+    if (this.muteRecall && !this.playing) this.recallMutes(this.scene);
     this.changed(true);
   }
   // Press a pattern pad: that pattern alone; with `extend`, a chain from the track's first
@@ -623,6 +635,7 @@ export class ProjectPlayer {
     const pack = this.pack, src = this.entry, proj = src.project;
     proj.tempo = this.tempo;
     proj.swing = this.swing;
+    proj.muteRecall = this.muteRecall ? 1 : 0;
     const patches = [0, 1].map((i) => new Uint8Array(this.ownCopy[i] ?? this.o.patchBytes(this.patchSlots[i])));
     patches.forEach((b, i) => MACRO_POS.forEach((a, k) => { b[a] = this.macros[i][k]; }));
     proj.synth1Patch = patches[0];
@@ -671,6 +684,7 @@ export class ProjectPlayer {
     this.linkSynths();
     this.readMix(pr);
     this.applyLevels();
+    this.muteRecall = pr.muteRecall !== 0;
     this.song = songOf(songPack(this.pack, this.o.patchName), this.entry);
     this.changed(false);
   }
@@ -686,6 +700,45 @@ export class ProjectPlayer {
     this.pans = [0, 1, 2, 3, 4, 5, 6, 7].map((t) => (t < 4 ? proj.mixerPans?.[t] : proj.drumConfigs?.[t - 4]?.pan) ?? 64);
   }
   setMute(t, on) { this.mutes[t] = on; this.player.setMute(t, on); this.o.onChange?.(); }
+
+  // ---- scene mutes (firmware 1.2; Rhythm 2.0 addendum p. 8). Each scene saves the mutes it was
+  // stored with (bit t of its mask = track t muted). With Mute Recall on (Mixer view pad 9) a
+  // scene's mutes become the current mutes when it starts; mutes changed by hand then hold until
+  // the next scene starts. With it off, scenes leave the mutes alone. Saved with the project.
+  sceneMask(i) { return this.song?.scenes[i]?.mask ?? 0; }
+  recallMutes(i) {
+    const mask = this.sceneMask(i);
+    for (let t = 0; t < 8; t++) this.mutes[t] = ((mask >> t) & 1) === 1;
+    this.player.setMutesAt(this.mutes, 0);
+    this.recalled = i;
+  }
+  // A scene starting in playback (from the player, ahead of time `at`). The same scene again (a
+  // single scene looping, or a restart inside it) keeps the mutes as they are.
+  sceneMutesAt(e, at, resume) {
+    if (e.scene === this.recalled) return;
+    const mask = e.sceneMutes;
+    const next = this.mutes.map((_, t) => ((mask >> t) & 1) === 1);
+    const same = next.every((m, t) => m === this.mutes[t]);
+    this.recalled = e.scene;
+    next.forEach((m, t) => { this.mutes[t] = m; });
+    this.player.setMutesAt(this.mutes, at);
+    if (same) return;
+    const wait = Math.max(0, (at - (this.player.ctx?.currentTime ?? 0)) * 1000);
+    setTimeout(() => this.o.onChange?.(), resume ? 0 : wait);
+  }
+  setMuteRecall(on) {
+    if (!this.loaded || this.muteRecall === on) return;
+    this.muteRecall = on;
+    this.entry.edited = true;
+    // Turned on: the scene playing (or chosen) brings its mutes at once.
+    if (on && !this.custom) {
+      const pos = this.playing ? this.player.position % (this.render?.loop || 1) : null;
+      const sc = pos != null ? this.render?.rendered.sceneStarts.find((s) => this.sec(s.tick) <= pos && pos < this.sec(s.tick + s.length)) : null;
+      this.recallMutes(sc?.scene ?? this.scene);
+    }
+    this.changed(false);
+  }
+  sec(tick) { return (tick / PPQ) * (60 / this.tempo); }
   setLevel(t, v) { this.setMix(t, 'levels', v); }
   setPan(t, v) { this.setMix(t, 'pans', v); }
   setMix(t, what, v) {
