@@ -51,6 +51,16 @@ const { chromium } = require('playwright');
   check(k?.mode === 'reverb' && k.v[6] === 17 && k.v[7] === 29 && k.v[0] === 16, `the macro knobs are reverb sends (${k?.v})`);
   check(k?.cap[0] === 'Synth 1' && k.cap[7] === 'Drum 4', 'captions name the tracks');
 
+  // The send faders under the pads show the same values and set them.
+  const faders = () => p.$$eval('.sendbox .lvl input', (x) => x.map((e) => +e.value));
+  check(await p.isVisible('.sendbox') && (await faders()).join() === k.v.join(), 'the faders under the pads show the reverb sends');
+  check(await p.$eval('.sendkind button.on', (e) => e.dataset.kind) === 'reverb', 'the switch says Reverb sends');
+  await p.$eval('.sendbox .lvl[data-track="5"] input', (e) => { e.value = 40; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  check(await pw(() => window.patchworker.proj.send(5, 'reverb')) === 40 && (await knobs()).v[5] === 40, 'a fader sets Drum 2\'s reverb send, and the knob follows');
+  await p.click('.sendkind button[data-kind="delay"]');
+  check((await knobs()).mode === 'delay' && (await faders()).join() === (await knobs()).v.join() && (await st()).dp === 7, 'Delay sends switches the faders and knobs without changing the preset');
+  await p.click('.sendkind button[data-kind="reverb"]');
+  await pw(() => window.patchworker.panel().mixKnobs().set(5, 0));
   // A delay preset: number and values written, knobs become delay sends.
   await p.click('.pad.fxp.delay[data-delay="10"]');
   s = await st();
@@ -58,6 +68,7 @@ const { chromium } = require('playwright');
   check(s.edited, 'the project counts as edited');
   k = await knobs();
   check(k.mode === 'delay' && k.v[0] === 30 && k.v[1] === 14, `the knobs are now delay sends (${k.v})`);
+  check((await faders()).join() === k.v.join() && await p.$eval('.sendkind button.on', (e) => e.dataset.kind) === 'delay', 'and the faders switch to delay sends');
   check(await pw(() => window.patchworker.proj.player.mix.delay.sync) === 10, 'the mixer plays the new delay');
   // A reverb preset.
   await p.click('.pad.fxp.reverb[data-reverb="0"]');

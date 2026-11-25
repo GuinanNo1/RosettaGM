@@ -760,3 +760,14 @@ body.doc { display: block; overflow: auto; }
 .mixbox .lvl.drum { --kc: var(--drum, #ff7a59); }
 .ct .cbtn.arrow.lit, .cbtn.arrow.lit { box-shadow: inset 0 0 0 2px var(--accent); color: #fff; }
 .macro.mixk.sel { border-color: transparent; background: none; }
+/* FX view: each track's reverb or delay send under the pads (0.23) */
+.sendbox { padding-top: 6px; }
+.sendbox .sendkind { margin: 0 10px; }
+.sendbox .sendkind button.on { color: #12111a; background: var(--fxc); }
+.sendbox[data-kind="reverb"] { --fxc: #f4e2b0; }
+.sendbox[data-kind="delay"] { --fxc: #ffab7a; }
+.faderbox { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 7px; padding: 6px 10px 0; }
+.faderbox .lvl { display: grid; grid-template-rows: auto 60px auto; gap: 3px; justify-items: center; font: 600 .66rem var(--head); color: var(--muted); }
+.faderbox .lvl output { font: 400 .72rem var(--mono); color: var(--lcd-ink); }
+.faderbox .lvl input.fader { writing-mode: vertical-lr; direction: rtl; width: 22px; height: 60px; margin: 0; accent-color: var(--fxc); }
+@media (max-width: 760px) { .faderbox { gap: 4px; padding: 6px 6px 0; } .faderbox .lvl span { font-size: .58rem; } }

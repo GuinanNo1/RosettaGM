@@ -235,6 +235,34 @@ export function buildPanel(root, api) {
     return { input, out, pan, pout, cell: h('div', { class: `lvl ${t.kind}`, 'data-track': i }, h('span', { text: t.label }), input, out, pan, pout) };
   });
   const mixbox = h('div', { class: 'mixbox', hidden: true }, levels.map((l) => l.cell));
+  // FX view: under the pads, each track's reverb or delay send (whichever the macro knobs set: the
+  // kind of preset pressed last, or the Reverb / Delay switch here). Double-click: 0.
+  const sends = TRACKS.map((t, i) => {
+    const input = h('input', { type: 'range', class: 'fader', min: 0, max: 127, value: 0, 'aria-label': `${t.label} send` });
+    const out = h('output', { text: '0' });
+    input.addEventListener('input', () => { pp?.setSend(i, st.fxMode, +input.value); out.textContent = input.value; });
+    input.addEventListener('dblclick', () => { input.value = 0; pp?.setSend(i, st.fxMode, 0); out.textContent = '0'; });
+    return { input, out, cell: h('div', { class: `lvl ${t.kind}`, 'data-track': i }, h('span', { text: t.label }), input, out) };
+  });
+  const sendKind = ['reverb', 'delay'].map((k) => h('button', { type: 'button', 'data-kind': k, text: k === 'reverb' ? 'Reverb sends' : 'Delay sends', title: `Show and set each track's ${k} send (the macro knobs follow)`, onclick: () => setFxMode(k) }));
+  const sendbox = h('div', { class: 'sendbox', hidden: true }, h('div', { class: 'seg sendkind' }, sendKind), h('div', { class: 'faderbox' }, sends.map((x) => x.cell)));
+  function setFxMode(k) {
+    if (st.fxMode === k) return;
+    st.fxMode = k;
+    flash(`The macro knobs and faders set each track's ${k} send.`);
+    paint();
+  }
+  function paintSends() {
+    sendbox.dataset.kind = st.fxMode;
+    sendKind.forEach((b) => { const on = b.dataset.kind === st.fxMode; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    sends.forEach((x, i) => {
+      const v = pp?.loaded ? pp.send(i, st.fxMode) : 0;
+      x.input.value = v;
+      x.out.textContent = v;
+      x.input.disabled = !pp?.loaded;
+      x.input.title = `${TRACKS[i].label} ${st.fxMode} send (0-127). Double-click for 0.${i === 2 || i === 3 ? ' Saved for the Circuit Tracks\' rear input; not heard in the browser.' : ''}`;
+    });
+  }
   // Tempo view: tempo and swing as the hardware's macros 1 and 2 would set them, and Tap.
   const bpm = h('input', { type: 'number', min: 40, max: 240, value: 120, 'aria-label': 'Tempo (BPM)' });
   const bpmRange = h('input', { type: 'range', min: 40, max: 240, value: 120, 'aria-label': 'Tempo' });
@@ -316,7 +344,7 @@ export function buildPanel(root, api) {
       h('div', { class: 'c-l rg stepcol' }, vNote, vVel, vGate, vPat),
       h('div', { class: 'c-m rg padzone' }, grid, roll.el, tempobox),
       h('div', { class: 'c-r rg rightcol' }, vMixer, vFx, recBtn, playBtn),
-      h('div', { class: 'c-m rs status' }, lcd, tools, mixbox, hint))));
+      h('div', { class: 'c-m rs status' }, lcd, tools, mixbox, sendbox, hint))));
 
   // Pads: pointer down plays, up / leave releases. In Preset view a pad picks a patch (and plays
   // it at the keyboard's C while held) or a drum sample (and plays it).
@@ -1243,6 +1271,7 @@ export function buildPanel(root, api) {
   // FX view (User Guide pp. 90-92): rows 1-2 the 16 delay presets, row 3 the 8 reverb presets (the
   // project's preset bright), pad 25 FX on / off.
   function paintFx() {
+    paintSends();
     st.pads.forEach((p, k) => {
       clearPad(p);
       const row = Math.floor(k / 8), col = k % 8;
@@ -1317,6 +1346,7 @@ export function buildPanel(root, api) {
     playBtn.querySelector('.nm').textContent = pp?.playing ? '■' : '▶';
     playBtn.setAttribute('aria-label', pp?.playing ? 'Stop' : 'Play');
     mixbox.hidden = st.view !== 'mixer';
+    sendbox.hidden = st.view !== 'fx';
     tempobox.hidden = st.view !== 'tempo';
     if (!grid.hidden && grid.offsetHeight) lastGridH = grid.offsetHeight;
     grid.hidden = st.view === 'tempo' || st.view === 'roll';
@@ -1345,7 +1375,7 @@ export function buildPanel(root, api) {
     if (v.id === 'projects') { setHint((st.saveArm && pp?.loaded ? '' : 'Press a project to load it, then ▶ (or Space) to play it. Synth 1 and 2 play the pack\'s patches as you edit them. Edits stay here until you Save (a dot marks a project with unsaved edits, a ring one saved into the pack here).') + saveHint); paintProjects(); return; }
     if (v.id === 'patterns') { setHint(pp?.loaded ? 'The lit pads are the patterns each track plays. Click a pattern to play it; hold it and press another (or Shift-click) to chain the patterns between them. ▼ ▲ show patterns 1-4 or 5-8. Choosing a scene in Mixer view puts back its patterns.' + saveHint : none); paintPatterns(); return; }
     if (v.id === 'mixer') { setHint(pp?.loaded ? `Top row: mute each track. Pad 9 (Mute recall): when lit, each scene brings back the mutes saved with it as it starts; when dim, scenes keep the current mutes. Bottom two rows: the 16 scenes (white: saved in the project). Click a scene to play it; hold it and press another (or Shift-click) to chain the scenes between them. The macro knobs set each track\'s ${st.mixMode === 'pan' ? 'pan (▲ for levels)' : 'level (▼ for pan)'}, as do the faders (level) and sliders (pan) below; Save keeps them. With Clear on, turning a knob deletes that track\'s recorded ${st.mixMode === 'pan' ? 'pan movements (clockwise: back to the centre)' : 'level movements'} in the pattern it plays.` + saveHint : none); paintMixer(); return; }
-    if (v.id === 'fx') { setHint(pp?.loaded ? `Rows 1-2: the 16 delay presets; row 3: the 8 reverb presets (bright: the project's). Pressing a preset also makes the macro knobs that effect's send for each track (now: ${st.fxMode} sends; the knob brightens as the send rises). Pad 25 turns FX on or off. With Clear on, turning a knob deletes that track's recorded ${st.fxMode} send movements in the pattern it plays. Save keeps all of it. Press FX again (or Shift + FX) for Side Chain.` + saveHint : none); paintFx(); return; }
+    if (v.id === 'fx') { setHint(pp?.loaded ? `Rows 1-2: the 16 delay presets; row 3: the 8 reverb presets (bright: the project's). Pressing a preset also makes the macro knobs that effect's send for each track (now: ${st.fxMode} sends; the knob brightens as the send rises). The faders below show and set the same sends; Reverb sends / Delay sends switches them and the knobs without changing the preset. Pad 25 turns FX on or off. With Clear on, turning a knob deletes that track's recorded ${st.fxMode} send movements in the pattern it plays. Save keeps all of it. Press FX again (or Shift + FX) for Side Chain.` + saveHint : none); paintFx(); return; }
     if (v.id === 'sidechain') { setHint(pp?.loaded ? `Side chain for ${st.scPage ? 'MIDI 1 (row 3) and MIDI 2 (row 4)' : 'Synth 1 (row 3) and Synth 2 (row 4)'}: Off, or presets 1-7 (how the drum ducks the track). Pads 5-8: the drum that ducks ${TRACKS[st.scTrack].label} (the track whose preset you pressed last). ${st.scPage ? '▲ for Synth 1 and 2.' : '▼ for MIDI 1 and 2.'} A muted drum doesn't duck. Save keeps it.${st.scPage ? ' The MIDI tracks\' side chains act on the Circuit Tracks\' rear inputs; the browser keeps and saves them but doesn\'t play them.' : ''}` + saveHint : none); paintSidechain(); return; }
     if (v.id === 'roll') {
       const drum = t.kind === 'drum';
