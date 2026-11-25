@@ -735,8 +735,8 @@ body.doc { display: block; overflow: auto; }
 .macro.mixk .k-ptr { stroke: var(--mix, #fff); }
 .macro.mixk .m-cap { color: var(--kc, var(--muted)); cursor: default; }
 /* faders: level vertical, pan horizontal below it */
-.mixbox .lvl { grid-template-rows: auto 96px auto auto auto; }
-.mixbox .lvl input.fader { writing-mode: vertical-lr; direction: rtl; width: 22px; height: 96px; margin: 0; accent-color: var(--kc, var(--accent)); }
+.mixbox .lvl { grid-template-rows: auto 60px auto auto auto; }
+.mixbox .lvl input.fader { writing-mode: vertical-lr; direction: rtl; width: 22px; height: 60px; margin: 0; accent-color: var(--kc, var(--accent)); }
 .mixbox .lvl input.pan { width: 100%; margin: 4px 0 0; accent-color: #cfcfe0; }
 .mixbox .lvl .pout { font-size: .66rem; }
 .mixbox .lvl.synth[data-track="0"] { --kc: var(--s1, #4f8bff); }

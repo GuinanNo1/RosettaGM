@@ -12,7 +12,7 @@ Each tool page shows its version next to its status badge, so you can tell which
 | MIDI2Rhythm | 0.21 | For testing · v0.21 |
 | Circuit2MIDI | 0.7 | alpha 0.7 |
 | CircuitTrim | 0.5 | alpha 0.5 |
-| PatchWorker | 0.21.1 | For testing · v0.21.1 (title line under the menu) |
+| PatchWorker | 0.21.2 | For testing · v0.21.2 (title line under the menu) |
 
 Numbering started on 14 Nov 2026. Earlier changes are grouped roughly:
 
@@ -54,6 +54,7 @@ See `midi2rhythm/help.html` (Versions). 0.1–0.6 on 14 Nov 2026; 0.7 (15 Nov): 
 - 0.1 (10 Nov 2026): first alpha.
 
 ## PatchWorker
+- **0.21.2** (25 Nov 2026): Mixer view's level faders 60 px tall (were 96 px), as Ian asked.
 - **0.21.1** (25 Nov 2026): Mixer view's arrows the way round Ian wants: it opens on level, ▼ turns the knobs into pan controls and ▲ goes back to level (the arrow to press lit).
 - **0.21** (25 Nov 2026): Mixer view as on the Circuit Tracks (User Guide pp. 88-89). The macro knobs set each track's level (lit in the track's colour, dimmer as it drops); ▲ (J) turns them into pan controls (white in the centre, bluer to the left, pinker to the right, with L/C/R values) and ▼ (K) back, the arrow to press lit. Under the pads, a vertical level fader and a horizontal pan slider per track show the same values (double-click: 100 / centre). Levels and pans are the project's: loading a project sets them as saved (synth and MIDI tracks from the project's mixer bytes, drums from their drum settings), they're project edits that Save keeps, and Revert project puts them back. MIDI 1/2 levels and pans are kept and saved but don't change the browser's MIDI sketch. With Clear on, turning a knob deletes that track's recorded level (or pan) movements in the pattern it plays; in pan mode, clockwise puts the track back in the centre. Out of Mixer view the knobs are the patch's macros again. Test: `tests/ui_mixpan.cjs <Apricots pack>`.
 - **0.20** (25 Nov 2026): automation lane under the piano roll and drum grid, on the same steps: the recorded knob movements of the pattern shown (the selected drum's in the drum grid). A list chooses the lane: a synth's Macros 1-8 (labelled with what each controls in the patch it plays), Level, Pan, Reverb send and Delay send; MIDI 1/2's Knobs 1-8 and the same four; a drum's Pitch, Decay, Distortion, EQ, sends, Level and Pan. • marks lanes with values in the pattern. Bars show the recorded values (thin bars for a knob recording's micro positions), a dashed line where the last value holds (fainter from the pattern's start, as it loops). Drag to draw a value on each step passed (Shift: on sixths of a step), double-click a step to clear it. Edits are project edits, heard at once and kept by Save. While the song plays, the macro knobs turn with recorded macro movements (outlined), and go back to the project's positions when it stops. The roll is the pads' height plus the lane (on a short window, scroll the panel to reach it). Test: `tests/ui_auto.cjs <Apricots pack>`.
