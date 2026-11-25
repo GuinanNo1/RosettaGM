@@ -12,7 +12,7 @@ Each tool page shows its version next to its status badge, so you can tell which
 | MIDI2Rhythm | 0.21 | For testing · v0.21 |
 | Circuit2MIDI | 0.7 | alpha 0.7 |
 | CircuitTrim | 0.5 | alpha 0.5 |
-| PatchWorker | 0.22 | For testing · v0.22 (title line under the menu) |
+| PatchWorker | 0.23 | For testing · v0.23 (title line under the menu) |
 
 Numbering started on 14 Nov 2026. Earlier changes are grouped roughly:
 
@@ -54,6 +54,7 @@ See `midi2rhythm/help.html` (Versions). 0.1–0.6 on 14 Nov 2026; 0.7 (15 Nov): 
 - 0.1 (10 Nov 2026): first alpha.
 
 ## PatchWorker
+- **0.23** (25 Nov 2026): FX view and Side Chain view (User Guide pp. 90-94). FX: delay presets on rows 1-2, reverb presets on row 3, pad 25 FX on/off; pressing a preset makes the macro knobs that effect's sends (Clear + turn deletes recorded send movements). Side Chain (FX again or Shift + FX): Off or presets 1-7 for Synth 1/2 (▼ MIDI 1/2), pads 5-8 the trigger drum. All saved with the project, put back by Revert. Fixes: drum reverb/delay sends were read from the drum settings (always 0) instead of the tail's send bytes, so drums had no FX in projects that send them; a muted drum no longer fires the side chain.
 - **0.22** (25 Nov 2026): scene mutes (Circuit Tracks firmware 1.2). Mixer view's pad 9 is Mute Recall (bright white when on, saved with the project): each scene then brings back the mutes saved with it as it starts or is chosen, and the mute pads show them; mutes changed by hand hold until the next scene. Before, playback dropped scene-muted tracks without showing it and they couldn't be unmuted.
 - **0.21.2** (25 Nov 2026): Mixer view's level faders 60 px tall (were 96 px), as Ian asked.
 - **0.21.1** (25 Nov 2026): Mixer view's arrows the way round Ian wants: it opens on level, ▼ turns the knobs into pan controls and ▲ goes back to level (the arrow to press lit).

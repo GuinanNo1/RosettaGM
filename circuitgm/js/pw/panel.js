@@ -31,7 +31,7 @@ export const VIEWS = [
   { id: 'micro', label: 'Micro step', step: 3 }, { id: 'pattern', label: 'Pattern settings', step: 3 },
   { id: 'preset', label: 'Preset', step: 1, group: 'project' }, { id: 'projects', label: 'Projects', step: 1 },
   { id: 'patterns', label: 'Patterns', step: 1 }, { id: 'mixer', label: 'Mixer', step: 1 },
-  { id: 'fx', label: 'FX', step: 4 }, { id: 'sidechain', label: 'Sidechain', step: 4 },
+  { id: 'fx', label: 'FX', step: 1 }, { id: 'sidechain', label: 'Side Chain', step: 1 },
   { id: 'scales', label: 'Scales', step: 3 }, { id: 'expand', label: 'Expanded Note', step: 3 }, { id: 'roll', label: 'Piano roll', step: 3 }, { id: 'tempo', label: 'Tempo', step: 1 },
 ];
 const NOTE_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
@@ -47,6 +47,7 @@ const FIXED_VELOCITY = 96;
 // keys above them (null = no key), from C to the next C.
 import { SCALES, CHROMATIC, ROOT_NAMES, inScale, degreeNote } from '../scales.js';
 import { buildRoll } from './roll.js?v=20261125a';
+import { DELAY_NAMES, REVERB_NAMES } from '../fx.js';
 const WHITE = [0, 2, 4, 5, 7, 9, 11, 12];
 const BLACK = [null, 1, 3, null, 6, 8, 10, null];
 
@@ -82,6 +83,9 @@ export function buildPanel(root, api) {
     armed: false,                      // Note view: keys add / remove notes on the chosen step
     mode: null,                        // 'clear' or 'dup' while Clear or Duplicate is on
     mixMode: 'level',                  // Mixer view: the macro knobs set 'level' or 'pan'
+    fxMode: 'reverb',                  // FX view: the macro knobs set 'reverb' or 'delay' sends (the last preset pad pressed)
+    scPage: 0,                         // Side Chain view: 0 Synth 1 / 2, 1 MIDI 1 / 2
+    scTrack: 0,                        // Side Chain view: the track (0-3) whose trigger drum the top row chooses
     dupSrc: null,                      // Duplicate: the step being copied
     fixedVel: false,                   // Shift + Velocity: Fixed Velocity (96)
     saveArm: false,                    // Save pressed once: the next Save (or a project pad) saves
@@ -413,6 +417,11 @@ export function buildPanel(root, api) {
       return;
     }
     if (pad.dataset.mute != null) { e.preventDefault(); const t = +pad.dataset.mute; pp?.setMute(t, !pp.mutes[t]); return; }
+    if (pad.dataset.delay != null) { e.preventDefault(); const n = +pad.dataset.delay; pp?.setDelayPreset(n); st.fxMode = 'delay'; flash(`Delay ${n + 1}: ${DELAY_NAMES[n]}. The macro knobs are now delay sends.`); paint(); return; }
+    if (pad.dataset.reverb != null) { e.preventDefault(); const n = +pad.dataset.reverb; pp?.setReverbPreset(n); st.fxMode = 'reverb'; flash(`Reverb ${n + 1}: ${REVERB_NAMES[n]}. The macro knobs are now reverb sends.`); paint(); return; }
+    if (pad.dataset.fxon != null) { e.preventDefault(); pp?.setFxOn(!pp.fxOn); flash(pp?.fxOn ? 'FX on: reverb and delay are heard.' : 'FX off: reverb and delay are bypassed (the sends are kept).'); return; }
+    if (pad.dataset.scsrc != null) { e.preventDefault(); const d = +pad.dataset.scsrc; pp?.setSidechainSource(st.scTrack, d); flash(`${TRACKS[st.scTrack].label} is ducked by Drum ${d + 1}.`); return; }
+    if (pad.dataset.scpreset != null) { e.preventDefault(); const t = +pad.dataset.sctrack, n = +pad.dataset.scpreset; st.scTrack = t; pp?.setSidechainPreset(t, n); flash(n ? `${TRACKS[t].label}: side chain preset ${n}, triggered by Drum ${pp.sidechain(t).source + 1} (top row to change).` : `${TRACKS[t].label}: side chain off.`); paint(); return; }
     if (pad.dataset.recall != null) { e.preventDefault(); pp?.setMuteRecall(!pp.muteRecall); flash(`Mute Recall ${pp?.muteRecall ? 'on: scenes bring back the mutes saved with them' : 'off: scenes keep the current mutes'}.`); return; }
     if (pad.dataset.drumhit != null) { e.preventDefault(); api.audition(+pad.dataset.drumhit, st.track); pad.classList.add('down'); setTimeout(() => pad.classList.remove('down'), 120); return; }
     if (pad.dataset.note == null) return;
@@ -484,6 +493,8 @@ export function buildPanel(root, api) {
     st.stepFlip = null;
     if (!STEP_VIEWS.includes(id)) { st.mode = null; st.dupSrc = null; }
     if (id === 'preset') followSlot();
+    // Side Chain view opens on the MIDI page when a MIDI track is selected (User Guide p. 94).
+    if (id === 'sidechain') { st.scPage = TRACKS[st.track].kind === 'midi' ? 1 : 0; st.scTrack = st.scPage * 2 + (st.track === 1 || st.track === 3 ? 1 : 0); }
     paint();
   }
   // Turn the synth tracks' preset page to the one holding the patch being edited.
@@ -522,11 +533,13 @@ export function buildPanel(root, api) {
   // With Clear on, turning a knob deletes that track's recorded level (or pan) movements in the
   // pattern it plays; in pan mode turning it clockwise puts the track back in the centre.
   function mixKnobs() {
-    if (st.view !== 'mixer' || !pp?.loaded || root.hidden) return null;
+    if (!pp?.loaded || root.hidden) return null;
+    if (st.view === 'fx') return fxKnobs();
+    if (st.view !== 'mixer') return null;
     const pan = st.mixMode === 'pan';
     const arr = () => (pan ? pp.pans : pp.levels);
     return {
-      pan,
+      pan, mode: st.mixMode, name: pan ? 'pan' : 'level',
       def: pan ? 64 : 100,
       label: (k) => TRACKS[k].label,
       kind: (k) => TRACKS[k].kind,
@@ -541,6 +554,28 @@ export function buildPanel(root, api) {
           return;
         }
         if (pan) pp.setPan(k, v); else pp.setLevel(k, v);
+      },
+    };
+  }
+  // FX view's macro knobs: each track's reverb or delay send (the last preset pad pressed), lit
+  // cream for reverb and peach for delay, brighter as the send rises (User Guide p. 91).
+  function fxKnobs() {
+    const kind = st.fxMode, key = `${kind}_send`;
+    return {
+      pan: false, mode: kind, name: `${kind} send`, def: 0,
+      colour: (k, v) => `color-mix(in srgb, ${kind === 'reverb' ? '#f4e2b0' : '#ffab7a'} ${Math.round(20 + (v / 127) * 80)}%, #24242e)`,
+      label: (k) => TRACKS[k].label,
+      kind: (k) => TRACKS[k].kind,
+      get: (k) => pp.send(k, kind),
+      text: (v) => String(v),
+      set: (k, v) => {
+        if (st.mode === 'clear') {
+          const p = viewPattern(k)?.index;
+          const gone = p != null && pp.clearMixAutomation(k, key, p);
+          flash(gone ? `${TRACKS[k].label}: recorded ${kind} send movements deleted from pattern ${p + 1}.` : `${TRACKS[k].label}: no recorded ${kind} send movements in pattern ${p == null ? '-' : p + 1}.`);
+          return;
+        }
+        pp.setSend(k, kind, v);
       },
     };
   }
@@ -709,18 +744,20 @@ export function buildPanel(root, api) {
     if (st.view === 'roll') { roll.scrollOctave(dir); return; }
     // Mixer view: it opens on level; ▼ turns the macro knobs into pan controls, ▲ back to level.
     if (st.view === 'mixer') { setMixMode(dir < 0 ? 'pan' : 'level'); return; }
+    // Side Chain view: ▼ the MIDI 1 / 2 page, ▲ back to Synth 1 / 2.
+    if (st.view === 'sidechain') { const pg = dir < 0 ? 1 : 0; if (pg !== st.scPage) { st.scPage = pg; flash(pg ? 'Side chain for MIDI 1 and 2.' : 'Side chain for Synth 1 and 2.'); paint(); } return; }
     if (st.view === 'note' || st.view === 'expand') api.setOctave?.(api.octave() + dir);
   }
   function paintPages() {
     const n = pageCount();
     const paged = n > 0;
     if (paged) setPage(Math.min(getPage(), n - 1));
-    const mixer = st.view === 'mixer' && !!pp?.loaded;
+    const mixer = (st.view === 'mixer' || st.view === 'sidechain') && !!pp?.loaded;
     downBtn.classList.toggle('idle', !mixer && (paged ? getPage() === 0 : !['note', 'expand', 'roll'].includes(st.view) || api.octave() <= 0));
     upBtn.classList.toggle('idle', !mixer && (paged ? getPage() >= n - 1 : !['note', 'expand', 'roll'].includes(st.view) || api.octave() >= 6));
     const synth = presetKind() === 'synth';
     const stepView = STEP_VIEWS.includes(st.view);
-    const projEdit = !!pp?.loaded && pp.edited && (stepView || st.view === 'projects' || st.view === 'roll' || st.view === 'mixer');
+    const projEdit = !!pp?.loaded && pp.edited && (stepView || ['projects', 'roll', 'mixer', 'fx', 'sidechain'].includes(st.view));
     const rollable = !!pp?.loaded && (st.view === 'note' || st.view === 'roll');
     tools.hidden = !synth && !projEdit && !rollable;
     rollBtn.hidden = !rollable;
@@ -731,10 +768,10 @@ export function buildPanel(root, api) {
     copyBtn.classList.toggle('idle', !synth && !(stepView && pp?.loaded));
     clearBtn.classList.toggle('on', st.mode === 'clear');
     // Mixer view: the arrow that switches the knobs is lit (▼ in level mode, ▲ in pan mode).
-    downBtn.classList.toggle('lit', st.view === 'mixer' && st.mixMode !== 'pan');
-    upBtn.classList.toggle('lit', st.view === 'mixer' && st.mixMode === 'pan');
+    downBtn.classList.toggle('lit', (st.view === 'mixer' && st.mixMode !== 'pan') || (st.view === 'sidechain' && st.scPage === 0));
+    upBtn.classList.toggle('lit', (st.view === 'mixer' && st.mixMode === 'pan') || (st.view === 'sidechain' && st.scPage === 1));
     api.mixKnobsChanged?.();
-    clearBtn.classList.toggle('idle', !((stepView || st.view === 'mixer') && pp?.loaded));
+    clearBtn.classList.toggle('idle', !((stepView || st.view === 'mixer' || st.view === 'fx') && pp?.loaded));
     if (synth) revertBtn.disabled = !api.slotInfo(api.slot()).edited;
     // 1-16/17-32: dim for a pattern of 16 steps, otherwise it shows which half the grid shows.
     const tg = pp?.loaded ? editTarget() : null;
@@ -888,7 +925,7 @@ export function buildPanel(root, api) {
     st.pads.forEach((p, i) => {
       const row = Math.floor(i / 8), col = i % 8;
       let note = null, cls = 'pad', label = '';
-      delete p.dataset.drumhit; delete p.dataset.dsample; delete p.dataset.project; delete p.dataset.pattern; delete p.dataset.ptrack; delete p.dataset.scene; delete p.dataset.mute; delete p.dataset.recall; delete p.dataset.val;
+      delete p.dataset.drumhit; delete p.dataset.dsample; delete p.dataset.project; delete p.dataset.pattern; delete p.dataset.ptrack; delete p.dataset.scene; delete p.dataset.mute; delete p.dataset.recall; delete p.dataset.delay; delete p.dataset.reverb; delete p.dataset.fxon; delete p.dataset.scsrc; delete p.dataset.scpreset; delete p.dataset.sctrack; p.style.removeProperty('--c'); delete p.dataset.val;
       const expand = st.view === 'expand';
       if (st.view === 'note' && row < 2) {
         const k = base + row * 8 + col;
@@ -1118,7 +1155,7 @@ export function buildPanel(root, api) {
     return text;
   }
 
-  const clearPad = (p) => { for (const k of ['note', 'slot', 'sample', 'step', 'drumhit', 'project', 'pattern', 'ptrack', 'scene', 'mute', 'recall']) delete p.dataset[k]; p.removeAttribute('title'); p.removeAttribute('aria-pressed'); p.removeAttribute('aria-label'); p.textContent = ''; };
+  const clearPad = (p) => { for (const k of ['note', 'slot', 'sample', 'step', 'drumhit', 'project', 'pattern', 'ptrack', 'scene', 'mute', 'recall', 'delay', 'reverb', 'fxon', 'scsrc', 'scpreset', 'sctrack']) delete p.dataset[k]; p.style.removeProperty('--c'); p.removeAttribute('title'); p.removeAttribute('aria-pressed'); p.removeAttribute('aria-label'); p.textContent = ''; };
 
   // Projects view: the pack's 64 project slots as two pages; the lit pad is the project loaded.
   function paintProjects() {
@@ -1203,6 +1240,76 @@ export function buildPanel(root, api) {
     mixbox.dataset.mode = st.mixMode;
   }
 
+  // FX view (User Guide pp. 90-92): rows 1-2 the 16 delay presets, row 3 the 8 reverb presets (the
+  // project's preset bright), pad 25 FX on / off.
+  function paintFx() {
+    st.pads.forEach((p, k) => {
+      clearPad(p);
+      const row = Math.floor(k / 8), col = k % 8;
+      if (!pp?.loaded) { p.className = 'pad off'; return; }
+      if (row < 2) {
+        const on = pp.delayPreset === k;
+        p.className = `pad fxp delay${on ? ' on' : ''}`;
+        p.dataset.delay = k;
+        p.textContent = String(k + 1);
+        p.title = `Delay ${k + 1}: ${DELAY_NAMES[k]}${on ? ' (the project\'s delay)' : ''}`;
+        p.setAttribute('aria-pressed', String(on));
+      } else if (row === 2) {
+        const on = pp.reverbPreset === col;
+        p.className = `pad fxp reverb${on ? ' on' : ''}`;
+        p.dataset.reverb = col;
+        p.textContent = String(col + 1);
+        p.title = `Reverb ${col + 1}: ${REVERB_NAMES[col]}${on ? ' (the project\'s reverb)' : ''}`;
+        p.setAttribute('aria-pressed', String(on));
+      } else if (col === 0) {
+        const on = pp.fxOn;
+        p.className = `pad fxon${on ? ' on' : ''}`;
+        p.dataset.fxon = '1';
+        p.textContent = on ? 'FX on' : 'FX off';
+        p.title = on ? 'FX on: click to bypass reverb and delay' : 'FX off (bypassed): click to turn them back on';
+        p.setAttribute('aria-pressed', String(on));
+      } else p.className = 'pad off';
+      p.setAttribute('aria-label', p.title || '');
+    });
+  }
+  // Side Chain view (User Guide pp. 93-94): page 1 Synth 1 / 2, page 2 MIDI 1 / 2 (▼ ▲). Rows 3 and
+  // 4: each track's Off pad and presets 1-7; pads 5-8 choose the drum that ducks the track whose
+  // preset was pressed last.
+  const TRACK_C = ['var(--s1)', 'var(--s2)', 'var(--midi)', 'var(--midi)'];
+  function paintSidechain() {
+    const base = st.scPage * 2;
+    if (st.scTrack < base || st.scTrack > base + 1) st.scTrack = base;
+    st.pads.forEach((p, k) => {
+      clearPad(p);
+      const row = Math.floor(k / 8), col = k % 8;
+      if (!pp?.loaded) { p.className = 'pad off'; return; }
+      if (row === 0 && col >= 4) {
+        const d = col - 4, sc = pp.sidechain(st.scTrack), on = sc.source === d;
+        p.className = `pad scsrc drum${on ? ' on' : ''}${sc.preset ? '' : ' idle'}`;
+        p.dataset.scsrc = d;
+        p.textContent = `Drum ${d + 1}`;
+        p.title = `Drum ${d + 1}${on ? ' ducks' : ': click to make it duck'} ${TRACKS[st.scTrack].label}${sc.preset ? '' : ' (its side chain is off)'}`;
+        p.setAttribute('aria-pressed', String(on));
+      } else if (row >= 2) {
+        const t = base + row - 2, sc = pp.sidechain(t), on = sc.preset === col;
+        p.dataset.sctrack = t;
+        p.dataset.scpreset = col;
+        p.style.setProperty('--c', TRACK_C[t]);
+        if (col === 0) {
+          p.className = `pad scoff${on ? ' on' : ''}`;
+          p.textContent = 'Off';
+          p.title = `${TRACKS[t].label}: side chain ${on ? 'off' : 'on: click to turn it off'}`;
+        } else {
+          p.className = `pad scp${on ? ' on' : ''}${t === st.scTrack ? ' chosen' : ''}`;
+          p.textContent = String(col);
+          p.title = `${TRACKS[t].label}: side chain preset ${col}${on ? ` (on, from Drum ${sc.source + 1})` : ''}`;
+        }
+        p.setAttribute('aria-pressed', String(on));
+      } else p.className = 'pad off';
+      p.setAttribute('aria-label', p.title || '');
+    });
+  }
+
   function paint() {
     st.track = TRACKS[st.track].kind === 'synth' ? api.synth() : st.track;
     playBtn.classList.toggle('idle', !pp?.loaded);
@@ -1238,6 +1345,8 @@ export function buildPanel(root, api) {
     if (v.id === 'projects') { setHint((st.saveArm && pp?.loaded ? '' : 'Press a project to load it, then ▶ (or Space) to play it. Synth 1 and 2 play the pack\'s patches as you edit them. Edits stay here until you Save (a dot marks a project with unsaved edits, a ring one saved into the pack here).') + saveHint); paintProjects(); return; }
     if (v.id === 'patterns') { setHint(pp?.loaded ? 'The lit pads are the patterns each track plays. Click a pattern to play it; hold it and press another (or Shift-click) to chain the patterns between them. ▼ ▲ show patterns 1-4 or 5-8. Choosing a scene in Mixer view puts back its patterns.' + saveHint : none); paintPatterns(); return; }
     if (v.id === 'mixer') { setHint(pp?.loaded ? `Top row: mute each track. Pad 9 (Mute recall): when lit, each scene brings back the mutes saved with it as it starts; when dim, scenes keep the current mutes. Bottom two rows: the 16 scenes (white: saved in the project). Click a scene to play it; hold it and press another (or Shift-click) to chain the scenes between them. The macro knobs set each track\'s ${st.mixMode === 'pan' ? 'pan (▲ for levels)' : 'level (▼ for pan)'}, as do the faders (level) and sliders (pan) below; Save keeps them. With Clear on, turning a knob deletes that track\'s recorded ${st.mixMode === 'pan' ? 'pan movements (clockwise: back to the centre)' : 'level movements'} in the pattern it plays.` + saveHint : none); paintMixer(); return; }
+    if (v.id === 'fx') { setHint(pp?.loaded ? `Rows 1-2: the 16 delay presets; row 3: the 8 reverb presets (bright: the project's). Pressing a preset also makes the macro knobs that effect's send for each track (now: ${st.fxMode} sends; the knob brightens as the send rises). Pad 25 turns FX on or off. With Clear on, turning a knob deletes that track's recorded ${st.fxMode} send movements in the pattern it plays. Save keeps all of it. Press FX again (or Shift + FX) for Side Chain.` + saveHint : none); paintFx(); return; }
+    if (v.id === 'sidechain') { setHint(pp?.loaded ? `Side chain for ${st.scPage ? 'MIDI 1 (row 3) and MIDI 2 (row 4)' : 'Synth 1 (row 3) and Synth 2 (row 4)'}: Off, or presets 1-7 (how the drum ducks the track). Pads 5-8: the drum that ducks ${TRACKS[st.scTrack].label} (the track whose preset you pressed last). ${st.scPage ? '▲ for Synth 1 and 2.' : '▼ for MIDI 1 and 2.'} A muted drum doesn't duck. Save keeps it.${st.scPage ? ' The MIDI tracks\' side chains act on the Circuit Tracks\' rear inputs; the browser keeps and saves them but doesn\'t play them.' : ''}` + saveHint : none); paintSidechain(); return; }
     if (v.id === 'roll') {
       const drum = t.kind === 'drum';
       setHint(!pp?.loaded ? none : drum

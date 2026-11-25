@@ -177,8 +177,10 @@ export function projectMix(proj) {
   }));
   const drums = [0, 1, 2, 3].map((i) => {
     const d = proj?.drumConfigs?.[i] ?? {};
+    // A drum's sends are in the tail's send bytes 2-5 (confirmed on the hardware, 16 Nov); the
+    // drum settings' own send bytes are 0 in every save.
     return {
-      level: d.level ?? 100, pan: d.pan ?? 64, reverb: d.reverbSend ?? 0, delay: d.delaySend ?? 0,
+      level: d.level ?? 100, pan: d.pan ?? 64, reverb: fx.reverbSends?.[2 + i] ?? d.reverbSend ?? 0, delay: fx.delaySends?.[2 + i] ?? d.delaySend ?? 0,
       pitch: d.pitch ?? 64, decay: d.decay ?? 127, distortion: d.distortion ?? 0, eq: d.eq ?? 64,
     };
   });

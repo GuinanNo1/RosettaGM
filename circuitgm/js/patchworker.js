@@ -8,10 +8,10 @@ import { PatchSynth, waveTable, lfoShape, envelopePoints } from './pw/engine.js?
 import { TracksLink, VIEW_CODES } from './pw/midi.js?v=20261114s';
 import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, projectsFollowing, download,
   fileSafe, session, PATCH_SLOTS } from './pw/packio.js?v=20261114s';
-import { buildPanel } from './pw/panel.js?v=20261125e';
+import { buildPanel } from './pw/panel.js?v=20261125f';
 import { drumRate } from './pw/mixlaws.js?v=20261114s';
 import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
-import { ProjectPlayer, packProjects } from './pw/project.js?v=20261125e';
+import { ProjectPlayer, packProjects } from './pw/project.js?v=20261125f';
 
 const DEFAULT_PACK = '../tracksgm/TracksGM_v1.circuittrackspack';
 // PatchWorker is Offline only for now (plan-patchworker-tracks-first.md, 22 Nov 2026): the browser is
@@ -737,9 +737,9 @@ function buildMacros() {
         // white in the centre, bluer to the left, pinker to the right.
         const v = m.get(k);
         caption.textContent = m.label(k);
-        cell.style.setProperty('--mix', m.pan ? (v === 64 ? '#ffffff' : `color-mix(in srgb, ${v < 64 ? '#4f8bff' : '#ff6fb5'} ${Math.round((Math.abs(v - 64) / 64) * 100)}%, #ffffff)`) : `color-mix(in srgb, var(--kc) ${Math.round(25 + (v / 127) * 75)}%, #24242e)`);
+        cell.style.setProperty('--mix', m.colour ? m.colour(k, v) : m.pan ? (v === 64 ? '#ffffff' : `color-mix(in srgb, ${v < 64 ? '#4f8bff' : '#ff6fb5'} ${Math.round((Math.abs(v - 64) / 64) * 100)}%, #ffffff)`) : `color-mix(in srgb, var(--kc) ${Math.round(25 + (v / 127) * 75)}%, #24242e)`);
         cell.classList.remove('unused');
-        cell.title = `${m.label(k)} ${m.pan ? 'pan' : 'level'}: drag, scroll or arrow keys; double-click for ${m.pan ? 'centre' : '100'}`;
+        cell.title = `${m.label(k)} ${m.name ?? (m.pan ? 'pan' : 'level')}: drag, scroll or arrow keys; double-click for ${m.pan ? 'centre' : m.def}`;
         return;
       }
       cell.style.removeProperty('--mix');
@@ -776,7 +776,7 @@ let mixShown = '';
 function mixKnobsChanged() {
   if (!tracksPanel) return;
   const m = tracksPanel.mixKnobs?.();
-  const sig = m ? (m.pan ? 'pan' : 'level') : '';
+  const sig = m ? m.mode ?? (m.pan ? 'pan' : 'level') : '';
   if (sig === mixShown) return;
   mixShown = sig;
   knobsShown = '';

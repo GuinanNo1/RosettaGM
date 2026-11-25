@@ -439,6 +439,19 @@ body.doc { display: block; overflow: auto; }
 .pad.mute.muted { background: color-mix(in srgb, var(--c) 14%, #1f1f29); color: #8a8aa0; }
 .pad.recall { cursor: pointer; font: 600 .62rem var(--head); line-height: 1.1; text-align: center; color: #8a8aa0; background: #34343f; }
 .pad.recall.on { background: #e9e9f2; color: #12111a; box-shadow: 0 0 12px #ffffff60; }
+.pad.fxp { cursor: pointer; font: 600 .72rem var(--mono); --c: #ffab7a; color: color-mix(in srgb, var(--c) 70%, #8a8aa0); background: color-mix(in srgb, var(--c) 18%, #22222c); }
+.pad.fxp.reverb { --c: #f4e2b0; }
+.pad.fxp.on { background: var(--c); color: #12111a; box-shadow: 0 0 12px color-mix(in srgb, var(--c) 60%, transparent); }
+.pad.fxon { cursor: pointer; font: 600 .66rem var(--head); color: #ff8a8a; background: color-mix(in srgb, #ff4d4d 22%, #22222c); }
+.pad.fxon.on { color: #12111a; background: #e9e9f2; box-shadow: 0 0 12px #ffffff60; }
+.pad.scsrc { cursor: pointer; font: 600 .66rem var(--head); color: color-mix(in srgb, var(--c) 60%, #8a8aa0); background: color-mix(in srgb, var(--c) 16%, #22222c); }
+.pad.scsrc.on { background: var(--c); color: #12111a; }
+.pad.scsrc.on.idle { background: color-mix(in srgb, var(--c) 45%, #2a2a36); }
+.pad.scoff { cursor: pointer; font: 600 .66rem var(--head); color: #ff8a8a; background: color-mix(in srgb, #ff4d4d 14%, #22222c); }
+.pad.scoff.on { background: #ff4d4d; color: #12111a; box-shadow: 0 0 12px #ff4d4d70; }
+.pad.scp { cursor: pointer; font: 600 .72rem var(--mono); color: color-mix(in srgb, var(--c) 55%, #8a8aa0); background: color-mix(in srgb, var(--c) 14%, #22222c); }
+.pad.scp.chosen { background: color-mix(in srgb, var(--c) 22%, #262632); }
+.pad.scp.on { background: var(--c); color: #12111a; box-shadow: 0 0 12px color-mix(in srgb, var(--c) 60%, transparent); }
 .pad.scene { cursor: pointer; font: 600 .72rem var(--mono); color: #6d6d82; background: #23232e; }
 .pad.scene.stored { background: #4a4a5e; color: #e9e9f2; }
 .pad.scene.chain { background: color-mix(in srgb, var(--s2) 45%, #2a2a36); color: #12111a; }

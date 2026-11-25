@@ -8,10 +8,14 @@
 // chain (as chosen in Patterns view), mutes, levels, tempo and swing.
 import { readProject, isEmpty } from '../pack.js?v=20261122b';
 import { songOf, renderSong, STEP_TICKS, PPQ } from '../song.js?v=20261124b';
-import { Player } from '../player.js?v=20261125e';
+import { Player } from '../player.js?v=20261125f';
 import { serializeNCS } from '../vendor/ncs.js';
 import { snapToScale, CHROMATIC } from '../scales.js';
 import { macroPosAddr, P } from './params.js?v=20261114s';
+import { projectMix, sidechainShape } from './mixlaws.js?v=20261125f';
+import { REVERB_PRESETS, TRACKS_DELAY_PRESETS, SIDECHAIN_PRESETS } from '../fx.js';
+// Each track's reverb / delay send byte in the tail (S1, S2, M1, M2, Drum 1-4).
+const SEND_AT = [0, 1, 6, 7, 2, 3, 4, 5];
 const MACRO_POS = Array.from({ length: 8 }, (_, k) => macroPosAddr(k));   // knob positions in a patch
 
 const NCS_PATCH_SLOT = [0xcd64, 0xcd6c];   // Synth 1 / Synth 2: the pack slot the project plays
@@ -683,7 +687,7 @@ export class ProjectPlayer {
     [0, 1].forEach((i) => { if (this.patchSlots[i] === pr.patchSlots[i]) this.ownCopy[i] = this.readCopy(pr, i); });
     this.linkSynths();
     this.readMix(pr);
-    this.applyLevels();
+    this.applyFx();
     this.muteRecall = pr.muteRecall !== 0;
     this.song = songOf(songPack(this.pack, this.o.patchName), this.entry);
     this.changed(false);
@@ -756,7 +760,7 @@ export class ProjectPlayer {
     for (let t = 0; t < 8; t++) {
       if (t === 2 || t === 3) continue;
       const s = mx.strips[t];
-      if (s.cfg) mx.setStrip(t, { ...s.cfg, level: this.levels[t], pan: this.pans[t] });
+      if (s.cfg) mx.setStrip(t, { ...s.cfg, level: this.levels[t], pan: this.pans[t], reverb: this.send(t, 'reverb'), delay: this.send(t, 'delay') });
     }
   }
   // Clear held and a mixer knob turned (User Guide p. 89): the track's recorded level or pan
@@ -768,6 +772,81 @@ export class ProjectPlayer {
     delete pat.paramLocks[key];
     this.edit();
     return true;
+  }
+
+  // ---- FX view and Side Chain view (User Guide pp. 90-94). These edit the loaded project's own
+  // model (entry.project), so Save writes them and Revert puts them back. Choosing a preset writes
+  // its number and its values (the hardware plays the stored values; js/fx.js).
+  get fx() { return this.entry?.project?.fx ?? null; }
+  get reverbPreset() { return this.entry?.project?.reverbPreset ?? 0; }
+  get delayPreset() { return this.entry?.project?.delayPreset ?? 0; }
+  get fxOn() { return !this.fx?.fxBypass; }
+  // Track t's reverb or delay send (kind 'reverb' | 'delay'), 0-127.
+  send(t, kind) { return this.fx?.[kind === 'reverb' ? 'reverbSends' : 'delaySends']?.[SEND_AT[t]] ?? 0; }
+  setSend(t, kind, v) {
+    const f = this.fx;
+    if (!this.loaded || !f) return;
+    v = Math.max(0, Math.min(127, Math.round(v)));
+    const arr = f[kind === 'reverb' ? 'reverbSends' : 'delaySends'];
+    if (arr[SEND_AT[t]] === v) return;
+    arr[SEND_AT[t]] = v;
+    this.fxEdited();
+  }
+  setReverbPreset(n) {
+    if (!this.loaded || !this.fx) return;
+    this.entry.project.reverbPreset = n;
+    [this.fx.reverbType, this.fx.reverbDecay, this.fx.reverbDamping] = REVERB_PRESETS[n];
+    this.fxEdited();
+  }
+  setDelayPreset(n) {
+    if (!this.loaded || !this.fx) return;
+    this.entry.project.delayPreset = n;
+    const f = this.fx;
+    [f.delayTime, f.delaySync, f.delayFeedback, f.delayWidth, f.delayLrRatio, f.delaySlew] = TRACKS_DELAY_PRESETS[n];
+    this.fxEdited();
+  }
+  setFxOn(on) {
+    if (!this.loaded || !this.fx || this.fxOn === on) return;
+    this.fx.fxBypass = !on;
+    this.fxEdited();
+  }
+  // Side chain of track i (0-3: Synth 1, Synth 2, MIDI 1, MIDI 2): { preset 0 (off) - 7, source
+  // 0-3 (Drum 1-4), attack, hold, decay, depth }.
+  sidechain(i) { return this.entry?.project?.sidechain?.[i] ?? { preset: 0, source: 0 }; }
+  setSidechainPreset(i, preset) {
+    const pr = this.entry?.project;
+    if (!this.loaded || !pr?.sidechain) return;
+    const [attack, hold, decay, depth] = SIDECHAIN_PRESETS[preset];
+    pr.sidechain[i] = { ...pr.sidechain[i], preset, attack, hold, decay, depth };
+    this.fxEdited();
+  }
+  setSidechainSource(i, source) {
+    const pr = this.entry?.project;
+    if (!this.loaded || !pr?.sidechain || pr.sidechain[i]?.source === source) return;
+    pr.sidechain[i] = { ...pr.sidechain[i], source };
+    this.fxEdited();
+  }
+  fxEdited() { this.entry.edited = true; this.applyFx(); this.o.onChange?.(); }
+  // The project's reverb, delay, FX on/off, sends and side chains into the mixer. MIDI 1/2 sends
+  // and side chains are kept and saved (on the hardware they act on the rear inputs) but the
+  // browser's MIDI sketch doesn't use them.
+  applyFx() {
+    const proj = this.entry?.project;
+    if (!proj) return;
+    const m = projectMix(proj);
+    const pm = this.player.mix;
+    if (pm) {
+      pm.reverb = m.reverb; pm.delay = m.delay; pm.bypass = m.bypass;
+      pm.synth.forEach((s, i) => { s.reverb = m.synth[i].reverb; s.delay = m.synth[i].delay; s.sidechain = m.synth[i].sidechain; });
+      pm.drums.forEach((d, i) => { d.reverb = m.drums[i].reverb; d.delay = m.drums[i].delay; });
+    }
+    const mx = this.player.mixer;
+    if (!mx || !pm) return;
+    mx.setReverb(m.reverb);
+    mx.setDelay(m.delay, this.tempo);
+    mx.setBypass(m.bypass);
+    mx.shapes = [0, 1].map((i) => sidechainShape(m.synth[i].sidechain ?? {}));
+    this.applyLevels();
   }
 
   // ---- tempo and swing

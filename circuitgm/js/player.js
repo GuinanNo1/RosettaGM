@@ -9,8 +9,8 @@
 // setProject() is given a Circuit Tracks project: then the project's levels, pans, sends,
 // reverb, delay, drum settings and sidechain apply as measured on the hardware (calibration
 // set 7), and the two synth tracks can play their patches on PatchWorker's browser synth.
-import { Mixer } from './pw/mixer.js?v=20261125e';
-import { projectMix, drumRate, drumDecaySeconds } from './pw/mixlaws.js?v=20261114s';
+import { Mixer } from './pw/mixer.js?v=20261125f';
+import { projectMix, drumRate, drumDecaySeconds } from './pw/mixlaws.js?v=20261125f';
 import { PatchSynth } from './pw/engine.js?v=20261124j';
 
 const LOOKAHEAD = 0.15;
@@ -273,10 +273,11 @@ export class Player {
     const g = ctx.createGain();
     g.gain.value = (e.vel / 127) * 0.9;
     g.connect(this.trackGains[e.track]);
-    // A Circuit Tracks drum track: its pitch and decay, and its note fires the sidechain.
+    // A Circuit Tracks drum track: its pitch and decay, and its note fires the sidechain (not
+    // when the drum is muted: User Guide p. 94).
     const cfg = this.mix && e.track >= 4 ? this.mix.drums[e.track - 4] : null;
     if (cfg) {
-      this.mixer.trigger(e.track - 4, at);
+      if (!this.mutes[e.track]) this.mixer.trigger(e.track - 4, at);
       // Recorded automation at this step (e.auto) replaces the track's knob settings.
       e = { ...e, rate: (e.rate || 1) * drumRate(e.auto?.pitch ?? cfg.pitch) };
       const fade = drumDecaySeconds(e.auto?.decay ?? cfg.decay);
