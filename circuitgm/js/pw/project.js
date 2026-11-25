@@ -70,7 +70,8 @@ export class ProjectPlayer {
     this.entry = null;       // the project slot entry
     this.song = null;
     this.mutes = new Array(8).fill(false);
-    this.levels = null;      // per track 0-127 (MIDI tracks: 127)
+    this.levels = null;      // per track 0-127, as saved in the project (Mixer view)
+    this.pans = null;        // per track 0-127, 64 = centre
     this.render = null;      // { order, rendered, scenes (song with the live scene), loop, events }
     this.masterFilter = 64;  // the panel's Master Filter knob (64 = off), as CC 74 on channel 16
     this.player.onPosition = (pos) => this.tickAt(pos);
@@ -114,7 +115,7 @@ export class ProjectPlayer {
     this.player.setProject(proj, { patches: [0, 1].map((i) => this.ownCopy[i] ?? this.o.patchBytes(this.patchSlots[i])) });
     this.applyMacros();
     this.masterFilter = this.player.mix?.filter?.cutoff ?? 64;
-    this.levels = [0, 1, 2, 3, 4, 5, 6, 7].map((t) => (t < 2 ? this.player.mix.synth[t].level : t >= 4 ? this.player.mix.drums[t - 4].level : 127));
+    this.readMix(proj);
     this.rerender();
     this.linkSynths();
     await this.loadSamples();
@@ -627,6 +628,10 @@ export class ProjectPlayer {
     proj.synth1Patch = patches[0];
     proj.synth2Patch = patches[1];
     proj.patchSlots = this.patchSlots.slice();
+    // Mixer view's levels and pans.
+    proj.mixerLevels = this.levels.slice(0, 4);
+    proj.mixerPans = this.pans.slice(0, 4);
+    proj.drumConfigs?.forEach((c, i) => { if (c) { c.level = this.levels[4 + i]; c.pan = this.pans[4 + i]; } });
     const base = pack.files.get(src.url);
     const out = serializeNCS(proj, base);
     NCS_PATCH_SLOT.forEach((o, i) => { out[o] = this.patchSlots[i]; });
@@ -664,18 +669,52 @@ export class ProjectPlayer {
     // Each synth still on the project's saved patch gets its saved copy and knob positions back.
     [0, 1].forEach((i) => { if (this.patchSlots[i] === pr.patchSlots[i]) this.ownCopy[i] = this.readCopy(pr, i); });
     this.linkSynths();
+    this.readMix(pr);
+    this.applyLevels();
     this.song = songOf(songPack(this.pack, this.o.patchName), this.entry);
     this.changed(false);
   }
   patternHasNotes(track, p) { return !!this.song?.tracks[track].patterns[p]?.steps.some((s) => s.hits.length); }
 
   // ---- mixer
+  // Each track's level and pan as the project saves them (Mixer view, User Guide pp. 88-89): synth
+  // and MIDI tracks in the project's mixer bytes, drums in their drum settings. A project edit:
+  // Save keeps them. MIDI 1/2 levels set external gear (or the rear inputs) on the hardware, so
+  // they're kept and saved but don't change the browser's MIDI sketch.
+  readMix(proj) {
+    this.levels = [0, 1, 2, 3, 4, 5, 6, 7].map((t) => (t < 4 ? proj.mixerLevels?.[t] : proj.drumConfigs?.[t - 4]?.level) ?? 100);
+    this.pans = [0, 1, 2, 3, 4, 5, 6, 7].map((t) => (t < 4 ? proj.mixerPans?.[t] : proj.drumConfigs?.[t - 4]?.pan) ?? 64);
+  }
   setMute(t, on) { this.mutes[t] = on; this.player.setMute(t, on); this.o.onChange?.(); }
-  setLevel(t, v) { this.levels[t] = v; this.applyLevels(); this.o.onChange?.(); }
+  setLevel(t, v) { this.setMix(t, 'levels', v); }
+  setPan(t, v) { this.setMix(t, 'pans', v); }
+  setMix(t, what, v) {
+    if (!this.loaded) return;
+    v = Math.max(0, Math.min(127, Math.round(v)));
+    if (this[what][t] === v) return;
+    this[what][t] = v;
+    this.entry.edited = true;
+    this.applyLevels();
+    this.o.onChange?.();
+  }
   applyLevels() {
     const mx = this.player.mixer;
     if (!mx || !this.levels) return;
-    for (let t = 0; t < 8; t++) { const s = mx.strips[t]; if (s.cfg) mx.setStrip(t, { ...s.cfg, level: this.levels[t] }); }
+    for (let t = 0; t < 8; t++) {
+      if (t === 2 || t === 3) continue;
+      const s = mx.strips[t];
+      if (s.cfg) mx.setStrip(t, { ...s.cfg, level: this.levels[t], pan: this.pans[t] });
+    }
+  }
+  // Clear held and a mixer knob turned (User Guide p. 89): the track's recorded level or pan
+  // movements go from the pattern it is playing. Returns true if there were any.
+  clearMixAutomation(t, key, p) {
+    const pat = this.raw(t, p);
+    const locks = pat.paramLocks?.[key];
+    if (!locks || !Object.keys(locks).length) return false;
+    delete pat.paramLocks[key];
+    this.edit();
+    return true;
   }
 
   // ---- tempo and swing

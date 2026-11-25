@@ -729,3 +729,19 @@ body.doc { display: block; overflow: auto; }
 .ct .lane[data-trk="4"], .ct .lane[data-trk="5"], .ct .lane[data-trk="6"], .ct .lane[data-trk="7"] { --trk: var(--drum, #ff7a59); }
 .ct .lane-head { z-index: 1; }
 .macro.auto .knob { filter: drop-shadow(0 0 3px var(--accent)); }   /* turned by a recorded movement (0.20) */
+
+/* Mixer view (0.21): the macro knobs set track level / pan, lit as on the hardware */
+.macro.mixk .k-val { stroke: var(--mix, #fff); }
+.macro.mixk .k-ptr { stroke: var(--mix, #fff); }
+.macro.mixk .m-cap { color: var(--kc, var(--muted)); cursor: default; }
+/* faders: level vertical, pan horizontal below it */
+.mixbox .lvl { grid-template-rows: auto 96px auto auto auto; }
+.mixbox .lvl input.fader { writing-mode: vertical-lr; direction: rtl; width: 22px; height: 96px; margin: 0; accent-color: var(--kc, var(--accent)); }
+.mixbox .lvl input.pan { width: 100%; margin: 4px 0 0; accent-color: #cfcfe0; }
+.mixbox .lvl .pout { font-size: .66rem; }
+.mixbox .lvl.synth[data-track="0"] { --kc: var(--s1, #4f8bff); }
+.mixbox .lvl.synth[data-track="1"] { --kc: var(--s2, #b07cff); }
+.mixbox .lvl.midi { --kc: #ffb057; }
+.mixbox .lvl.drum { --kc: var(--drum, #ff7a59); }
+.ct .cbtn.arrow.lit, .cbtn.arrow.lit { box-shadow: inset 0 0 0 2px var(--accent); color: #fff; }
+.macro.mixk.sel { border-color: transparent; background: none; }

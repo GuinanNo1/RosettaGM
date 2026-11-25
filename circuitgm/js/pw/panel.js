@@ -81,6 +81,7 @@ export function buildPanel(root, api) {
     sel: null,                         // the step chosen in a step view (0-31)
     armed: false,                      // Note view: keys add / remove notes on the chosen step
     mode: null,                        // 'clear' or 'dup' while Clear or Duplicate is on
+    mixMode: 'level',                  // Mixer view: the macro knobs set 'level' or 'pan'
     dupSrc: null,                      // Duplicate: the step being copied
     fixedVel: false,                   // Shift + Velocity: Fixed Velocity (96)
     saveArm: false,                    // Save pressed once: the next Save (or a project pad) saves
@@ -214,13 +215,20 @@ export function buildPanel(root, api) {
     octave: () => api.octave(), scale: () => curScale(),
     status: (text) => { st.rollStatus = text; paintLcd(); }, flash: (text) => flash(text),
   });
-  // Mixer view: a level slider per track under the pads (the hardware uses its macro knobs).
+  // Mixer view (User Guide pp. 88-89): under the pads, each track's level (a vertical fader) and
+  // pan (a horizontal slider below it), as saved in the project; the macro knobs set the same
+  // values (level, or pan after ▲). Double-click: level 100, pan centre.
+  const panText = (v) => (v === 64 ? 'C' : v < 64 ? `L${64 - v}` : `R${v - 64}`);
   const levels = TRACKS.map((t, i) => {
-    const input = h('input', { type: 'range', min: 0, max: 127, value: 100, 'aria-label': `${t.label} level`, title: `${t.label} level (0-127; the Circuit Tracks' default is 100). Double-click for 100.` });
+    const input = h('input', { type: 'range', class: 'fader', min: 0, max: 127, value: 100, 'aria-label': `${t.label} level`, title: `${t.label} level (0-127; the Circuit Tracks' default is 100). Double-click for 100.` });
     const out = h('output', { text: '100' });
+    const pan = h('input', { type: 'range', class: 'pan', min: 0, max: 127, value: 64, 'aria-label': `${t.label} pan`, title: `${t.label} pan (centre 64). Double-click for centre.` });
+    const pout = h('output', { class: 'pout', text: 'C' });
     input.addEventListener('input', () => { pp?.setLevel(i, +input.value); out.textContent = input.value; });
     input.addEventListener('dblclick', () => { input.value = 100; pp?.setLevel(i, 100); out.textContent = '100'; });
-    return { input, out, cell: h('label', { class: `lvl ${t.kind}`, 'data-track': i }, h('span', { text: t.label }), input, out) };
+    pan.addEventListener('input', () => { pp?.setPan(i, +pan.value); pout.textContent = panText(+pan.value); });
+    pan.addEventListener('dblclick', () => { pan.value = 64; pp?.setPan(i, 64); pout.textContent = 'C'; });
+    return { input, out, pan, pout, cell: h('div', { class: `lvl ${t.kind}`, 'data-track': i }, h('span', { text: t.label }), input, out, pan, pout) };
   });
   const mixbox = h('div', { class: 'mixbox', hidden: true }, levels.map((l) => l.cell));
   // Tempo view: tempo and swing as the hardware's macros 1 and 2 would set them, and Tap.
@@ -503,6 +511,38 @@ export function buildPanel(root, api) {
   }
   function paintHint() { hint.textContent = st.msg || hint.dataset.text || ''; hint.classList.toggle('msg', !!st.msg); }
   function setHint(text) { hint.dataset.text = text; paintHint(); }
+  function setMixMode(m) {
+    if (st.mixMode === m) return;
+    st.mixMode = m;
+    flash(m === 'pan' ? 'The macro knobs pan each track (▼ for levels).' : 'The macro knobs set each track\'s level (▲ for pan).');
+    paint();
+  }
+  // The macro knobs in Mixer view (read by the editor's macro strip): each track's level or pan.
+  // With Clear on, turning a knob deletes that track's recorded level (or pan) movements in the
+  // pattern it plays; in pan mode turning it clockwise puts the track back in the centre.
+  function mixKnobs() {
+    if (st.view !== 'mixer' || !pp?.loaded || root.hidden) return null;
+    const pan = st.mixMode === 'pan';
+    const arr = () => (pan ? pp.pans : pp.levels);
+    return {
+      pan,
+      def: pan ? 64 : 100,
+      label: (k) => TRACKS[k].label,
+      kind: (k) => TRACKS[k].kind,
+      get: (k) => arr()[k],
+      text: (v) => (pan ? panText(v) : String(v)),
+      set: (k, v) => {
+        if (st.mode === 'clear') {
+          const p = viewPattern(k)?.index;
+          if (pan && v > arr()[k]) { pp.setPan(k, 64); flash(`${TRACKS[k].label} back in the centre.`); return; }
+          const gone = p != null && pp.clearMixAutomation(k, pan ? 'pan' : 'level', p);
+          flash(gone ? `${TRACKS[k].label}: recorded ${pan ? 'pan' : 'level'} movements deleted from pattern ${p + 1}.` : `${TRACKS[k].label}: no recorded ${pan ? 'pan' : 'level'} movements in pattern ${p == null ? '-' : p + 1}.`);
+          return;
+        }
+        if (pan) pp.setPan(k, v); else pp.setLevel(k, v);
+      },
+    };
+  }
   function setMode(m) {
     st.mode = m;
     st.dupSrc = null;
@@ -666,17 +706,20 @@ export function buildPanel(root, api) {
     const n = pageCount();
     if (n) { setPage(Math.max(0, Math.min(n - 1, getPage() + dir))); paint(); return; }
     if (st.view === 'roll') { roll.scrollOctave(dir); return; }
+    // Mixer view: ▲ (J on the Circuit Tracks) turns the macro knobs into pan controls, ▼ (K) back to level.
+    if (st.view === 'mixer') { setMixMode(dir > 0 ? 'pan' : 'level'); return; }
     if (st.view === 'note' || st.view === 'expand') api.setOctave?.(api.octave() + dir);
   }
   function paintPages() {
     const n = pageCount();
     const paged = n > 0;
     if (paged) setPage(Math.min(getPage(), n - 1));
-    downBtn.classList.toggle('idle', paged ? getPage() === 0 : !['note', 'expand', 'roll'].includes(st.view) || api.octave() <= 0);
-    upBtn.classList.toggle('idle', paged ? getPage() >= n - 1 : !['note', 'expand', 'roll'].includes(st.view) || api.octave() >= 6);
+    const mixer = st.view === 'mixer' && !!pp?.loaded;
+    downBtn.classList.toggle('idle', !mixer && (paged ? getPage() === 0 : !['note', 'expand', 'roll'].includes(st.view) || api.octave() <= 0));
+    upBtn.classList.toggle('idle', !mixer && (paged ? getPage() >= n - 1 : !['note', 'expand', 'roll'].includes(st.view) || api.octave() >= 6));
     const synth = presetKind() === 'synth';
     const stepView = STEP_VIEWS.includes(st.view);
-    const projEdit = !!pp?.loaded && pp.edited && (stepView || st.view === 'projects' || st.view === 'roll');
+    const projEdit = !!pp?.loaded && pp.edited && (stepView || st.view === 'projects' || st.view === 'roll' || st.view === 'mixer');
     const rollable = !!pp?.loaded && (st.view === 'note' || st.view === 'roll');
     tools.hidden = !synth && !projEdit && !rollable;
     rollBtn.hidden = !rollable;
@@ -686,7 +729,11 @@ export function buildPanel(root, api) {
     copyBtn.classList.toggle('on', st.copying || st.mode === 'dup');
     copyBtn.classList.toggle('idle', !synth && !(stepView && pp?.loaded));
     clearBtn.classList.toggle('on', st.mode === 'clear');
-    clearBtn.classList.toggle('idle', !(stepView && pp?.loaded));
+    // Mixer view: the arrow that switches the knobs is lit (J in level mode, K in pan mode).
+    upBtn.classList.toggle('lit', st.view === 'mixer' && st.mixMode !== 'pan');
+    downBtn.classList.toggle('lit', st.view === 'mixer' && st.mixMode === 'pan');
+    api.mixKnobsChanged?.();
+    clearBtn.classList.toggle('idle', !((stepView || st.view === 'mixer') && pp?.loaded));
     if (synth) revertBtn.disabled = !api.slotInfo(api.slot()).edited;
     // 1-16/17-32: dim for a pattern of 16 steps, otherwise it shows which half the grid shows.
     const tg = pp?.loaded ? editTarget() : null;
@@ -1137,11 +1184,14 @@ export function buildPanel(root, api) {
       p.setAttribute('aria-label', p.title || '');
     });
     levels.forEach((l, i) => {
-      const v = pp?.levels?.[i] ?? 100;
+      const v = pp?.levels?.[i] ?? 100, pn = pp?.pans?.[i] ?? 64;
       l.input.value = v;
       l.out.textContent = v;
-      l.input.disabled = !pp?.loaded;
+      l.pan.value = pn;
+      l.pout.textContent = panText(pn);
+      l.input.disabled = l.pan.disabled = !pp?.loaded;
     });
+    mixbox.dataset.mode = st.mixMode;
   }
 
   function paint() {
@@ -1178,7 +1228,7 @@ export function buildPanel(root, api) {
     const saveHint = st.saveArm && pp?.loaded ? ` Save is waiting: press Save again to save over project ${pp.entry.slot + 1}${v.id === 'projects' ? ', or press another project\'s pad to save there' : ', or go to Projects view and press Save, then a pad, to save to another project'}. Esc cancels.` : '';
     if (v.id === 'projects') { setHint((st.saveArm && pp?.loaded ? '' : 'Press a project to load it, then ▶ (or Space) to play it. Synth 1 and 2 play the pack\'s patches as you edit them. Edits stay here until you Save (a dot marks a project with unsaved edits, a ring one saved into the pack here).') + saveHint); paintProjects(); return; }
     if (v.id === 'patterns') { setHint(pp?.loaded ? 'The lit pads are the patterns each track plays. Click a pattern to play it; hold it and press another (or Shift-click) to chain the patterns between them. ▼ ▲ show patterns 1-4 or 5-8. Choosing a scene in Mixer view puts back its patterns.' + saveHint : none); paintPatterns(); return; }
-    if (v.id === 'mixer') { setHint(pp?.loaded ? 'Top row: mute each track. Bottom two rows: the 16 scenes (white: saved in the project). Click a scene to play it; hold it and press another (or Shift-click) to chain the scenes between them. The sliders set each track\'s level.' + saveHint : none); paintMixer(); return; }
+    if (v.id === 'mixer') { setHint(pp?.loaded ? `Top row: mute each track. Bottom two rows: the 16 scenes (white: saved in the project). Click a scene to play it; hold it and press another (or Shift-click) to chain the scenes between them. The macro knobs set each track\'s ${st.mixMode === 'pan' ? 'pan (▼ for levels)' : 'level (▲ for pan)'}, as do the faders (level) and sliders (pan) below; Save keeps them. With Clear on, turning a knob deletes that track\'s recorded ${st.mixMode === 'pan' ? 'pan movements (clockwise: back to the centre)' : 'level movements'} in the pattern it plays.` + saveHint : none); paintMixer(); return; }
     if (v.id === 'roll') {
       const drum = t.kind === 'drum';
       setHint(!pp?.loaded ? none : drum
@@ -1255,5 +1305,5 @@ export function buildPanel(root, api) {
   paint();
   // selectTrack: a track chosen on the Circuit Tracks itself (0 Synth 1 … 7 Drum 4).
   // selectView: a view chosen on the Circuit Tracks itself (an id from VIEWS).
-  return { paint, refresh, step, projectLoaded, macroSlot, lane: () => roll.lane, selectTrack: (i) => { if (i >= 0 && i < TRACKS.length) selectTrack(i); }, selectView: (id) => { if (VIEWS.some((v) => v.id === id) && id !== st.view) selectView(id); }, state: st };
+  return { paint, refresh, step, projectLoaded, macroSlot, mixKnobs, lane: () => roll.lane, selectTrack: (i) => { if (i >= 0 && i < TRACKS.length) selectTrack(i); }, selectView: (id) => { if (VIEWS.some((v) => v.id === id) && id !== st.view) selectView(id); }, state: st };
 }

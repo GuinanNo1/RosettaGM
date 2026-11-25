@@ -8,10 +8,10 @@ import { PatchSynth, waveTable, lfoShape, envelopePoints } from './pw/engine.js?
 import { TracksLink, VIEW_CODES } from './pw/midi.js?v=20261114s';
 import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, projectsFollowing, download,
   fileSafe, session, PATCH_SLOTS } from './pw/packio.js?v=20261114s';
-import { buildPanel } from './pw/panel.js?v=20261125a';
+import { buildPanel } from './pw/panel.js?v=20261125b';
 import { drumRate } from './pw/mixlaws.js?v=20261114s';
 import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
-import { ProjectPlayer, packProjects } from './pw/project.js?v=20261125a';
+import { ProjectPlayer, packProjects } from './pw/project.js?v=20261125b';
 
 const DEFAULT_PACK = '../tracksgm/TracksGM_v1.circuittrackspack';
 // PatchWorker is Offline only for now (plan-patchworker-tracks-first.md, 22 Nov 2026): the browser is
@@ -327,16 +327,20 @@ function knob(b, { small = false } = {}) {
   const get = b.get ?? (() => S.bytes[b.addr]);
   const set = b.set ? (v) => b.set(clamp(Math.round(v), b.lo, b.hi)) : (v) => setByte(b.addr, clamp(Math.round(v), b.lo, b.hi));
   const bipolar = b.def === 64 && b.lo < 64 && b.hi > 64 && b.fmt !== FMT.raw;
+  // b.def, b.bipolar and b.text may be functions: a knob whose job changes (the macro knobs in
+  // Mixer view, 0.21).
+  const defOf = () => (typeof b.def === 'function' ? b.def() : b.def);
   const paint = () => {
     const v = get();
+    const bip = typeof b.bipolar === 'function' ? b.bipolar() : bipolar;
     const t = (v - b.lo) / (b.hi - b.lo || 1);
     const deg = A0 + SW * t;
-    val.setAttribute('d', bipolar ? arc(A0 + SW * ((64 - b.lo) / (b.hi - b.lo)), deg) : arc(A0, deg));
+    val.setAttribute('d', bip ? arc(A0 + SW * ((64 - b.lo) / (b.hi - b.lo)), deg) : arc(A0, deg));
     ptr.setAttribute('transform', `rotate(${deg} 24 24)`);
-    out.textContent = (b.fmt ?? FMT.raw)(v);
+    out.textContent = b.text?.(v) ?? (b.fmt ?? FMT.raw)(v);
     el.setAttribute('aria-valuenow', v);
     el.setAttribute('aria-valuetext', out.textContent);
-    el.classList.toggle('moved', v !== b.def);
+    el.classList.toggle('moved', v !== defOf());
   };
   watch(b.addr, paint);
 
@@ -358,11 +362,11 @@ function knob(b, { small = false } = {}) {
   const end = () => { drag = null; el.classList.remove('drag'); };
   el.addEventListener('pointerup', end);
   el.addEventListener('pointercancel', end);
-  el.addEventListener('dblclick', (e) => { if (e.target !== out) set(b.def); });
+  el.addEventListener('dblclick', (e) => { if (e.target !== out) set(defOf()); });
   el.addEventListener('wheel', (e) => { e.preventDefault(); set(get() + (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 5 : 1)); }, { passive: false });
   el.addEventListener('keydown', (e) => {
     const step = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 10, PageDown: -10 }[e.key];
-    if (step) { set(get() + step); e.preventDefault(); } else if (e.key === 'Home') { set(b.lo); e.preventDefault(); } else if (e.key === 'End') { set(b.hi); e.preventDefault(); } else if (e.key === 'Delete' || e.key === 'Backspace') { set(b.def); e.preventDefault(); }
+    if (step) { set(get() + step); e.preventDefault(); } else if (e.key === 'Home') { set(b.lo); e.preventDefault(); } else if (e.key === 'End') { set(b.hi); e.preventDefault(); } else if (e.key === 'Delete' || e.key === 'Backspace') { set(defOf()); e.preventDefault(); }
   });
   // Click the readout to type an exact value (the stored 0-127 number).
   out.addEventListener('click', () => {
@@ -713,13 +717,33 @@ function buildMacros() {
     const addr = macroPosAddr(k);
     // With a project playing this patch on this synth, the knob is the project's (as on the Circuit
     // Tracks): turning it is a project edit, heard in the song; otherwise it is the patch's.
-    const kn = knob({ addr, lo: 0, hi: 127, def: 0, label: String(k + 1), aria: `Macro ${k + 1}`,
-      get: () => { const i = projMacroSynth(); return i == null ? S.bytes[addr] : liveMacro(i, k); },
-      set: (v) => { const i = projMacroSynth(); if (i == null) { setByte(addr, v); return; } proj.setMacro(i, k, v); syncEditorMacros(); repaint(addr); } });
+    // In the TRACKS panel's Mixer view the knobs set each track's level or pan instead (0.21), as
+    // on the Circuit Tracks.
+    const mix = () => tracksPanel?.mixKnobs?.() ?? null;
+    const kn = knob({ addr, lo: 0, hi: 127, label: String(k + 1), aria: `Macro ${k + 1}`,
+      def: () => mix()?.def ?? 0, bipolar: () => !!mix()?.pan, text: (v) => mix()?.text(v) ?? null,
+      get: () => { const m = mix(); if (m) return m.get(k); const i = projMacroSynth(); return i == null ? S.bytes[addr] : liveMacro(i, k); },
+      set: (v) => { const m = mix(); if (m) { m.set(k, v); repaint(addr); return; } const i = projMacroSynth(); if (i == null) { setByte(addr, v); return; } proj.setMacro(i, k, v); syncEditorMacros(); repaint(addr); } });
     const cell = h('div', { class: 'macro', title: `Macro ${k + 1}: click to choose what it controls` }, kn, caption);
-    cell.addEventListener('pointerdown', () => { if (S.macro !== k) { S.macro = k; paintMacroSel(); S.paintMacro?.(); } });
-    caption.addEventListener('click', () => showPage('mod'));
+    cell.addEventListener('pointerdown', () => { if (mix()) return; if (S.macro !== k) { S.macro = k; paintMacroSel(); S.paintMacro?.(); } });
+    caption.addEventListener('click', () => { if (!mix()) showPage('mod'); });
     always.push(() => {
+      const m = mix();
+      cell.classList.toggle('mixk', !!m);
+      cell.dataset.kind = m ? m.kind(k) : '';
+      if (m) cell.style.setProperty('--kc', ['var(--s1, #4f8bff)', 'var(--s2, #b07cff)', '#ffb057', '#ffb057'][k] ?? 'var(--drum, #ff7a59)');
+      if (m) {
+        // The knob lights as on the hardware: the track's colour, dimmer as the level drops; for pan
+        // white in the centre, bluer to the left, pinker to the right.
+        const v = m.get(k);
+        caption.textContent = m.label(k);
+        cell.style.setProperty('--mix', m.pan ? (v === 64 ? '#ffffff' : `color-mix(in srgb, ${v < 64 ? '#4f8bff' : '#ff6fb5'} ${Math.round((Math.abs(v - 64) / 64) * 100)}%, #ffffff)`) : `color-mix(in srgb, var(--kc) ${Math.round(25 + (v / 127) * 75)}%, #24242e)`);
+        cell.classList.remove('unused');
+        cell.title = `${m.label(k)} ${m.pan ? 'pan' : 'level'}: drag, scroll or arrow keys; double-click for ${m.pan ? 'centre' : '100'}`;
+        return;
+      }
+      cell.style.removeProperty('--mix');
+      cell.title = `Macro ${k + 1}: click to choose what it controls`;
       const live = macroRows(S.bytes, k).filter((r) => r.dest && r.depth);
       caption.textContent = live.length ? `${MACRO_DESTS[live[0].dest]?.label ?? '?'}${live.length > 1 ? ` +${live.length - 1}` : ''}` : 'Not assigned';
       cell.classList.toggle('unused', !live.length);
@@ -747,7 +771,20 @@ function liveMacro(i, k) {
   return pos ?? proj.macro(i, k);
 }
 let knobsShown = '';
+// The panel's Mixer view took or gave back the macro knobs (or switched level / pan): repaint them.
+let mixShown = '';
+function mixKnobsChanged() {
+  if (!tracksPanel) return;
+  const m = tracksPanel.mixKnobs?.();
+  const sig = m ? (m.pan ? 'pan' : 'level') : '';
+  if (sig === mixShown) return;
+  mixShown = sig;
+  knobsShown = '';
+  for (const c of $('#macro-row').children) c.classList.remove('auto');
+  repaintMacros();
+}
 function paintKnobsLive() {
+  if (tracksPanel?.mixKnobs?.()) return;
   const i = projMacroSynth();
   const vals = i == null ? '' : Array.from({ length: 8 }, (_, k) => liveMacro(i, k)).join(',');
   if (vals === knobsShown) return;
@@ -2149,6 +2186,7 @@ async function start() {
   if (!TRACKS_MODE) bindKb();
   buildKeys();
   tracksPanel = buildPanel($('#tracks'), {
+    mixKnobsChanged: () => mixKnobsChanged(),
     synth: () => S.synth,
     chooseSynth: (i) => document.querySelector(`#synth-seg [data-synth="${i}"]`)?.click(),
     noteOn: (n, v) => noteOn(n, v),
