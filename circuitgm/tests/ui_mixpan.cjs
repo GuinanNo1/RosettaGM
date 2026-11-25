@@ -1,5 +1,5 @@
 // PatchWorker 0.21: Mixer view's levels and pans (User Guide pp. 88-89). The macro knobs set each
-// track's level, ▲ (J) turns them into pan controls and ▼ (K) back; vertical level faders and
+// track's level, ▼ turns them into pan controls and ▲ back (0.21.1); vertical level faders and
 // horizontal pan sliders under the pads show the same values. Loading a project sets them as saved,
 // Save keeps them, Revert project puts them back. With Clear on, turning a knob deletes the
 // track's recorded level / pan movements in its pattern (pan: clockwise centres the track).
@@ -41,7 +41,7 @@ const { chromium } = require('playwright');
   let f = await faders();
   check(f.every((x, i) => x.lv === s.lv[i] && x.pn === s.pn[i]) && f.every((x) => x.vertical), 'the faders (vertical) and pan sliders show the same values');
   const arrows = () => p.$$eval('.cbtn.arrow', (x) => x.map((b) => b.classList.contains('lit')));
-  check(JSON.stringify(await arrows()) === '[false,true]', '▲ is lit (J: press for pan)');
+  check(JSON.stringify(await arrows()) === '[true,false]', 'it opens on level, ▼ lit (press for pan)');
 
   // Turn Synth 1's knob down 10.
   await p.focus('#macro-row .macro:nth-child(1) .knob');
@@ -51,9 +51,9 @@ const { chromium } = require('playwright');
   check(s.lv[0] === file.lv[0] - 10 && f[0].lv === s.lv[0], `turning knob 1 sets Synth 1's level (${s.lv[0]}), and its fader follows`);
   check(await pw(() => window.patchworker.proj.edited && window.patchworker.proj.player.mixer.strips[0].cfg.level === window.patchworker.proj.levels[0]), 'it is a project edit, heard in the mixer');
 
-  // ▲: pan.
-  await p.click('.cbtn.arrow >> nth=1');
-  check(JSON.stringify(await arrows()) === '[true,false]', '▲ switches to pan: ▼ is lit (K: back to level)');
+  // ▼: pan.
+  await p.click('.cbtn.arrow >> nth=0');
+  check(JSON.stringify(await arrows()) === '[false,true]', '▼ switches to pan: ▲ is lit (back to level)');
   k = await knobs();
   check(k.every((x, i) => x.v === s.pn[i]) && k.every((x, i) => x.t === (s.pn[i] === 64 ? 'C' : s.pn[i] < 64 ? `L${64 - s.pn[i]}` : `R${s.pn[i] - 64}`)), `the knobs show the pans (${k.map((x) => x.t).join(' ')})`);
   await p.focus('#macro-row .macro:nth-child(5) .knob');
@@ -83,11 +83,11 @@ const { chromium } = require('playwright');
   check((await st()).pn[1] === 64, 'Clear + turning it clockwise puts Synth 2 back in the centre');
   await p.click('.cbtn.clear');
 
-  // ▼: back to level. Leaving Mixer view gives the knobs back to the patch's macros.
-  await p.click('.cbtn.arrow >> nth=0');
+  // ▲: back to level. Leaving Mixer view gives the knobs back to the patch's macros.
+  await p.click('.cbtn.arrow >> nth=1');
   k = await knobs();
   s = await st();
-  check(k.every((x, i) => x.v === s.lv[i]) && JSON.stringify(await arrows()) === '[false,true]', '▼ goes back to levels');
+  check(k.every((x, i) => x.v === s.lv[i]) && JSON.stringify(await arrows()) === '[true,false]', '▲ goes back to levels');
   await pw(() => window.patchworker.panel().selectView('note'));
   k = await knobs();
   check(k.every((x) => !x.mix) && !k.some((x) => /Synth|Drum/.test(x.cap)), `out of Mixer view the knobs are the patch's macros again (${k[4].cap})`);
