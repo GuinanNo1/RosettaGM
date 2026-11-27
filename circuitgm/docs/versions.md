@@ -12,7 +12,7 @@ Each tool page shows its version next to its status badge, so you can tell which
 | MIDI2Rhythm | 0.21 | For testing · v0.21 |
 | Circuit2MIDI | 0.7 | alpha 0.7 |
 | CircuitTrim | 0.5 | alpha 0.5 |
-| PatchWorker | 0.28 | For testing · v0.28 (title line under the menu) |
+| PatchWorker | 0.29 | For testing · v0.29 (title line under the menu) |
 
 Numbering started on 14 Nov 2026. Earlier changes are grouped roughly:
 
@@ -54,6 +54,7 @@ See `midi2rhythm/help.html` (Versions). 0.1–0.6 on 14 Nov 2026; 0.7 (15 Nov): 
 - 0.1 (10 Nov 2026): first alpha.
 
 ## PatchWorker
+- **0.29** (27 Nov 2026): Save keeps the scene chain (0x2C0) and the pattern chains each track plays (0x2C4); loading brings them back. The hardware saves the scene playing at the time (6 of 21 projects in Ian's packs were saved partway through their chain), so saved pattern chains that match any scene leave the chain playing from its first scene; only chains that match no scene (chosen by hand) load as chosen. Choosing scenes or patterns isn't an unsaved edit by itself. Test `tests/ui_selsave.cjs`.
 - **0.28** (27 Nov 2026): Record mode (User Guide pp. 35-37, 62-64, 71). Record (or R) toggles it; held over half a second it ends on release; Shift + Record is Rec Quantise (remembered; Shift shows it on the legend). While playing: notes played by hand (pads, computer keys, MIDI keyboard) on synth/MIDI tracks in Note/Expanded Note view go into the playing pattern (nearest step, or micro step with Rec Quantise off; snapped to the scale) with the held length as gate; drum sample pads record hits (sample flip); turned knobs (synth macros, Mixer levels/pans, FX sends) write their value from then until Record ends, as on the hardware. Stopped with a step chosen in Note view, a turned macro is written on that step. Heard from the next time round without restarting playback (`player.swapEvents`). Red, thicker step cursor. Not yet: drum macro knobs, holding a step pad while playing. Test `tests/ui_record.cjs`.
 - **0.27** (27 Nov 2026): the pack column hides to a thin strip (‹ / › at its top, or the \ key; remembered between visits). With it hidden the TRACKS panel is centred (Ian) and grows as far as the window's height lets the pads fit (about 1200 px wide at 1920 × 1080; unchanged on a 1440 × 900 laptop); the piano roll and lane follow. Stacked (phone) layout: the column collapses to its toggle. Test `tests/ui_side.cjs`.
 - **0.26** (27 Nov 2026): while the song plays, Mixer view's and FX view's macro knobs and faders follow recorded level, pan and send movements (as the hardware's knob LEDs do), each held until the next recorded value; a followed knob or fader glows and the fader's value is highlighted. Turning or dragging still sets the project's own value; stopped, they show the project's values. Test `tests/ui_mixfollow.cjs`.

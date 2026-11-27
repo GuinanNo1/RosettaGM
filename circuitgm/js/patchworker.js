@@ -11,7 +11,7 @@ import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, proje
 import { buildPanel } from './pw/panel.js?v=20261127e';
 import { drumRate } from './pw/mixlaws.js?v=20261114s';
 import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
-import { ProjectPlayer, packProjects } from './pw/project.js?v=20261127e';
+import { ProjectPlayer, packProjects } from './pw/project.js?v=20261127f';
 
 const DEFAULT_PACK = '../tracksgm/TracksGM_v1.circuittrackspack';
 // PatchWorker is Offline only for now (plan-patchworker-tracks-first.md, 22 Nov 2026): the browser is

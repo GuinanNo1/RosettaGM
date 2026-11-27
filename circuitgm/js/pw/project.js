@@ -120,6 +120,17 @@ export class ProjectPlayer {
     this.scene = c.start;
     this.sel = this.song.scenes[this.scene].chains.map((x) => ({ ...x }));
     this.custom = false;     // patterns changed since the scene was chosen
+    // The pattern chains the project was saved playing (0x2C4). The hardware saves the scene
+    // playing at the time (often one partway through the chain: 6 of 21 projects in Ian's packs),
+    // so a match with any scene leaves the scene chain to play from its start; pattern chains
+    // that match no scene were chosen by hand (Patterns view), and play as chosen.
+    const clip = (c) => ({ start: Math.min(c.start, c.end, 7), end: Math.min(Math.max(c.start, c.end), 7) });   // as js/song.js reads scenes
+    const cur = (proj.patternChains ?? []).map(clip);
+    const same = (a) => a.every((c, t) => c.start === cur[t].start && c.end === cur[t].end);
+    if (cur.length === 8 && !proj.scenes.some((s) => same(s.trackChains.map(clip)))) {
+      this.sel = cur.map((c, t) => ({ ...this.sel[t], start: c.start, end: c.end }));
+      this.custom = true;
+    }
     this.mutes.fill(false);
     this.player.mutes.fill(false);
     this.player.solo = -1;
@@ -713,6 +724,9 @@ export class ProjectPlayer {
     proj.synth1Patch = patches[0];
     proj.synth2Patch = patches[1];
     proj.patchSlots = this.patchSlots.slice();
+    // The scene chain and the patterns each track plays (0.29): loading the project brings them back.
+    proj.sceneChain = { ...proj.sceneChain, start: this.sceneChain.start, end: this.sceneChain.end };
+    proj.patternChains = this.sel.map((c, t) => ({ ...proj.patternChains?.[t], start: c.start, end: c.end }));
     // Mixer view's levels and pans.
     proj.mixerLevels = this.levels.slice(0, 4);
     proj.mixerPans = this.pans.slice(0, 4);
