@@ -1,4 +1,4 @@
-// PatchWorker 0.21: Mixer view's levels and pans (User Guide pp. 88-89). The macro knobs set each
+// TracksDECK 0.21: Mixer view's levels and pans (User Guide pp. 88-89). The macro knobs set each
 // track's level, ▼ turns them into pan controls and ▲ back (0.21.1); vertical level faders and
 // horizontal pan sliders under the pads show the same values. Loading a project sets them as saved,
 // Save keeps them, Revert project puts them back. With Clear on, turning a knob deletes the
@@ -17,22 +17,22 @@ const { chromium } = require('playwright');
   const p = await (await browser.newContext({ viewport: { width: 1400, height: 1000 } })).newPage();
   p.on('console', (m) => { if (m.type() === 'error' && !/ERR_|fonts\./.test(m.text())) errors.push(m.text()); });
   p.on('pageerror', (e) => errors.push(e.message));
-  await p.goto('http://localhost:8765/circuitgm/patchworker/');
-  await p.evaluate(() => { indexedDB.deleteDatabase('circuitgm-patchworker'); localStorage.clear(); });
-  await p.goto('http://localhost:8765/circuitgm/patchworker/');
-  await p.waitForFunction(() => window.patchworker?.S.pack);
+  await p.goto('http://localhost:8765/circuitgm/tracksdeck/');
+  await p.evaluate(() => { indexedDB.deleteDatabase('circuitgm-tracksdeck'); localStorage.clear(); });
+  await p.goto('http://localhost:8765/circuitgm/tracksdeck/');
+  await p.waitForFunction(() => window.tracksdeck?.S.pack);
   await p.setInputFiles('#file-pack', packFile);
-  await p.waitForFunction(() => window.patchworker.proj.loaded);
+  await p.waitForFunction(() => window.tracksdeck.proj.loaded);
   const pw = (fn, ...a) => p.evaluate(fn, ...a);
   await p.click('#face [data-face=tracks]');
 
   // The project's saved levels and pans.
-  const file = await pw(() => { const pr = window.patchworker.proj.entry.project; return { lv: [...pr.mixerLevels, ...pr.drumConfigs.map((d) => d.level)], pn: [...pr.mixerPans, ...pr.drumConfigs.map((d) => d.pan)] }; });
-  const st = () => pw(() => ({ lv: window.patchworker.proj.levels.slice(), pn: window.patchworker.proj.pans.slice() }));
+  const file = await pw(() => { const pr = window.tracksdeck.proj.entry.project; return { lv: [...pr.mixerLevels, ...pr.drumConfigs.map((d) => d.level)], pn: [...pr.mixerPans, ...pr.drumConfigs.map((d) => d.pan)] }; });
+  const st = () => pw(() => ({ lv: window.tracksdeck.proj.levels.slice(), pn: window.tracksdeck.proj.pans.slice() }));
   let s = await st();
   check(JSON.stringify(s.lv) === JSON.stringify(file.lv) && JSON.stringify(s.pn) === JSON.stringify(file.pn), `loading sets the levels and pans as saved (${s.lv.join(' ')} / ${s.pn.join(' ')})`);
 
-  await pw(() => window.patchworker.panel().selectView('mixer'));
+  await pw(() => window.tracksdeck.panel().selectView('mixer'));
   const knobs = () => p.$$eval('#macro-row .macro', (x) => x.map((c) => ({ mix: c.classList.contains('mixk'), cap: c.querySelector('.m-cap').textContent, v: +c.querySelector('.knob').getAttribute('aria-valuenow'), t: c.querySelector('.k-out').textContent })));
   let k = await knobs();
   check(k.every((x) => x.mix) && k.map((x) => x.cap).join('|') === 'Synth 1|Synth 2|MIDI 1|MIDI 2|Drum 1|Drum 2|Drum 3|Drum 4', `in Mixer view the macro knobs are the tracks (${k.map((x) => x.cap).join(', ')})`);
@@ -49,7 +49,7 @@ const { chromium } = require('playwright');
   s = await st();
   f = await faders();
   check(s.lv[0] === file.lv[0] - 10 && f[0].lv === s.lv[0], `turning knob 1 sets Synth 1's level (${s.lv[0]}), and its fader follows`);
-  check(await pw(() => window.patchworker.proj.edited && window.patchworker.proj.player.mixer.strips[0].cfg.level === window.patchworker.proj.levels[0]), 'it is a project edit, heard in the mixer');
+  check(await pw(() => window.tracksdeck.proj.edited && window.tracksdeck.proj.player.mixer.strips[0].cfg.level === window.tracksdeck.proj.levels[0]), 'it is a project edit, heard in the mixer');
 
   // ▼: pan.
   await p.click('.cbtn.arrow >> nth=0');
@@ -70,14 +70,14 @@ const { chromium } = require('playwright');
   check((await st()).lv[5] === 80, 'the fader sets Drum 2\'s level');
 
   // Clear on, pan mode: Synth 2 (recorded pan in its pattern) anticlockwise deletes it; clockwise centres it.
-  const sp = await pw(() => window.patchworker.panel().state && window.patchworker.proj.sel[1].start);
-  const panLocks = () => pw((x) => Object.keys(window.patchworker.proj.raw(1, x).paramLocks?.pan ?? {}).length, sp);
+  const sp = await pw(() => window.tracksdeck.panel().state && window.tracksdeck.proj.sel[1].start);
+  const panLocks = () => pw((x) => Object.keys(window.tracksdeck.proj.raw(1, x).paramLocks?.pan ?? {}).length, sp);
   const before = await panLocks();
   await p.click('.cbtn.clear');
   await p.focus('#macro-row .macro:nth-child(2) .knob');
   await p.keyboard.press('ArrowDown');
   check(before > 0 && await panLocks() === 0, `Clear + turning Synth 2's knob anticlockwise deletes its recorded pan in pattern ${sp + 1} (${before} values)`);
-  await pw(() => window.patchworker.proj.setPan(1, 30));
+  await pw(() => window.tracksdeck.proj.setPan(1, 30));
   await p.focus('#macro-row .macro:nth-child(2) .knob');
   await p.keyboard.press('ArrowUp');
   check((await st()).pn[1] === 64, 'Clear + turning it clockwise puts Synth 2 back in the centre');
@@ -88,7 +88,7 @@ const { chromium } = require('playwright');
   k = await knobs();
   s = await st();
   check(k.every((x, i) => x.v === s.lv[i]) && JSON.stringify(await arrows()) === '[true,false]', '▲ goes back to levels');
-  await pw(() => window.patchworker.panel().selectView('note'));
+  await pw(() => window.tracksdeck.panel().selectView('note'));
   k = await knobs();
   check(k.every((x) => !x.mix) && !k.some((x) => /Synth|Drum/.test(x.cap)), `out of Mixer view the knobs are the patch's macros again (${k[4].cap})`);
 
@@ -98,21 +98,21 @@ const { chromium } = require('playwright');
   await p.click('.cbtn.save');
   const saved = await pw(async () => {
     const { parseNCS } = await import('/circuitgm/js/vendor/ncs.js');
-    const pp = window.patchworker.proj, b = pp.pack.files.get(pp.entry.url);
+    const pp = window.tracksdeck.proj, b = pp.pack.files.get(pp.entry.url);
     const pr = parseNCS(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength));
     return { lv: [...pr.mixerLevels, ...pr.drumConfigs.map((d) => d.level)], pn: [...pr.mixerPans, ...pr.drumConfigs.map((d) => d.pan)] };
   });
   check(JSON.stringify(saved) === JSON.stringify(want), `Save keeps them in the project (${saved.lv.join(' ')} / ${saved.pn.join(' ')})`);
-  await pw(async () => { const w = window.patchworker; const ok = await w.proj.load(w.S.pack, 1); if (!ok) await w.proj.load(w.S.pack, 2); });
-  await pw(async () => { const w = window.patchworker; await w.proj.load(w.S.pack, 0); });
+  await pw(async () => { const w = window.tracksdeck; const ok = await w.proj.load(w.S.pack, 1); if (!ok) await w.proj.load(w.S.pack, 2); });
+  await pw(async () => { const w = window.tracksdeck; await w.proj.load(w.S.pack, 0); });
   s = await st();
   check(JSON.stringify({ lv: s.lv, pn: s.pn }) === JSON.stringify(want), 'loading the project again sets them as saved');
 
   // Revert project puts unsaved changes back.
-  await pw(() => { window.patchworker.proj.setLevel(4, 12); window.patchworker.proj.setPan(0, 0); });
-  await pw(() => window.patchworker.proj.revert());
+  await pw(() => { window.tracksdeck.proj.setLevel(4, 12); window.tracksdeck.proj.setPan(0, 0); });
+  await pw(() => window.tracksdeck.proj.revert());
   s = await st();
-  check(s.lv[4] === want.lv[4] && s.pn[0] === want.pn[0] && await pw(() => window.patchworker.proj.player.mixer.strips[4].cfg.level) === want.lv[4], 'Revert project puts the saved levels and pans back');
+  check(s.lv[4] === want.lv[4] && s.pn[0] === want.pn[0] && await pw(() => window.tracksdeck.proj.player.mixer.strips[4].cfg.level) === want.lv[4], 'Revert project puts the saved levels and pans back');
 
   check(!errors.length, `no console errors (${errors.join(' | ') || 'none'})`);
   await browser.close();

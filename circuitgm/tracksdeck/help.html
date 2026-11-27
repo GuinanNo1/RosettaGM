@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>PatchWorker help</title>
-<meta name="description" content="How to use PatchWorker, the CircuitGM synth patch editor for the Novation Circuit Tracks: edit patches in the browser, play them from a MIDI keyboard, and save .syx patches and packs.">
+<title>TracksDECK help</title>
+<meta name="description" content="How to use TracksDECK, the CircuitGM offline player and editor for Novation Circuit Tracks packs: play and edit projects, edit synth patches in the browser, play them from a MIDI keyboard, and save .syx patches and packs.">
 <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="../css/patchworker.css?v=20261116nav">
+<link rel="stylesheet" href="../css/tracksdeck.css?v=20261127g">
 </head>
 <body class="doc">
 <nav class="topnav" aria-label="RosettaGM">
@@ -40,9 +40,12 @@
       </ul>
     </li>
     <li class="navgroup current">
-      <button type="button" aria-haspopup="true">Patch Editors</button>
+      <button type="button" aria-haspopup="true">Decks &amp; Makers</button>
       <ul>
-        <li><a href="./">PatchWorker</a></li>
+        <li><a href="./">TracksDECK</a></li>
+        <li><a href="../tracksmaker/">TracksMAKER (soon)</a></li>
+        <li><a href="../rhythmdeck/">RhythmDECK (soon)</a></li>
+        <li><a href="../rhythmmaker/">RhythmMAKER (soon)</a></li>
       </ul>
     </li>
     <li class="navgroup">
@@ -54,10 +57,11 @@
   </ul>
 </nav>
 <main class="docwrap">
-  <p><a href="./">← Back to PatchWorker</a></p>
-  <h1>PatchWorker help</h1>
-  <p>PatchWorker edits the synth patches of a Novation Circuit Tracks, with no hardware needed: the page plays each patch itself. It opens with the <a href="../tracksgm/">TracksGM</a> pack, plays the projects in a pack so you can hear patches in context, and what you make goes out as <code>.syx</code> patches or a whole <code>.circuittrackspack</code> to load with Novation Components. Nothing is uploaded: files stay on your computer.</p>
-  <p>Since v0.9 PatchWorker works offline only: the browser is the synth, and a MIDI keyboard (a Circuit Tracks too) just plays it. Editing a Circuit Tracks directly, as Components does, may come back later as a separate mode.</p>
+  <p><a href="./">← Back to TracksDECK</a></p>
+  <h1>TracksDECK help</h1>
+  <p>TracksDECK plays and edits Novation Circuit Tracks packs, with no hardware needed: the page plays the projects and synth patches itself. It opens with the <a href="../tracksgm/">TracksGM</a> pack, plays the projects in a pack so you can hear patches in context, and what you make goes out as <code>.syx</code> patches or a whole <code>.circuittrackspack</code> to load with Novation Components. Nothing is uploaded: files stay on your computer.</p>
+  <p>TracksDECK was called PatchWorker up to v0.29 (renamed 27 Nov 2026, when it had grown well beyond patch editing). Sessions saved under the old name open as before.</p>
+  <p>Since v0.9 TracksDECK works offline only: the browser is the synth, and a MIDI keyboard (a Circuit Tracks too) just plays it. Editing a Circuit Tracks directly over USB, as Components does, is planned as a separate page, <a href="../tracksmaker/">TracksMAKER</a> (coming soon).</p>
 
   <h2 id="quickstart">Quick start</h2>
   <ol>
@@ -72,12 +76,12 @@
   <h2 id="saving">Saved, unsaved, and the Unsaved edits tray</h2>
   <p>The tag under the patch name says <b>Saved</b> or <b>Edited · not saved</b>. A patch is unsaved when you have changed it and not downloaded it since, as part of the pack (<b>Download pack</b>), a bank (<b>Bank .syx</b>) or its own <code>.syx</code>. While it is unsaved, <b>Save .syx</b> and <b>Download pack</b> sit beside the tag.</p>
   <p>Every unsaved patch is listed under <b>Unsaved edits</b> on the left (the number is how many), newest first, with where it came from and when you changed it. Each has <b>Open</b>, <b>.syx</b> (download just that patch) and <b>Discard</b> (put it back as it was last saved; open it and press Undo to bring your edit back). <b>Save all as .syx bank</b> downloads them all in one file, which you can open here again or load with Components.</p>
-  <p>Saving is your decision. When you choose another patch while the one you are on has unsaved changes, PatchWorker asks once: <b>Save .syx</b>, <b>Download pack</b>, <b>Not now</b> (it stays in Unsaved edits) or <b>Stay on this patch</b>. It doesn't ask again about the same patch until you change it again. Tick <b>Don't ask again</b> to stop the question; the box <b>Ask to save when I leave a changed patch</b> in the Unsaved edits tray turns it back on.</p>
+  <p>Saving is your decision. When you choose another patch while the one you are on has unsaved changes, TracksDECK asks once: <b>Save .syx</b>, <b>Download pack</b>, <b>Not now</b> (it stays in Unsaved edits) or <b>Stay on this patch</b>. It doesn't ask again about the same patch until you change it again. Tick <b>Don't ask again</b> to stop the question; the box <b>Ask to save when I leave a changed patch</b> in the Unsaved edits tray turns it back on.</p>
   <p>Duplicating onto a slot, starting from the Initial Patch and reverting don't ask: Undo brings back what was there. The other question is before <b>Open pack…</b> or <b>Load TracksGM</b> would replace unsaved edits: it says how many, and offers to save them as a <code>.syx</code> bank first.</p>
 
   <h2 id="midikeys">Playing from a MIDI keyboard or a Circuit Tracks</h2>
   <ol>
-    <li>Use Chrome, Edge or another browser with Web MIDI. Click <b>Use MIDI keyboard</b> at the top right and allow MIDI when the browser asks. PatchWorker then picks up any keyboard you plug in, and turns this on by itself on later visits.</li>
+    <li>Use Chrome, Edge or another browser with Web MIDI. Click <b>Use MIDI keyboard</b> at the top right and allow MIDI when the browser asks. TracksDECK then picks up any keyboard you plug in, and turns this on by itself on later visits.</li>
     <li>Notes play the patch you are editing, with their velocity. The sustain pedal works. Nothing is sent back to the keyboard.</li>
     <li>A <b>Circuit Tracks</b> works as a keyboard too. Play from its <b>MIDI 1</b> track (channel 3) to edit and hear Synth 1, or its <b>MIDI 2</b> track (channel 4) for Synth 2: these tracks send notes without playing the Circuit Tracks' own synths, so you only hear the browser. Playing from its Synth 1 or Synth 2 track also works, but then you hear the Circuit Tracks' synth as well; turn its volume down. MIDI 1 and MIDI 2 must be on their default channels (3 and 4), and MIDI note Tx on in its Setup view.</li>
     <li>Notes on any other channel play whichever synth is chosen with <b>Synth 1 / Synth 2</b> in the patch bar.</li>
@@ -112,7 +116,7 @@
     <li><b>Duplicate</b>: click it to turn it on, press the step to copy, then each step to copy it to. With Duplicate on, <b>1-16/17-32</b> copies steps 1 to 16 (and their automation) to 17 to 32.</li>
     <li><b>1-16/17-32</b>: a pattern of 16 steps becomes 32 steps; after that it shows steps 1 to 16 (blue) or 17 to 32 (orange).</li>
   </ul>
-  <p><b>Scales</b> (User Guide pages 30 to 32): rows 1 and 2 choose the root note, laid out as one octave of a piano (bright pads are the notes in the scale, the root is sand); rows 3 and 4 choose one of the 16 scales. Note view's keyboard follows them: with Chromatic it is a one-octave piano; with any other scale each of the two rows holds eight notes of the scale rising from the root, and the top row starts on the last note of the bottom row (the root pads are paler). The scale and root belong to the project and are saved with it. Changing the root transposes the project's synth and MIDI notes. Changing the scale is not destructive: a note that is not in the new scale plays the nearest note in it, and choosing the old scale again plays it as before. (Which way a note exactly halfway goes is not in the guide: PatchWorker goes down, to be checked on a Circuit Tracks.) With no project loaded, Scales only sets the keyboard, which starts as Chromatic.</p>
+  <p><b>Scales</b> (User Guide pages 30 to 32): rows 1 and 2 choose the root note, laid out as one octave of a piano (bright pads are the notes in the scale, the root is sand); rows 3 and 4 choose one of the 16 scales. Note view's keyboard follows them: with Chromatic it is a one-octave piano; with any other scale each of the two rows holds eight notes of the scale rising from the root, and the top row starts on the last note of the bottom row (the root pads are paler). The scale and root belong to the project and are saved with it. Changing the root transposes the project's synth and MIDI notes. Changing the scale is not destructive: a note that is not in the new scale plays the nearest note in it, and choosing the old scale again plays it as before. (Which way a note exactly halfway goes is not in the guide: TracksDECK goes down, to be checked on a Circuit Tracks.) With no project loaded, Scales only sets the keyboard, which starts as Chromatic.</p>
   <p><b>Piano roll and drum grid</b> (not on the Circuit Tracks, which has no screen): in Note view, the <b>Piano roll</b> button under the pads (<b>Drum grid</b> on a drum track) shows the pattern instead of the pads; <b>Pads</b> (or Note) goes back. In Patterns view, <b>double-click a pattern</b> to open it there; press Patterns to go back. They edit the same pattern as the pads, and Save keeps the changes.</p>
   <ul>
     <li><b>Piano roll</b> (Synth 1 / 2, MIDI 1 / 2): one row per note (only the scale's notes unless the scale is Chromatic), one column per step (32 for a longer pattern; steps outside the pattern are shaded). Click an empty cell to add a note, dragging right to make it longer; drag a note to move it; drag its right edge to change its length (whole steps, or sixths of a step with Shift held); click a note to remove it; scroll the mouse wheel over a note to change its velocity (shown by its brightness). Click a key on the left to hear it. ▼ ▲ scroll an octave. A step holds up to 6 notes.</li>
@@ -155,12 +159,12 @@
   </table>
 
   <h2 id="tracks-later">Editing a Circuit Tracks directly</h2>
-  <p>Earlier test versions could link to a Circuit Tracks and edit what its synths were playing (Live, Get, Save to Tracks). That is switched off from v0.9 while PatchWorker's offline studio is built, because Novation Components already does it. To put your patches on the Circuit Tracks, download the pack (or <code>.syx</code> files) here and send them with Components.</p>
+  <p>Earlier test versions could link to a Circuit Tracks and edit what its synths were playing (Live, Get, Save to Tracks). That is switched off from v0.9: TracksDECK is the offline studio, and editing the machine live is planned for <a href="../tracksmaker/">TracksMAKER</a> (coming soon). Novation Components already does it in the meantime. To put your patches on the Circuit Tracks, download the pack (or <code>.syx</code> files) here and send them with Components.</p>
 
   <h2 id="files">Files</h2>
   <table>
     <tr><th>Open pack…</th><td>Opens a <code>.circuittrackspack</code> from Components. Samples and projects are kept exactly as they are.</td></tr>
-    <tr><th>Download pack</th><td>Writes a new pack file with your patch edits and the projects saved on the TRACKS panel. It asks for the pack's name (up to 16 characters, the name Components shows), suggesting a new one such as "Blue Monday 2" so the pack you opened is never confused with the edited one; the file goes to your Downloads folder under that name (the browser adds a number rather than replace a file already there). If a project in the pack plays a patch you changed, PatchWorker offers to update that project's own copy of the patch too: projects carry their own copy of each synth patch, and only copies that still matched the pack are touched.</td></tr>
+    <tr><th>Download pack</th><td>Writes a new pack file with your patch edits and the projects saved on the TRACKS panel. It asks for the pack's name (up to 16 characters, the name Components shows), suggesting a new one such as "Blue Monday 2" so the pack you opened is never confused with the edited one; the file goes to your Downloads folder under that name (the browser adds a number rather than replace a file already there). If a project in the pack plays a patch you changed, TracksDECK offers to update that project's own copy of the patch too: projects carry their own copy of each synth patch, and only copies that still matched the pack are touched.</td></tr>
     <tr><th>Open .syx…</th><td>Loads one patch, or a bank of many, into the slots you choose. Patches from the original Circuit load too. You can also drop <code>.syx</code> and pack files anywhere on the page.</td></tr>
     <tr><th>Download .syx</th><td>The current patch as a 350-byte SysEx file (also <b>Save .syx</b> beside the status tag).</td></tr>
     <tr><th>Bank .syx</th><td>All 128 patches in one file.</td></tr>
@@ -178,7 +182,7 @@
     <li>Distortion, filter drive, chorus and phaser are simpler than the hardware's.</li>
     <li>How far a macro moves its destination is not yet measured on hardware, so macro ranges are estimates.</li>
   </ul>
-  <p>Every byte of a patch is kept, including anything PatchWorker does not show, so a patch saved here is exactly what you edited plus what was already there.</p>
+  <p>Every byte of a patch is kept, including anything TracksDECK does not show, so a patch saved here is exactly what you edited plus what was already there.</p>
 
   <h2 id="trouble">If something is not working</h2>
   <ul>
@@ -186,7 +190,7 @@
     <li><b>A MIDI keyboard plays nothing:</b> check that the top right says <b>Keyboard:</b> and its name. Safari has no Web MIDI. For a Circuit Tracks, switch on MIDI note Tx in its Setup view.</li>
     <li><b>You hear the Circuit Tracks as well as the browser:</b> play from its MIDI 1 or MIDI 2 track, or turn its volume down.</li>
   </ul>
-  <p>PatchWorker is v0.16 (for testing): keep copies of your packs, and please report problems on <a href="https://github.com/GuinanNo1/RosettaGM/issues">GitHub</a>. Not affiliated with Novation or Focusrite.</p>
+  <p>TracksDECK is v0.30 (for testing): keep copies of your packs, and please report problems on <a href="https://github.com/GuinanNo1/RosettaGM/issues">GitHub</a>. Not affiliated with Novation or Focusrite.</p>
 </main>
 </body>
 </html>

@@ -1,4 +1,4 @@
-// PatchWorker 0.25: the pulsing scene pad (User Guide v3 p. 83). In Mixer view the scene chosen last
+// TracksDECK 0.25: the pulsing scene pad (User Guide v3 p. 83). In Mixer view the scene chosen last
 // pulses (with a ring) while the patterns selected match the ones stored in it. Choosing other
 // patterns in Patterns view stops it; choosing the matching ones again brings it back. Only the
 // most recently chosen scene does this; storing the selection into that scene makes it match.
@@ -17,12 +17,12 @@ const { chromium } = require('playwright');
   const p = await ctx.newPage();
   p.on('console', (m) => { if (m.type() === 'error' && !/ERR_|fonts\./.test(m.text())) errors.push(m.text()); });
   p.on('pageerror', (e) => errors.push(e.message));
-  await p.goto('http://localhost:8765/circuitgm/patchworker/');
-  await p.evaluate(() => { indexedDB.deleteDatabase('circuitgm-patchworker'); localStorage.clear(); });
-  await p.goto('http://localhost:8765/circuitgm/patchworker/');
-  await p.waitForFunction(() => window.patchworker?.S.pack);
+  await p.goto('http://localhost:8765/circuitgm/tracksdeck/');
+  await p.evaluate(() => { indexedDB.deleteDatabase('circuitgm-tracksdeck'); localStorage.clear(); });
+  await p.goto('http://localhost:8765/circuitgm/tracksdeck/');
+  await p.waitForFunction(() => window.tracksdeck?.S.pack);
   await p.setInputFiles('#file-pack', packFile);
-  await p.waitForFunction(() => window.patchworker.proj.loaded);
+  await p.waitForFunction(() => window.tracksdeck.proj.loaded);
   const pw = (fn, ...a) => p.evaluate(fn, ...a);
   await p.click('#face [data-face=tracks]');
   const view = (name) => pw((name) => [...document.querySelectorAll('button')].find((b) => b.textContent.trim().startsWith(name)).click(), name);
@@ -31,13 +31,13 @@ const { chromium } = require('playwright');
   // Repaint Mixer view as a visit to Patterns view and back would.
   const repaint = async () => { await view('Patterns'); await p.waitForSelector('.pad.pattern'); await view('Mixer'); await p.waitForSelector('.pad.scene'); };
   const matching = () => p.$$eval('.pad.scene.match', (x) => x.map((e) => +e.dataset.scene));
-  const state = () => pw(() => { const pp = window.patchworker.proj; return { custom: pp.custom, scene: pp.scene, chain: [pp.sceneChain.start, pp.sceneChain.end], sel: pp.sel.map((c) => [c.start, c.end]) }; });
-  const sceneChains = (i) => pw((i) => window.patchworker.proj.song.scenes[i].chains.map((c) => [c.start, c.end]), i);
+  const state = () => pw(() => { const pp = window.tracksdeck.proj; return { custom: pp.custom, scene: pp.scene, chain: [pp.sceneChain.start, pp.sceneChain.end], sel: pp.sel.map((c) => [c.start, c.end]) }; });
+  const sceneChains = (i) => pw((i) => window.tracksdeck.proj.song.scenes[i].chains.map((c) => [c.start, c.end]), i);
 
   // 1. On loading: the chosen scene pulses, and only it.
   let s = await state();
   check(JSON.stringify(await matching()) === JSON.stringify([s.scene]), `on loading, the chosen scene (${s.scene + 1}) pulses, and only it`);
-  check(await pw(() => window.patchworker.proj.sceneMatches()), 'sceneMatches() is true');
+  check(await pw(() => window.tracksdeck.proj.sceneMatches()), 'sceneMatches() is true');
   const anim = await p.$eval('.pad.scene.match', (e) => getComputedStyle(e).animationName);
   check(anim === 'scenepulse', `it pulses bright/dim (animation ${anim})`);
   check(/Pulsing: the scene chosen last/.test(await p.$eval('.pad.scene.match', (e) => e.title)), 'its title says what the pulse means');
@@ -50,13 +50,13 @@ const { chromium } = require('playwright');
   check(s.chain[0] === s.chain[1] && JSON.stringify(await matching()) === JSON.stringify([s.scene]), `scene ${s.scene + 1} chosen alone: it pulses`);
   const orig = s.sel[0];
   const other = orig[0] === 0 && orig[1] === 0 ? 1 : 0;
-  await pw((o) => window.patchworker.proj.selectPattern(0, o), other);
+  await pw((o) => window.tracksdeck.proj.selectPattern(0, o), other);
   await repaint();
   check((await matching()).length === 0, 'choosing another pattern for Synth 1 stops the pulse');
   check(/patterns selected have changed/.test(await p.$eval(`.pad.scene[data-scene="${s.scene}"]`, (e) => e.title)), 'the chosen scene\'s title says the patterns have changed');
 
   // 3. The matching patterns chosen again: it pulses again (the selection is still "chosen here").
-  await pw((o) => { const pp = window.patchworker.proj; pp.selectPattern(0, o[0]); if (o[1] > o[0]) pp.selectPattern(0, o[1], { extend: true }); }, orig);
+  await pw((o) => { const pp = window.tracksdeck.proj; pp.selectPattern(0, o[0]); if (o[1] > o[0]) pp.selectPattern(0, o[1], { extend: true }); }, orig);
   await repaint();
   s = await state();
   check(s.custom && JSON.stringify(await matching()) === JSON.stringify([s.scene]), 'choosing the same patterns again brings the pulse back');
@@ -71,13 +71,13 @@ const { chromium } = require('playwright');
   const ch = await sceneChains(old);
   const nch = await sceneChains(next);
   if (JSON.stringify(ch) !== JSON.stringify(nch)) {
-    await pw((ch) => { const pp = window.patchworker.proj; ch.forEach((c, t) => { pp.selectPattern(t, c[0]); if (c[1] > c[0]) pp.selectPattern(t, c[1], { extend: true }); }); }, ch);
+    await pw((ch) => { const pp = window.tracksdeck.proj; ch.forEach((c, t) => { pp.selectPattern(t, c[0]); if (c[1] > c[0]) pp.selectPattern(t, c[1], { extend: true }); }); }, ch);
     await repaint();
     check((await matching()).length === 0, `selecting scene ${old + 1}'s patterns doesn't light it (only the scene chosen last pulses)`);
   } else check(true, `(scenes ${old + 1} and ${next + 1} hold the same patterns: skipped)`);
 
   // 6. Storing the selection into the chosen scene makes it match; storing into another doesn't.
-  await pw((o) => window.patchworker.proj.selectPattern(0, o), (nch[0][0] + 1) % 8);
+  await pw((o) => window.tracksdeck.proj.selectPattern(0, o), (nch[0][0] + 1) % 8);
   await repaint();
   check((await matching()).length === 0, 'new patterns chosen: no pulse');
   const elsewhere = (next + 5) % 16;
@@ -102,8 +102,8 @@ const { chromium } = require('playwright');
   s = await state();
   check(JSON.stringify(s.chain) === '[3,5]' && JSON.stringify(await matching()) === '[3]', `chain 4-6: scene 4 pulses (chain ${s.chain}, pulsing ${await matching()})`);
   const c4 = s.sel[0];
-  await pw((o) => window.patchworker.proj.selectPattern(0, o), (c4[0] + 1) % 8);
-  await pw((o) => { const pp = window.patchworker.proj; pp.selectPattern(0, o[0]); if (o[1] > o[0]) pp.selectPattern(0, o[1], { extend: true }); }, c4);
+  await pw((o) => window.tracksdeck.proj.selectPattern(0, o), (c4[0] + 1) % 8);
+  await pw((o) => { const pp = window.tracksdeck.proj; pp.selectPattern(0, o[0]); if (o[1] > o[0]) pp.selectPattern(0, o[1], { extend: true }); }, c4);
   await repaint();
   check((await matching()).length === 0, 'after changing patterns by hand, a chain\'s first scene stays unlit');
 

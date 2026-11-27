@@ -1,4 +1,4 @@
-// PatchWorker: the Circuit Tracks synth patch (340 bytes) as a parameter table.
+// TracksDECK: the Circuit Tracks synth patch (340 bytes) as a parameter table.
 //
 // Layout: Circuit Tracks Programmer's Reference Guide v3, "Synth Patch Format". Display units
 // come from CircuitGM's hardware measurements (docs/circuit-tracks-file-formats.md and the

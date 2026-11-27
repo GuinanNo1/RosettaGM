@@ -1,4 +1,4 @@
-// PatchWorker's MIDI keyboard input for Offline mode: notes from any connected MIDI keyboard play
+// TracksDECK's MIDI keyboard input for Offline mode: notes from any connected MIDI keyboard play
 // the browser synth. Nothing is ever sent out, and no SysEx access is asked for.
 // A Circuit Tracks works as a keyboard too: its MIDI 1 and MIDI 2 tracks send on channels 3 and 4
 // by default (fixed here: channel 3 = Synth 1, channel 4 = Synth 2) without sounding its own synths.

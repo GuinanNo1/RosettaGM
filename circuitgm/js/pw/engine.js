@@ -1,11 +1,11 @@
-// PatchWorker's browser synth: an approximation of the Circuit Tracks synth engine in Web Audio,
+// TracksDECK's browser synth: an approximation of the Circuit Tracks synth engine in Web Audio,
 // so a patch can be heard and edited with no hardware connected.
 //
 // The voice architecture (two oscillators + noise, filter, three envelopes, two LFOs, mod matrix,
 // macros that ADD to parameters, per-patch distortion / chorus / EQ, six-voice polyphony, buffer
 // LFOs with key-sync, envelope re-anchoring on release, synchronous voice stealing) is adapted
 // from the synth in circuit-tracks-tools by Namir Sayed-Ahmad Baraza (MIT licence, see
-// js/vendor/LICENSE-circuit-tracks-tools.txt). PatchWorker reads the 340 patch bytes directly,
+// js/vendor/LICENSE-circuit-tracks-tools.txt). TracksDECK reads the 340 patch bytes directly,
 // replaces the parameter curves with CircuitGM's hardware measurements (filter cutoff, envelope
 // times, LFO rate, mod depth to pitch and filter, EQ, Pre / Post FX level) and adds wavetable
 // shapes, ring modulation, density, virtual sync, filter drive and bypass, and a phaser.

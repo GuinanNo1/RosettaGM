@@ -8,7 +8,7 @@
 // Every track goes through the project mixer (js/pw/mixer.js). It is neutral until
 // setProject() is given a Circuit Tracks project: then the project's levels, pans, sends,
 // reverb, delay, drum settings and sidechain apply as measured on the hardware (calibration
-// set 7), and the two synth tracks can play their patches on PatchWorker's browser synth.
+// set 7), and the two synth tracks can play their patches on TracksDECK's browser synth.
 import { Mixer } from './pw/mixer.js?v=20261125f';
 import { projectMix, drumRate, drumDecaySeconds } from './pw/mixlaws.js?v=20261125f';
 import { PatchSynth } from './pw/engine.js?v=20261124j';
@@ -165,7 +165,7 @@ export class Player {
   }
 
   // New events for the same timeline while playing (a recorded note or knob movement): what is
-  // already scheduled stays, the rest comes from the new list, without stopping (PatchWorker's
+  // already scheduled stays, the rest comes from the new list, without stopping (TracksDECK's
   // Record mode). drop(e): leave out an event not yet scheduled (a note just played by hand).
   swapEvents(events, drop = null) {
     if (!this.playing) return;
@@ -205,7 +205,7 @@ export class Player {
   // to the mixer. Only with a project's mix (a Circuit Tracks project).
   automate(e, at) {
     if (!this.mix) return;
-    // A knob being recorded (Record mode, PatchWorker) is heard where the hand has it, not as recorded.
+    // A knob being recorded (Record mode, TracksDECK) is heard where the hand has it, not as recorded.
     if (!e.live && this.holdKeys?.has(`${e.track}:${e.autoKey}`)) return;
     const m = /^macro(\d)$/.exec(e.autoKey);
     if (m) {

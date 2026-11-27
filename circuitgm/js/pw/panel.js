@@ -1,4 +1,4 @@
-// PatchWorker's TRACKS face: a panel laid out like the Circuit Tracks front panel (track
+// TracksDECK's TRACKS face: a panel laid out like the Circuit Tracks front panel (track
 // buttons, view buttons, 32 pads, transport). The layout and views follow Web Tracks by Namir
 // Sayed-Ahmad Baraza (circuit-tracks-tools, MIT); the code is CircuitGM's own.
 //
@@ -8,11 +8,11 @@
 // 2. Preset view. Synth tracks: the pack's 128 patches as four pages of 32 pads; the lit pad is
 //    the patch being edited, pressing a pad edits that patch and plays it while held. Drum tracks:
 //    the pack's 64 samples as two pages; pressing a pad picks the track's sample and plays it.
-// 3. The Offline player (PatchWorker 0.10): Projects view picks and plays a project from the pack
+// 3. The Offline player (TracksDECK 0.10): Projects view picks and plays a project from the pack
 //    (js/pw/project.js); Patterns view chooses each track's pattern chain; Mixer view mutes tracks,
 //    sets levels and picks scenes and scene chains (bottom two rows, as on the hardware); Tempo
 //    view sets tempo and swing; Note view shows the playing pattern's steps on the top two rows.
-// 4. Step editing (PatchWorker 0.13): Note view adds and removes notes (synth and MIDI: choose a
+// 4. Step editing (TracksDECK 0.13): Note view adds and removes notes (synth and MIDI: choose a
 //    step, then the keys; drums: tap a step), Velocity, Gate, Probability and Pattern Settings views,
 //    Clear, Duplicate and 1-16/17-32 as on the hardware (User Guide v3, pp. 38-55 and 75), and Save
 //    into the pack open in the browser (p. 60).
@@ -187,7 +187,7 @@ export function buildPanel(root, api) {
   // Rec Quantise on or off (on: notes land on the nearest step; off: the nearest micro step).
   const recBtn = btn('tbtn rec', '●', { below: 'Rec Quantise', title: 'Record (R). Hold to punch in and out. Shift: Rec Quantise.' });
   recBtn.setAttribute('aria-label', 'Record');
-  try { st.recQ = localStorage.getItem('circuitgm-patchworker-recq') !== 'off'; } catch { st.recQ = true; }
+  try { st.recQ = localStorage.getItem('circuitgm-tracksdeck-recq') !== 'off'; } catch { st.recQ = true; }
   let recDown = null;
   recBtn.addEventListener('pointerdown', (e) => {
     if (!pp?.loaded) return;
@@ -212,7 +212,7 @@ export function buildPanel(root, api) {
   function setRecQuantise(on) {
     st.recQ = !!on;
     if (pp) pp.rec.quantise = st.recQ;
-    try { localStorage.setItem('circuitgm-patchworker-recq', st.recQ ? 'on' : 'off'); } catch { /* private mode */ }
+    try { localStorage.setItem('circuitgm-tracksdeck-recq', st.recQ ? 'on' : 'off'); } catch { /* private mode */ }
     flash(`Rec Quantise ${st.recQ ? 'on: recorded notes land on the nearest step' : 'off: recorded notes land on the nearest micro step (a sixth of a step)'}.`);
     paint();
   }

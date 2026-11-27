@@ -1,4 +1,4 @@
-// PatchWorker 0.17: the page title line, the side list's Show menu (Patches, Changed patches,
+// TracksDECK 0.17: the page title line, the side list's Show menu (Patches, Changed patches,
 // Samples with preview, Projects to load and play), and recorded automation in playback (drum
 // pitch, levels, pans, sends, drum distortion / EQ, synth macros). Needs the RosettaGM root
 // served on 8765.
@@ -18,23 +18,23 @@ const fs = require('fs');
   const p = await (await browser.newContext({ viewport: { width: 1400, height: 950 } })).newPage();
   p.on('console', (m) => { if (m.type() === 'error' && !/ERR_|fonts\./.test(m.text())) errors.push(m.text()); });
   p.on('pageerror', (e) => errors.push(e.message));
-  await p.goto('http://localhost:8765/circuitgm/patchworker/');
-  await p.evaluate(() => indexedDB.deleteDatabase('circuitgm-patchworker'));
-  await p.goto('http://localhost:8765/circuitgm/patchworker/');
-  await p.waitForFunction(() => window.patchworker?.S.pack);
+  await p.goto('http://localhost:8765/circuitgm/tracksdeck/');
+  await p.evaluate(() => indexedDB.deleteDatabase('circuitgm-tracksdeck'));
+  await p.goto('http://localhost:8765/circuitgm/tracksdeck/');
+  await p.waitForFunction(() => window.tracksdeck?.S.pack);
   const pw = (fn, ...a) => p.evaluate(fn, ...a);
 
   // ---- title line
-  check((await p.innerText('.pagetitle h1')).startsWith('PatchWorker'), 'a line under the menu names PatchWorker');
+  check((await p.innerText('.pagetitle h1')).startsWith('TracksDECK'), 'a line under the menu names TracksDECK');
   check(/v0\.\d+/.test(await p.innerText('.pagetitle .navver')), 'with the version next to it');
 
   await p.setInputFiles('#file-pack', packFile);
-  await p.waitForFunction(() => window.patchworker.S.pack.fileName !== 'TracksGM_v1.circuittrackspack');
+  await p.waitForFunction(() => window.tracksdeck.S.pack.fileName !== 'TracksGM_v1.circuittrackspack');
   // Opening a pack loads a project, as the Circuit Tracks does: the first with notes the first time.
-  await p.waitForFunction(() => window.patchworker.proj.loaded, null, { timeout: 5000 }).catch(() => {});
-  check(await pw(() => window.patchworker.proj.loaded && window.patchworker.proj.entry.slot === 0), 'opening the pack loads its first project');
-  await p.waitForFunction(() => window.patchworker.S.slot === window.patchworker.proj.patchSlots[window.patchworker.S.synth], null, { timeout: 3000 }).catch(() => {});
-  check(await pw(() => window.patchworker.S.slot === window.patchworker.proj.patchSlots[window.patchworker.S.synth]), 'and the editor follows its synth patch');
+  await p.waitForFunction(() => window.tracksdeck.proj.loaded, null, { timeout: 5000 }).catch(() => {});
+  check(await pw(() => window.tracksdeck.proj.loaded && window.tracksdeck.proj.entry.slot === 0), 'opening the pack loads its first project');
+  await p.waitForFunction(() => window.tracksdeck.S.slot === window.tracksdeck.proj.patchSlots[window.tracksdeck.S.synth], null, { timeout: 3000 }).catch(() => {});
+  check(await pw(() => window.tracksdeck.S.slot === window.tracksdeck.proj.patchSlots[window.tracksdeck.S.synth]), 'and the editor follows its synth patch');
 
   // ---- Show menu
   const opts = await p.$$eval('#filter option', (o) => o.map((x) => x.value));
@@ -63,57 +63,57 @@ const fs = require('fs');
   // Project 27 (slot 26) has Synth 1 macro 3 and 5 automation and Drum 1 pan automation.
   check(filled.includes(26), 'project 27 is listed');
   await p.click('#patchlist li[data-project="26"] .nm');
-  await p.waitForFunction(() => window.patchworker.proj.loaded && window.patchworker.proj.entry.slot === 26);
+  await p.waitForFunction(() => window.tracksdeck.proj.loaded && window.tracksdeck.proj.entry.slot === 26);
   await p.waitForTimeout(300);
   const cls = await p.$eval('#patchlist li[data-project="26"]', (l) => l.className);
   check(/\bsel\b/.test(cls), `clicking a project loads it (row selected: "${cls}")`);
   await p.click('#patchlist li[data-project="26"] .play');
-  await p.waitForFunction(() => window.patchworker.proj.playing);
+  await p.waitForFunction(() => window.tracksdeck.proj.playing);
   check(await p.innerText('#patchlist li[data-project="26"] .play') === '■', '▶ plays it (row shows ■)');
 
   // ---- automation
-  const autos = await pw(() => window.patchworker.proj.render.events.filter((e) => e.autoKey).map((e) => `${e.track}:${e.autoKey}`));
+  const autos = await pw(() => window.tracksdeck.proj.render.events.filter((e) => e.autoKey).map((e) => `${e.track}:${e.autoKey}`));
   const kinds = [...new Set(autos)].sort();
   check(kinds.includes('0:macro3') && kinds.includes('0:macro5'), `project 27's automation is in the playback (${kinds.join(' ')})`);
   // Its macro movements start late in the song: play from just after the first one, which also
   // checks that starting mid-song picks up the knob positions recorded before that point.
-  await pw(() => { const pp = window.patchworker.proj; const e = pp.render.events.find((x) => x.autoKey === 'macro5'); return pp.start(e.t + 0.05); });
+  await pw(() => { const pp = window.tracksdeck.proj; const e = pp.render.events.find((x) => x.autoKey === 'macro5'); return pp.start(e.t + 0.05); });
   await p.waitForTimeout(300);
-  const mp = await pw(() => window.patchworker.proj.player.synths[0].macroPos);
+  const mp = await pw(() => window.tracksdeck.proj.player.synths[0].macroPos);
   check(Array.isArray(mp) && (mp[2] != null || mp[4] != null), `Synth 1's macros follow the recording (macro 3 = ${mp?.[2]}, macro 5 = ${mp?.[4]})`);
-  const patchPos = await pw(() => { const pp = window.patchworker.proj; return Array.from(pp.player.synths[0].bytes.slice(0, 1)).length; });
+  const patchPos = await pw(() => { const pp = window.tracksdeck.proj; return Array.from(pp.player.synths[0].bytes.slice(0, 1)).length; });
   check(patchPos === 1, 'the synth still has its patch');
   await p.click('#patchlist li[data-project="26"] .play');
-  await p.waitForFunction(() => !window.patchworker.proj.playing);
-  const after = await pw(() => { const pp = window.patchworker.proj; return JSON.stringify(pp.player.synths[0].macroPos) === JSON.stringify(pp.macros[0]); });
+  await p.waitForFunction(() => !window.tracksdeck.proj.playing);
+  const after = await pw(() => { const pp = window.tracksdeck.proj; return JSON.stringify(pp.player.synths[0].macroPos) === JSON.stringify(pp.macros[0]); });
   check(after, 'stopping puts the macros back where the project has them');
 
   // Project 1 (slot 0): Drum 3 pitch automation becomes part of each hit.
   await p.click('#patchlist li[data-project="0"] .nm');
-  await p.waitForFunction(() => window.patchworker.proj.entry.slot === 0);
-  const drumAuto = await pw(() => window.patchworker.proj.render.events.filter((e) => e.track === 6 && e.part && e.auto?.pitch != null).length);
+  await p.waitForFunction(() => window.tracksdeck.proj.entry.slot === 0);
+  const drumAuto = await pw(() => window.tracksdeck.proj.render.events.filter((e) => e.track === 6 && e.part && e.auto?.pitch != null).length);
   check(drumAuto > 0, `Drum 3 hits carry their recorded pitch (${drumAuto})`);
   // Project 25 (slot 24): Synth 2 reverb send automation.
   await p.click('#patchlist li[data-project="24"] .nm');
-  await p.waitForFunction(() => window.patchworker.proj.entry.slot === 24);
-  const n = await pw(() => window.patchworker.proj.render.events.filter((e) => e.autoKey === 'reverb_send' && e.track === 1).length);
+  await p.waitForFunction(() => window.tracksdeck.proj.entry.slot === 24);
+  const n = await pw(() => window.tracksdeck.proj.render.events.filter((e) => e.autoKey === 'reverb_send' && e.track === 1).length);
   check(n > 0, `Synth 2 reverb send automation is scheduled (${n} movements)`);
-  const v = await pw(() => { const pp = window.patchworker.proj; const e = pp.render.events.find((x) => x.autoKey === 'reverb_send' && x.track === 1); pp.start(e.t + 0.05); return e.value; });
+  const v = await pw(() => { const pp = window.tracksdeck.proj; const e = pp.render.events.find((x) => x.autoKey === 'reverb_send' && x.track === 1); pp.start(e.t + 0.05); return e.value; });
   await p.waitForTimeout(400);
   // The send moves continuously: compare with the last movement before now (within a step).
   const r = await pw(() => {
-    const pp = window.patchworker.proj, pos = pp.player.position;
+    const pp = window.tracksdeck.proj, pos = pp.player.position;
     const ev = pp.render.events.filter((x) => x.autoKey === 'reverb_send' && x.track === 1);
     const near = ev.filter((x) => x.t <= pos && x.t > pos - 0.25).map((x) => x.value);
     return { g: pp.player.mixer.strips[1].reverb.gain.value, lo: Math.min(...near), hi: Math.max(...near) };
   });
   const lo = (r.lo / 127) ** 1.1, hi = (r.hi / 127) ** 1.1;
   check(r.g >= lo - 0.03 && r.g <= hi + 0.03, `and Synth 2's reverb send follows it (gain ${r.g.toFixed(3)}, recorded ${r.lo}-${r.hi} in the last 0.25 s = ${lo.toFixed(3)}-${hi.toFixed(3)})`);
-  await pw(() => window.patchworker.proj.stop());
+  await pw(() => window.tracksdeck.proj.stop());
 
   // Drum pads play at the track's pitch: project 1's Drum 2 is at pitch 53 (about -4 semitones).
   await p.click('#patchlist li[data-project="0"] .nm');
-  await p.waitForFunction(() => window.patchworker.proj.entry.slot === 0);
+  await p.waitForFunction(() => window.tracksdeck.proj.entry.slot === 0);
   await pw(() => {
     window._rates = [];
     const start = AudioBufferSourceNode.prototype.start;
@@ -121,7 +121,7 @@ const fs = require('fs');
   });
   await p.click('#face [data-face=tracks]');
   await p.click('.trk[data-track="5"]');
-  if (await pw(() => window.patchworker.panel().state.view) !== 'note') await p.click('.view[data-view=note]');
+  if (await pw(() => window.tracksdeck.panel().state.view) !== 'note') await p.click('.view[data-view=note]');
   await p.dispatchEvent('.pad[data-dsample]', 'pointerdown');
   await p.dispatchEvent('.pad[data-dsample]', 'pointerup');
   await p.waitForTimeout(300);
@@ -136,12 +136,12 @@ const fs = require('fs');
   // The last project used with a pack comes back with it: load project 27, reload the page.
   await p.selectOption('#filter', 'projects');
   await p.click('#patchlist li[data-project="26"] .nm');
-  await p.waitForFunction(() => window.patchworker.proj.entry?.slot === 26);
+  await p.waitForFunction(() => window.tracksdeck.proj.entry?.slot === 26);
   await p.waitForTimeout(400);
   await p.reload();
-  await p.waitForFunction(() => window.patchworker?.S.pack && window.patchworker.S.pack.fileName !== 'TracksGM_v1.circuittrackspack');
-  await p.waitForFunction(() => window.patchworker.proj.loaded, null, { timeout: 5000 }).catch(() => {});
-  check(await pw(() => window.patchworker.proj.entry?.slot) === 26, 'reopening the pack loads the project used last (27)');
+  await p.waitForFunction(() => window.tracksdeck?.S.pack && window.tracksdeck.S.pack.fileName !== 'TracksGM_v1.circuittrackspack');
+  await p.waitForFunction(() => window.tracksdeck.proj.loaded, null, { timeout: 5000 }).catch(() => {});
+  check(await pw(() => window.tracksdeck.proj.entry?.slot) === 26, 'reopening the pack loads the project used last (27)');
   await p.screenshot({ path: `${out}/lists-patches.png` });
 
   check(!errors.length, `no console errors (${errors.join(' | ') || 'none'})`);

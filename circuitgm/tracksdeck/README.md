@@ -1,12 +1,14 @@
-# CircuitGM Patch Editor (PatchWorker), for testing, v0.16
+# TracksDECK: Circuit Tracks player and editor (CircuitGM), for testing, v0.30
 
-**Try it:** https://guinanno1.github.io/RosettaGM/circuitgm/patchworker/
+*Called PatchWorker up to v0.29; renamed 27 Nov 2026. Live editing over USB is planned as a separate page, TracksMAKER.*
 
-**Help:** https://guinanno1.github.io/RosettaGM/circuitgm/patchworker/help.html
+**Try it:** https://guinanno1.github.io/RosettaGM/circuitgm/tracksdeck/
 
-A web page that edits the synth patches of a Novation Circuit Tracks, without the hardware. It opens with the [TracksGM](../tracksgm/) pack, plays patches in the browser (from the page, the computer keyboard or a MIDI keyboard, including a Circuit Tracks), and saves single `.syx` patches or a complete `.circuittrackspack` for Novation Components. Nothing is uploaded, and there is no server.
+**Help:** https://guinanno1.github.io/RosettaGM/circuitgm/tracksdeck/help.html
 
-Since v0.9 PatchWorker is **Offline only** (see the claude.ai Project note `plan-patchworker-tracks-first.md`): the Circuit Tracks link below is hidden and only shows with `?tracksmode` at the end of the address, for development of a later Tracks mode.
+A web page that plays and edits Novation Circuit Tracks packs, without the hardware: projects (patterns, scenes, mixer, FX, recording) and synth patches. It opens with the [TracksGM](../tracksgm/) pack, plays patches in the browser (from the page, the computer keyboard or a MIDI keyboard, including a Circuit Tracks), and saves single `.syx` patches or a complete `.circuittrackspack` for Novation Components. Nothing is uploaded, and there is no server.
+
+Since v0.9 TracksDECK is **Offline only** (see the claude.ai Project note `plan-patchworker-tracks-first.md`): the Circuit Tracks link below is hidden and only shows with `?tracksmode` at the end of the address, for development of a later Tracks mode.
 
 ## What it does
 
@@ -30,9 +32,9 @@ Since v0.9 PatchWorker is **Offline only** (see the claude.ai Project note `plan
 
 | Path | What it is |
 |---|---|
-| `patchworker/index.html`, `patchworker/help.html` | The page and its help. |
-| `css/patchworker.css` | Styles (PatchWorker has its own dark panel look). |
-| `js/patchworker.js` | The page: controls, pack list, files, keyboard, Circuit Tracks link. |
+| `tracksdeck/index.html`, `tracksdeck/help.html` | The page and its help. |
+| `css/tracksdeck.css` | Styles (TracksDECK has its own dark panel look). |
+| `js/tracksdeck.js` | The page: controls, pack list, files, keyboard, Circuit Tracks link. |
 | `js/pw/params.js` | The patch as a parameter table: addresses, ranges, defaults, CC / NRPN numbers, display units, SysEx. |
 | `js/pw/engine.js` | The browser synth (Web Audio). |
 | `js/pw/keys.js` | MIDI keyboard input for Offline mode (notes, sustain; channels 3 / 4 choose Synth 1 / 2). |
@@ -43,7 +45,7 @@ Since v0.9 PatchWorker is **Offline only** (see the claude.ai Project note `plan
 | `js/pw/mixlaws.js` | The Circuit Tracks project controls as numbers, from calibration set 7: mixer levels and pans, reverb, delay, master filter, drum pitch / decay / distortion / EQ, sidechain. |
 | `js/pw/mixer.js` | The project mixer in Web Audio, built from `mixlaws.js`; `js/player.js` plays through it. |
 | `tests/ui_offline.cjs` | Browser test of Offline mode: no link controls, status tag, Unsaved edits tray, the load-pack warning and bank, and a stand-in MIDI keyboard on channels 1, 3 and 4. |
-| `tests/ui_patchworker.cjs` | Browser test: renders all 128 TracksGM patches, edits, saves, reloads, and (with `?tracksmode`) drives a stand-in Circuit Tracks. `tests/ui_follow.cjs` also runs in `?tracksmode`. |
+| `tests/ui_tracksdeck.cjs` | Browser test: renders all 128 TracksGM patches, edits, saves, reloads, and (with `?tracksmode`) drives a stand-in Circuit Tracks. `tests/ui_follow.cjs` also runs in `?tracksmode`. |
 | `tests/ui_panel.cjs` | Browser test of the TRACKS face. |
 | `tests/mixlaws.mjs`, `tests/ui_mixer.cjs` | The set 7 laws against the measurements, in Node and as offline renders in a browser. |
 
@@ -51,7 +53,7 @@ The patch layout and MIDI numbers are from the Circuit Tracks Programmer's Refer
 
 ## The browser synth
 
-`js/pw/engine.js` is adapted from the Web Audio synth in [circuit-tracks-tools](https://github.com/namirsab/circuit-tracks-tools) by Namir Sayed-Ahmad Baraza (MIT licence, `js/vendor/LICENSE-circuit-tracks-tools.txt`): its voice structure, buffer LFOs, envelope handling and voice stealing. PatchWorker's version reads the patch bytes directly and uses curves measured on the hardware:
+`js/pw/engine.js` is adapted from the Web Audio synth in [circuit-tracks-tools](https://github.com/namirsab/circuit-tracks-tools) by Namir Sayed-Ahmad Baraza (MIT licence, `js/vendor/LICENSE-circuit-tracks-tools.txt`): its voice structure, buffer LFOs, envelope handling and voice stealing. TracksDECK's version reads the patch bytes directly and uses curves measured on the hardware:
 
 - filter cutoff (about one octave per 11.5 steps, 64 = 650 Hz), with key tracking;
 - envelope times (+32 steps = 10×);
@@ -71,7 +73,7 @@ Not emulated: Q normalise, pitch-bend range, LFO slew and common sync, and mod m
 python3 -m http.server 8765 &      # from the RosettaGM root
 node tests/ui_offline.cjs tests/out
 node tests/ui_player.cjs "path/to/Blue Monday.circuittrackspack" tests/out   # any Tracks pack with projects
-node tests/ui_patchworker.cjs tests/out
+node tests/ui_tracksdeck.cjs tests/out
 node tests/ui_panel.cjs && node tests/ui_preset.cjs && node tests/ui_follow.cjs
 ```
 

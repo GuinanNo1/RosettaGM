@@ -1,4 +1,4 @@
-// PatchWorker's Offline player: plays a project from the pack open in the browser, through the
+// TracksDECK's Offline player: plays a project from the pack open in the browser, through the
 // browser synth (Synth 1 / 2 on the pack's patches, so edits are heard in context), the pack's
 // drum samples and the project mixer measured on the hardware (js/pw/mixer.js, set 7).
 //
@@ -38,7 +38,7 @@ function stepOrder(pat) {
   return fwd;
 }
 
-// pack: PatchWorker's pack (js/pw/packio.js openPack). Returns the 64 project slots:
+// pack: TracksDECK's pack (js/pw/packio.js openPack). Returns the 64 project slots:
 // { slot, name, empty, project (parsed, or null), error }.
 export function packProjects(pack) {
   if (pack.projectList) return pack.projectList;

@@ -6,7 +6,7 @@ General MIDI for the Ableton Move: a sound pack, and MIDI2Move, which turns MIDI
 | | What it is | Status | Links |
 |---|---|---|---|
 | **MoveGM** | 128 General MIDI instruments (Melodic Sampler), 12 drum kits and 23 Drift synths as Move presets, built from GeneralUser GS | v0.2, for testing | [Pack page](https://guinanno1.github.io/RosettaGM/movegm/pack/) · [Audition](https://guinanno1.github.io/RosettaGM/movegm/pack/audition.html) |
-| **MIDI2Move** | A General MIDI file to a Move Set (`.ablbundle`), using the MoveGM sounds | Alpha 0.6 | [Open](https://guinanno1.github.io/RosettaGM/movegm/midi2move/) · [Help](https://guinanno1.github.io/RosettaGM/movegm/midi2move/help.html) |
+| **MIDI2Move** | A General MIDI file to a Move Set (`.ablbundle`), using the MoveGM sounds | Alpha 0.7 | [Open](https://guinanno1.github.io/RosettaGM/movegm/midi2move/) · [Help](https://guinanno1.github.io/RosettaGM/movegm/midi2move/help.html) |
 
 Both open and play in Ableton Live 12 (including Lite). Neither has been tested on Move hardware yet.
 

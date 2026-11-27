@@ -1,5 +1,5 @@
-// PatchWorker TRACKS panel: the piano roll (Synth 1 / 2, MIDI 1 / 2) and the drum grid (Drum 1-4),
-// shown instead of the 32 pads (PatchWorker 0.16). Not on the Circuit Tracks, which has no screen:
+// TracksDECK TRACKS panel: the piano roll (Synth 1 / 2, MIDI 1 / 2) and the drum grid (Drum 1-4),
+// shown instead of the 32 pads (TracksDECK 0.16). Not on the Circuit Tracks, which has no screen:
 // a browser view of the same pattern data the pads edit (ProjectPlayer's edit methods), so a change
 // in one shows in the other.
 //

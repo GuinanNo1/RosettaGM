@@ -1,8 +1,8 @@
-// PatchWorker in a real browser: load the default pack, render every patch through the browser
+// TracksDECK in a real browser: load the default pack, render every patch through the browser
 // synth, edit and undo, save a patch and the pack, carry a session over a reload, and talk to a
 // stand-in Circuit Tracks over a fake Web MIDI port.
 // Needs `python3 -m http.server 8765` running in the repo.
-// node tests/ui_patchworker.cjs <out dir>
+// node tests/ui_tracksdeck.cjs <out dir>
 const { chromium } = require('playwright');
 const fs = require('fs');
 
@@ -40,7 +40,7 @@ const fakeMidi = () => {
   const page = await ctx.newPage();
   page.on('console', (m) => { if (m.type() === 'error' && !/ERR_|fonts\./.test(m.text())) errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(e.message));
-  const open = async () => { await page.goto('http://localhost:8765/circuitgm/patchworker/?tracksmode'); await page.waitForFunction(() => window.patchworker?.S.pack && document.querySelectorAll('#patchlist li[data-slot]').length === 128); };
+  const open = async () => { await page.goto('http://localhost:8765/circuitgm/tracksdeck/?tracksmode'); await page.waitForFunction(() => window.tracksdeck?.S.pack && document.querySelectorAll('#patchlist li[data-slot]').length === 128); };
   await open();
   check((await page.innerText('#pack-info')).startsWith('128 patches · 64 samples'), 'TracksGM loads by default');
   check(await page.inputValue('#patch-name') === 'Grand Piano', 'slot 1 is Grand Piano');
@@ -48,7 +48,7 @@ const fakeMidi = () => {
   // --- every patch makes sound in the browser synth, with nothing blowing up
   const render = await page.evaluate(async () => {
     const { PatchSynth } = await import('/circuitgm/js/pw/engine.js?v=20261113e');
-    const { S } = window.patchworker;
+    const { S } = window.tracksdeck;
     const res = [];
     for (let i = 0; i < 128; i++) {
       const off = new OfflineAudioContext(1, 48000, 48000);
@@ -84,7 +84,7 @@ const fakeMidi = () => {
   // --- an untouched pack saves back with every file identical
   const same = await page.evaluate(async () => {
     const { openPack } = await import('/circuitgm/js/pw/packio.js?v=20261113e');
-    const { S, buildPack } = window.patchworker;
+    const { S, buildPack } = window.tracksdeck;
     const { blob } = await buildPack(S.pack);
     const again = await openPack(await blob.arrayBuffer());
     let diff = 0;
@@ -99,15 +99,15 @@ const fakeMidi = () => {
 
   // --- edit with the keyboard, undo, redo
   const freq = page.locator('.filter .knob', { hasText: 'Frequency' });
-  const before = await page.evaluate(() => window.patchworker.S.bytes[64]);
+  const before = await page.evaluate(() => window.tracksdeck.S.bytes[64]);
   await freq.focus();
   for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowDown');
-  check(await page.evaluate(() => window.patchworker.S.bytes[64]) === before - 5, 'arrow keys move a knob');
+  check(await page.evaluate(() => window.tracksdeck.S.bytes[64]) === before - 5, 'arrow keys move a knob');
   check(await page.locator('#patchlist li.sel.edited').count() === 1, 'the slot is marked as changed');
   await page.click('#undo');
-  check(await page.evaluate(() => window.patchworker.S.bytes[64]) === before, 'undo restores it in one step');
+  check(await page.evaluate(() => window.tracksdeck.S.bytes[64]) === before, 'undo restores it in one step');
   await page.click('#redo');
-  check(await page.evaluate(() => window.patchworker.S.bytes[64]) === before - 5, 'redo brings it back');
+  check(await page.evaluate(() => window.tracksdeck.S.bytes[64]) === before - 5, 'redo brings it back');
 
   // --- rename, download the patch, check the file
   await page.fill('#patch-name', 'Worker Test');
@@ -116,7 +116,7 @@ const fakeMidi = () => {
   const syxFile = `${out}/${dl.suggestedFilename()}`;
   await dl.saveAs(syxFile);
   const syx = fs.readFileSync(syxFile);
-  const want = await page.evaluate(() => [...window.patchworker.S.bytes]);
+  const want = await page.evaluate(() => [...window.tracksdeck.S.bytes]);
   check(syx.length === 350 && syx[0] === 0xf0 && syx[5] === 0x64 && syx[349] === 0xf7 && want.every((v, i) => syx[9 + i] === v), `patch saved as ${dl.suggestedFilename()} (350 bytes, matches the editor)`);
 
   // --- load that .syx into slot 128, then save the pack and read it back
@@ -165,13 +165,13 @@ const fakeMidi = () => {
   await page.waitForTimeout(200);
   check((await page.getAttribute('body', 'data-synth')) === '1', 'choosing Synth 2 switches the panel colour');
   // Synth 2 plays something else: the first edit asks before replacing it.
-  await page.evaluate(() => window.patchworker.setByte(75, 29));
+  await page.evaluate(() => window.tracksdeck.setByte(75, 29));
   await page.waitForSelector('#dlg[open]');
   check((await page.innerText('#dlg-title')) === 'Synth 2 on the Circuit Tracks', 'the first edit asks before replacing what Synth 2 is playing');
   await page.click('#dlg-ok');
   await page.waitForTimeout(100);
   await sent();
-  await page.locator('.env .knob', { hasText: 'Attack' }).nth(1).evaluate(() => window.patchworker.setByte(75, 30));
+  await page.locator('.env .knob', { hasText: 'Attack' }).nth(1).evaluate(() => window.tracksdeck.setByte(75, 30));
   msgs = await sent();
   check(JSON.stringify(msgs) === JSON.stringify([[0xb1, 99, 0, 0xb1, 98, 1, 0xb1, 6, 30]]), `env 2 attack goes out as NRPN 0:1 on channel 2 (${JSON.stringify(msgs)})`);
   await page.locator('#macro-row .knob').nth(4).focus();
@@ -203,7 +203,7 @@ const fakeMidi = () => {
   // Live off: later edits leave the synth with an older version until Play on Tracks.
   await page.uncheck('#hw-live');
   check(await page.locator('#hw-send').isVisible() && (await page.innerText('#hw-send')) === 'Play on Tracks', 'Play on Tracks shows with Live off');
-  await page.evaluate(() => window.patchworker.setByte(75, 31));
+  await page.evaluate(() => window.tracksdeck.setByte(75, 31));
   msgs = await sent();
   check(msgs.length === 0 && (await page.innerText('#ed-hw')).includes('older version'), 'with Live off the status line says the synth is behind');
   check((await page.innerText('#ed-hw')).includes('press Play on Tracks'), 'the status line names Play on Tracks');
@@ -236,14 +236,14 @@ const fakeMidi = () => {
   if (await page.evaluate(() => document.querySelector('#dlg').open)) await page.click('#dlg-alt2');
 
   await page.click('[data-page="main"]');
-  await page.screenshot({ path: `${out}/patchworker-main.png` });
+  await page.screenshot({ path: `${out}/tracksdeck-main.png` });
   await page.click('[data-page="fx"]');
-  await page.screenshot({ path: `${out}/patchworker-fx.png` });
+  await page.screenshot({ path: `${out}/tracksdeck-fx.png` });
   await page.click('[data-page="mod"]');
-  await page.screenshot({ path: `${out}/patchworker-mod.png` });
+  await page.screenshot({ path: `${out}/tracksdeck-mod.png` });
   await page.setViewportSize({ width: 1100, height: 760 });
   await page.click('[data-page="main"]');
-  await page.screenshot({ path: `${out}/patchworker-small.png` });
+  await page.screenshot({ path: `${out}/tracksdeck-small.png` });
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   check(overflow <= 0, `no sideways overflow at 1100px (${overflow})`);
 

@@ -1,4 +1,5 @@
-// PatchWorker: a synth patch editor for the Novation Circuit Tracks.
+// TracksDECK (was PatchWorker up to 0.29): offline player and editor for Novation Circuit Tracks packs.
+// The patch editor (EDITOR face) and the Circuit Tracks panel (TRACKS face, js/pw/panel.js).
 // Pages and parameters follow Novation Components' Synth editor (Main / Effects / Modulation).
 import { P, PATCH_SIZE, OSC_WAVES, FILTER_TYPES, DRIVE_TYPES, LFO_WAVES, POLY_MODES, ROUTINGS,
   FADE_MODES, CATEGORIES, GENRES, MOD_SOURCES, MOD_DESTS, MACRO_DESTS, MOD_SLOTS, FMT, modAddr,
@@ -7,14 +8,14 @@ import { P, PATCH_SIZE, OSC_WAVES, FILTER_TYPES, DRIVE_TYPES, LFO_WAVES, POLY_MO
 import { PatchSynth, waveTable, lfoShape, envelopePoints } from './pw/engine.js?v=20261124j';
 import { TracksLink, VIEW_CODES } from './pw/midi.js?v=20261114s';
 import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, projectsFollowing, download,
-  fileSafe, session, PATCH_SLOTS } from './pw/packio.js?v=20261114s';
+  fileSafe, session, PATCH_SLOTS } from './pw/packio.js?v=20261127g';
 import { buildPanel } from './pw/panel.js?v=20261127e';
 import { drumRate } from './pw/mixlaws.js?v=20261114s';
 import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
 import { ProjectPlayer, packProjects } from './pw/project.js?v=20261127f';
 
 const DEFAULT_PACK = '../tracksgm/TracksGM_v1.circuittrackspack';
-// PatchWorker is Offline only for now (plan-patchworker-tracks-first.md, 22 Nov 2026): the browser is
+// TracksDECK is Offline only for now (plan-patchworker-tracks-first.md, 22 Nov 2026): the browser is
 // the synth and a connected MIDI keyboard (a Circuit Tracks too) only plays it. The Circuit Tracks
 // link (Live, Get, Save to Tracks, patches from the Tracks, Hear on) is kept for a later Tracks mode
 // and only shows with ?tracksmode, for development.
@@ -841,7 +842,7 @@ function setFace(face) {
     b.setAttribute('aria-checked', String(on));
   });
   if (face === 'tracks') tracksPanel?.paint();
-  try { localStorage.setItem('circuitgm-patchworker-face', face); } catch { /* private mode */ }
+  try { localStorage.setItem('circuitgm-tracksdeck-face', face); } catch { /* private mode */ }
 }
 
 // The pack column (left) can be hidden to a thin strip (0.27), remembered between visits; with it
@@ -852,7 +853,7 @@ function setSide(hidden) {
   b.textContent = hidden ? '›' : '‹';
   b.setAttribute('aria-expanded', String(!hidden));
   b.title = hidden ? 'Show the pack column (\\ key)' : 'Hide the pack column (\\ key)';
-  try { localStorage.setItem('circuitgm-patchworker-side', hidden ? 'hidden' : 'shown'); } catch { /* private mode */ }
+  try { localStorage.setItem('circuitgm-tracksdeck-side', hidden ? 'hidden' : 'shown'); } catch { /* private mode */ }
   requestAnimationFrame(() => { if (document.body.dataset.face === 'tracks') tracksPanel?.paint(); });
 }
 
@@ -1038,7 +1039,7 @@ function discardSlot(i) {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveSession, 300);
 }
-// Before something replaces the whole pack: the one warning PatchWorker keeps. Resolves true to go on.
+// Before something replaces the whole pack: the one warning TracksDECK keeps. Resolves true to go on.
 async function okToReplacePack(action) {
   const slots = unsavedSlots();
   // Projects edited on the TRACKS panel, or saved into this pack and not downloaded since.
@@ -1228,7 +1229,7 @@ async function loadPackBuffer(buffer, fileName, { remember = true, edits = null 
   }
 }
 // The project last loaded for a pack (by its name), kept in the browser.
-const LAST_PROJECT = 'circuitgm-patchworker-project:';
+const LAST_PROJECT = 'circuitgm-tracksdeck-project:';
 const packKey = (pack) => LAST_PROJECT + (pack.openedName ?? pack.index?.name ?? pack.name ?? '');
 function lastProject(pack) { try { const v = localStorage.getItem(packKey(pack)); return v == null ? null : +v; } catch { return null; } }
 function rememberProject(pack, slot) { try { localStorage.setItem(packKey(pack), String(slot)); } catch { /* private mode */ } }
@@ -1817,7 +1818,7 @@ async function loadProject(slot, { quiet = false, follow = true } = {}) {
 // Offline: leaving a patch with unsaved edits asks once whether to save it. Not again for the same
 // patch until it changes again, and never if "Don't ask again" was ticked (the tray has a box to
 // turn it back on). Resolves false to stay on the patch.
-const ASK_KEY = 'circuitgm-patchworker-ask-leave';
+const ASK_KEY = 'circuitgm-tracksdeck-ask-leave';
 const askedAt = new Map();   // slot -> S.pack.at[slot] when last asked
 const askOnLeave = () => { try { return localStorage.getItem(ASK_KEY) !== 'off'; } catch { return true; } };
 function setAskOnLeave(on) {
@@ -2155,7 +2156,7 @@ function bindUI() {
   });
 
   $('#link-btn').addEventListener('click', async () => {
-    try { localStorage.removeItem('circuitgm-patchworker-unlinked'); } catch { /* private mode */ }
+    try { localStorage.removeItem('circuitgm-tracksdeck-unlinked'); } catch { /* private mode */ }
     await link.connect();
     paintLink();
   });
@@ -2164,8 +2165,8 @@ function bindUI() {
     if (hw.slot === S.slot && hw.edited && !(await leaveEdited(true))) return;   // offer to store first
     panic();
     link.disconnect();
-    try { localStorage.setItem('circuitgm-patchworker-unlinked', '1'); } catch { /* private mode */ }
-    toast('Unlinked. The Circuit Tracks keeps what it is playing; PatchWorker plays the browser synth.');
+    try { localStorage.setItem('circuitgm-tracksdeck-unlinked', '1'); } catch { /* private mode */ }
+    toast('Unlinked. The Circuit Tracks keeps what it is playing; TracksDECK plays the browser synth.');
   });
   document.querySelectorAll('#synth-seg [data-synth]').forEach((b) => b.addEventListener('click', () => {
     panic();
@@ -2198,11 +2199,11 @@ function bindUI() {
   const setKeySize = (size) => {
     document.body.dataset.keys = size;
     document.querySelectorAll('#keysize button').forEach((b) => b.classList.toggle('on', b.dataset.size === size));
-    try { localStorage.setItem('circuitgm-patchworker-keys', size); } catch { /* private mode */ }
+    try { localStorage.setItem('circuitgm-tracksdeck-keys', size); } catch { /* private mode */ }
   };
   document.querySelectorAll('#keysize button').forEach((b) => b.addEventListener('click', () => setKeySize(b.dataset.size)));
   let keySize = 'm';
-  try { keySize = localStorage.getItem('circuitgm-patchworker-keys') || 'm'; } catch { /* private mode */ }
+  try { keySize = localStorage.getItem('circuitgm-tracksdeck-keys') || 'm'; } catch { /* private mode */ }
   setKeySize(/^[sml]$/.test(keySize) ? keySize : 'm');
   window.addEventListener('beforeunload', saveSession);
 }
@@ -2254,10 +2255,10 @@ async function start() {
     loadProject: (slot) => loadProject(slot),
   });
   let face = 'editor';
-  try { face = localStorage.getItem('circuitgm-patchworker-face') || 'editor'; } catch { /* private mode */ }
+  try { face = localStorage.getItem('circuitgm-tracksdeck-face') || 'editor'; } catch { /* private mode */ }
   setFace(face);
   let side = 'shown';
-  try { side = localStorage.getItem('circuitgm-patchworker-side') || 'shown'; } catch { /* private mode */ }
+  try { side = localStorage.getItem('circuitgm-tracksdeck-side') || 'shown'; } catch { /* private mode */ }
   setSide(side === 'hidden');
   $('#side-toggle').addEventListener('click', () => setSide(!$('#app').classList.contains('side-hidden')));
   paintMacroSel();
@@ -2286,7 +2287,7 @@ async function start() {
   try {
     const perm = await navigator.permissions?.query({ name: 'midi', sysex: true });
     let unlinked = false;
-    try { unlinked = localStorage.getItem('circuitgm-patchworker-unlinked') === '1'; } catch { /* private mode */ }
+    try { unlinked = localStorage.getItem('circuitgm-tracksdeck-unlinked') === '1'; } catch { /* private mode */ }
     if (perm?.state === 'granted' && !unlinked) link.connect();
   } catch { /* the permission query is optional */ }
 }
@@ -2294,7 +2295,7 @@ async function start() {
 // ------------------------------------------------------------------ MIDI keyboard (Offline)
 // Notes from any MIDI keyboard play the browser synth. Channel 3 (the Circuit Tracks' MIDI 1 track)
 // chooses Synth 1, channel 4 (MIDI 2) Synth 2; other channels play the synth chosen here.
-const KB_KEY = 'circuitgm-patchworker-midikeys';
+const KB_KEY = 'circuitgm-tracksdeck-midikeys';
 let remindedTracks = false;
 const pedalHeld = new Set();
 let pedalDown = false;
@@ -2336,11 +2337,11 @@ function bindKb() {
   $('#kb-btn').addEventListener('click', async () => {
     if (await keys.enable()) { try { localStorage.setItem(KB_KEY, '1'); } catch { /* private mode */ } }
     paintKb();
-    if (keys.enabled && !keys.inputs.length) toast('MIDI is on, but no keyboard is connected yet. Plug one in: PatchWorker picks it up by itself.', 6000);
+    if (keys.enabled && !keys.inputs.length) toast('MIDI is on, but no keyboard is connected yet. Plug one in: TracksDECK picks it up by itself.', 6000);
   });
   paintKb();
 }
 
 // Handy when testing from the console, and for the automated tests.
-window.patchworker = { S, link, keys, proj, editCopy, saveCopyToSlot, loadProject, unsavedSlots, TRACKS_MODE, audio, selectSlot, copyTo, setByte, toSyx, buildPack, undo, redo, setFace, storeOnTracks, openFromTracks, panel: () => tracksPanel, get synth() { return synth; } };
+window.tracksdeck = { S, link, keys, proj, editCopy, saveCopyToSlot, loadProject, unsavedSlots, TRACKS_MODE, audio, selectSlot, copyTo, setByte, toSyx, buildPack, undo, redo, setFace, storeOnTracks, openFromTracks, panel: () => tracksPanel, get synth() { return synth; } };
 start();

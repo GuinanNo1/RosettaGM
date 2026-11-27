@@ -1,4 +1,4 @@
-// PatchWorker 0.27: the pack column (left) hides to a thin strip with ‹ / › or the \ key, and stays
+// TracksDECK 0.27: the pack column (left) hides to a thin strip with ‹ / › or the \ key, and stays
 // hidden after a reload. With it hidden the TRACKS panel grows as far as the window's height lets
 // the pads fit (no change on a 1440 x 900 laptop); the piano roll takes the pads' new height.
 // Needs the RosettaGM root served on 8765.
@@ -17,14 +17,14 @@ const { chromium } = require('playwright');
   p.on('console', (m) => { if (m.type() === 'error' && !/ERR_|fonts\./.test(m.text())) errors.push(m.text()); });
   p.on('pageerror', (e) => errors.push(e.message));
   const open = async () => {
-    await p.goto('http://localhost:8765/circuitgm/patchworker/');
-    await p.waitForFunction(() => window.patchworker?.S.pack);
+    await p.goto('http://localhost:8765/circuitgm/tracksdeck/');
+    await p.waitForFunction(() => window.tracksdeck?.S.pack);
   };
   await open();
-  await p.evaluate(() => { indexedDB.deleteDatabase('circuitgm-patchworker'); localStorage.clear(); });
+  await p.evaluate(() => { indexedDB.deleteDatabase('circuitgm-tracksdeck'); localStorage.clear(); });
   await open();
   await p.setInputFiles('#file-pack', packFile);
-  await p.waitForFunction(() => window.patchworker.proj.loaded);
+  await p.waitForFunction(() => window.tracksdeck.proj.loaded);
   await p.click('#face [data-face=tracks]');
   const box = (s) => p.$eval(s, (e) => { const r = e.getBoundingClientRect(); return { x: r.x, w: r.width, h: r.height, bottom: r.bottom }; });
   const hidden = () => p.$eval('#app', (e) => e.classList.contains('side-hidden'));
@@ -35,9 +35,9 @@ const { chromium } = require('playwright');
   check(Math.round(ct.w) <= 920, `the panel is at most 920 px wide (${Math.round(ct.w)})`);
   check(await p.textContent('#side-toggle') === '‹' && await p.getAttribute('#side-toggle', 'aria-expanded') === 'true', 'the toggle shows ‹');
   await p.click('.ct .cbtn.view:has-text("Note")').catch(() => {});
-  const roll = async () => { await p.evaluate(() => window.patchworker.panel().selectView('roll')); await p.waitForTimeout(200); return box('.roll'); };
+  const roll = async () => { await p.evaluate(() => window.tracksdeck.panel().selectView('roll')); await p.waitForTimeout(200); return box('.roll'); };
   const roll1 = await roll();
-  await p.evaluate(() => window.patchworker.panel().selectView('note'));
+  await p.evaluate(() => window.tracksdeck.panel().selectView('note'));
   const pads1 = await box('.pads');
 
   // ‹ hides it: the panel grows, the pads still fit in the window.
@@ -55,7 +55,7 @@ const { chromium } = require('playwright');
   check(pads2.bottom <= dev.bottom, `and still fit above the bottom bar (pads end ${Math.round(pads2.bottom)}, panel area ${Math.round(dev.bottom)})`);
   const roll2 = await roll();
   check(roll2.h > roll1.h + 50, `the piano roll takes the pads' new height (${Math.round(roll1.h)} → ${Math.round(roll2.h)} px)`);
-  await p.evaluate(() => window.patchworker.panel().selectView('note'));
+  await p.evaluate(() => window.tracksdeck.panel().selectView('note'));
 
   // Remembered after a reload; › shows it again.
   await open();

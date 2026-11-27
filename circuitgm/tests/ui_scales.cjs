@@ -1,4 +1,4 @@
-// PatchWorker Scales (0.14): Scales view (root and scale pads), Note view's keyboard following the
+// TracksDECK Scales (0.14): Scales view (root and scale pads), Note view's keyboard following the
 // project's scale, Expanded Note view, transposing by root, snapping on a scale change, Save keeping
 // the scale, and Download pack asking for a new name. Needs the RosettaGM root served on 8765.
 // node tests/ui_scales.cjs <"Blue Monday.circuittrackspack" (project 1: D Dorian)> [screenshot dir]
@@ -18,17 +18,17 @@ const fs = require('fs');
   const p = await ctx.newPage();
   p.on('console', (m) => { if (m.type() === 'error' && !/ERR_|fonts\./.test(m.text())) errors.push(m.text()); });
   p.on('pageerror', (e) => errors.push(e.message));
-  await p.goto('http://localhost:8765/circuitgm/patchworker/');
-  await p.evaluate(() => indexedDB.deleteDatabase('circuitgm-patchworker'));
-  await p.goto('http://localhost:8765/circuitgm/patchworker/');
-  await p.waitForFunction(() => window.patchworker?.S.pack);
+  await p.goto('http://localhost:8765/circuitgm/tracksdeck/');
+  await p.evaluate(() => indexedDB.deleteDatabase('circuitgm-tracksdeck'));
+  await p.goto('http://localhost:8765/circuitgm/tracksdeck/');
+  await p.waitForFunction(() => window.tracksdeck?.S.pack);
   const pw = (fn, ...a) => p.evaluate(fn, ...a);
   const pad = (i) => `.pads .pad:nth-child(${i + 1})`;
   const padNote = (i) => p.$eval(pad(i), (x) => (x.dataset.note == null ? null : +x.dataset.note));
 
   // ---- No project (TracksGM): the keyboard is Chromatic, and Scales view changes only it.
   await p.click('#face [data-face=tracks]');
-  check(await pw(() => window.patchworker.panel().state.view === 'note'), 'the panel opens in Note view');
+  check(await pw(() => window.tracksdeck.panel().state.view === 'note'), 'the panel opens in Note view');
   const whites = await p.$$eval('.ct .pads .pad.key.white', (x) => x.length);
   check(whites === 8, `no project: a Chromatic piano keyboard (${whites} white keys)`);
   await p.click('.view[data-view=scales]');
@@ -44,10 +44,10 @@ const fs = require('fs');
 
   // ---- Blue Monday project 1: D Dorian
   await p.setInputFiles('#file-pack', packFile);
-  await p.waitForFunction(() => window.patchworker.S.pack.fileName !== 'TracksGM_v1.circuittrackspack');
+  await p.waitForFunction(() => window.tracksdeck.S.pack.fileName !== 'TracksGM_v1.circuittrackspack');
   await p.click('.view[data-view=projects]');
   await p.click('.pad.project[data-project="0"]');
-  await p.waitForFunction(() => window.patchworker.proj.loaded);
+  await p.waitForFunction(() => window.tracksdeck.proj.loaded);
   await p.click('.trk[data-track="0"]');
   await p.click('.view[data-view=scales]');
   check(/D Dorian/.test(await p.innerText('.panel-lcd')), 'Scales view shows the project\'s scale: D Dorian');
@@ -62,7 +62,7 @@ const fs = require('fs');
   await p.screenshot({ path: `${out}/scales-note.png` });
 
   // Notes as they sound before changing anything (pattern 1, Synth 1).
-  const notesOf = () => pw(() => { const pp = window.patchworker.proj, out = []; for (let k = 0; k < 32; k++) out.push(...pp.stepNotes(0, 0, k).map((n) => n.note)); return out; });
+  const notesOf = () => pw(() => { const pp = window.tracksdeck.proj, out = []; for (let k = 0; k < 32; k++) out.push(...pp.stepNotes(0, 0, k).map((n) => n.note)); return out; });
   const before = await notesOf();
   check(before.length > 0, `Synth 1 pattern 1 has ${before.length} notes`);
 
@@ -87,11 +87,11 @@ const fs = require('fs');
   // ---- Expanded Note view: Note pressed again
   await p.click('.view[data-view=note]');
   await p.click('.view[data-view=note]');
-  check(await pw(() => window.patchworker.panel().state.view === 'expand'), 'Note again opens Expanded Note view');
+  check(await pw(() => window.tracksdeck.panel().state.view === 'expand'), 'Note again opens Expanded Note view');
   check(await p.$$eval('.pad.key.scale', (x) => x.length) === 32, 'a 32-pad scale keyboard');
   check(await padNote(8) === await padNote(23) && await padNote(0) - await padNote(24) === 36, 'four rows rising from the bottom, each starting on the last note of the row below');
   await p.click('.view[data-view=note]');
-  check(await pw(() => window.patchworker.panel().state.view === 'note'), 'Note again goes back');
+  check(await pw(() => window.tracksdeck.panel().state.view === 'note'), 'Note again goes back');
 
   // ---- Save keeps the scale
   await p.click('.view[data-view=scales]');
@@ -100,7 +100,7 @@ const fs = require('fs');
   await p.click('.cbtn.save'); await p.click('.cbtn.save');
   const saved = await pw(async () => {
     const { readProject } = await import('/circuitgm/js/pack.js?v=20261122b');
-    const pk = window.patchworker.S.pack, d = pk.files.get(pk.index.projects[0].url);
+    const pk = window.tracksdeck.S.pack, d = pk.files.get(pk.index.projects[0].url);
     const pr = readProject('circuit-tracks', d.slice().buffer);
     return [pr.scaleRoot, pr.scaleType];
   });

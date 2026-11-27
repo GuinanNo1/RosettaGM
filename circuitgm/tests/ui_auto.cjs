@@ -1,4 +1,4 @@
-// PatchWorker 0.20: the automation lane under the piano roll and drum grid. Apricots project 1:
+// TracksDECK 0.20: the automation lane under the piano roll and drum grid. Apricots project 1:
 // Synth 2's pattern 1 has Macro 2 recorded on step 1, Drum 3's pattern 1 has Pitch. Draws Macro 5
 // (filter frequency) on steps 1-4, a value on a sixth of step 6, clears step 2, plays (the song's
 // synth and the macro knob follow the drawing), saves (the pack's project keeps it), and draws a
@@ -16,23 +16,23 @@ const { chromium } = require('playwright');
   const p = await (await browser.newContext({ viewport: { width: 1400, height: 1000 } })).newPage();
   p.on('console', (m) => { if (m.type() === 'error' && !/ERR_|fonts\./.test(m.text())) errors.push(m.text()); });
   p.on('pageerror', (e) => errors.push(e.message));
-  await p.goto('http://localhost:8765/circuitgm/patchworker/');
-  await p.evaluate(() => { indexedDB.deleteDatabase('circuitgm-patchworker'); localStorage.clear(); });
-  await p.goto('http://localhost:8765/circuitgm/patchworker/');
-  await p.waitForFunction(() => window.patchworker?.S.pack);
+  await p.goto('http://localhost:8765/circuitgm/tracksdeck/');
+  await p.evaluate(() => { indexedDB.deleteDatabase('circuitgm-tracksdeck'); localStorage.clear(); });
+  await p.goto('http://localhost:8765/circuitgm/tracksdeck/');
+  await p.waitForFunction(() => window.tracksdeck?.S.pack);
   await p.setInputFiles('#file-pack', packFile);
-  await p.waitForFunction(() => window.patchworker.proj.loaded);
+  await p.waitForFunction(() => window.tracksdeck.proj.loaded);
   const pw = (fn, ...a) => p.evaluate(fn, ...a);
-  check(await pw(() => window.patchworker.proj.entry.slot) === 0, 'Apricots opens on project 1');
+  check(await pw(() => window.tracksdeck.proj.entry.slot) === 0, 'Apricots opens on project 1');
 
   // Synth 2 in the editor (so the macro knobs are the project's), then TRACKS, Synth 2, piano roll.
   await p.click('#synth-seg [data-synth="1"]');
-  await p.waitForFunction(() => window.patchworker.S.slot === 32);
+  await p.waitForFunction(() => window.tracksdeck.S.slot === 32);
   await p.click('#face [data-face=tracks]');
-  await pw(() => window.patchworker.panel().selectTrack(1));
+  await pw(() => window.tracksdeck.panel().selectTrack(1));
   await p.click('.rollbtn');
   await p.waitForSelector('.lane:not([hidden]) .lane-area');
-  const lane = () => pw(() => window.patchworker.panel() && document.querySelector('.lane-sel').value);
+  const lane = () => pw(() => window.tracksdeck.panel() && document.querySelector('.lane-sel').value);
   check(await lane() === 'macro2', `the lane opens on the macro with values (${await lane()})`);
   const opts = await p.$$eval('.lane-sel option', (x) => x.map((o) => o.textContent));
   check(opts.length === 12 && opts[1].startsWith('• Macro 2 · ') && /^Macro 5 · .+/.test(opts[4]) && !/not assigned/.test(opts[4]) && opts[8] === 'Level',
@@ -42,7 +42,7 @@ const { chromium } = require('playwright');
   await p.selectOption('.lane-sel', 'macro5');
   await p.$eval('.lane-area', (e) => e.scrollIntoView({ block: 'center' }));
   const box = await p.$eval('.lane-area', (e) => { const r = e.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; });
-  const L = await pw(() => window.patchworker.panel().lane());
+  const L = await pw(() => window.tracksdeck.panel().lane());
   const sw = box.w / L.n;
   console.log(`     (lane: track ${L.t + 1}, pattern ${L.p + 1}, ${L.n} steps, ${L.per} positions a step)`);
   const yOf = (v) => box.y + 1 + (1 - v / 127) * (box.h - 3);
@@ -52,11 +52,11 @@ const { chromium } = require('playwright');
   await p.mouse.move(box.x + 2.5 * sw, yOf(80), { steps: 4 });
   await p.mouse.move(box.x + 3.5 * sw, yOf(110), { steps: 4 });
   await p.mouse.up();
-  const locks = () => pw(() => window.patchworker.proj.laneLocks(1, window.patchworker.panel().lane().p, 'macro5'));
+  const locks = () => pw(() => window.tracksdeck.proj.laneLocks(1, window.tracksdeck.panel().lane().p, 'macro5'));
   let l = await locks();
   check(l.length === 4 && l.every(([pos], i) => pos === i) && l.every(([, v], i) => i === 0 || v > l[i - 1][1]) && l[0][1] < 40 && Math.abs(l[3][1] - 110) <= 2,
     `dragging draws a value on each step passed (${l.map(([pos, v]) => `${pos + 1}:${v}`).join(' ')})`);
-  check(await pw(() => window.patchworker.proj.edited), 'it is a project edit');
+  check(await pw(() => window.tracksdeck.proj.edited), 'it is a project edit');
   check(await pw(() => document.querySelector('.lane-sel option[value=macro5]').textContent.startsWith('• ')), 'the list marks Macro 5 as having values');
   const bars = await p.$$eval('.lane-svg .lane-bar-v', (x) => x.length);
   check(bars === 4, `the lane shows a bar per drawn step (${bars})`);
@@ -75,21 +75,21 @@ const { chromium } = require('playwright');
   check(!l.some(([pos]) => pos >= 1 && pos < 2) && l.some(([pos]) => pos === 0) && l.some(([pos]) => pos === 2), `double-click clears a step (${l.map(([pos, v]) => `${+(pos + 1).toFixed(3)}:${v}`).join(' ')})`);
 
   // The song has the drawing: playing moves the song's Synth 2 macro 5 and the knob shows it.
-  const autos = await pw(() => window.patchworker.proj.render.events.filter((e) => e.track === 1 && e.autoKey === 'macro5').length);
+  const autos = await pw(() => window.tracksdeck.proj.render.events.filter((e) => e.track === 1 && e.autoKey === 'macro5').length);
   check(autos > 0, `the song plays the drawn movements (${autos} on Synth 2 macro 5)`);
-  await pw(() => window.patchworker.proj.play());
+  await pw(() => window.tracksdeck.proj.play());
   const seen = new Set();
   let knobAuto = false;
   for (let i = 0; i < 40; i++) {
     await p.waitForTimeout(100);
-    const s = await pw(() => ({ v: window.patchworker.proj.player.synths[1].macroPos?.[4], auto: document.querySelectorAll('#macro-row .macro')[4]?.classList.contains('auto'), shown: +document.querySelectorAll('#macro-row .knob')[4]?.getAttribute('aria-valuenow') }));
+    const s = await pw(() => ({ v: window.tracksdeck.proj.player.synths[1].macroPos?.[4], auto: document.querySelectorAll('#macro-row .macro')[4]?.classList.contains('auto'), shown: +document.querySelectorAll('#macro-row .knob')[4]?.getAttribute('aria-valuenow') }));
     if (s.v != null) seen.add(s.v);
     if (s.auto && s.shown === s.v) knobAuto = true;
   }
-  await pw(() => window.patchworker.proj.stop());
+  await pw(() => window.tracksdeck.proj.stop());
   check(seen.size >= 2, `playing turns Synth 2's macro 5 to the drawn values (${[...seen].join(', ')})`);
   check(knobAuto, 'the macro 5 knob turns with it while the song plays');
-  const after = await pw(() => ({ v: window.patchworker.proj.player.synths[1].macroPos?.[4], shown: +document.querySelectorAll('#macro-row .knob')[4]?.getAttribute('aria-valuenow'), auto: document.querySelectorAll('#macro-row .macro')[4]?.classList.contains('auto') }));
+  const after = await pw(() => ({ v: window.tracksdeck.proj.player.synths[1].macroPos?.[4], shown: +document.querySelectorAll('#macro-row .knob')[4]?.getAttribute('aria-valuenow'), auto: document.querySelectorAll('#macro-row .macro')[4]?.classList.contains('auto') }));
   check(after.v === 16 && after.shown === 16 && !after.auto, `stopped, it is back at the project's position (${after.v}, knob ${after.shown})`);
 
   // Save: the project in the pack keeps the lane.
@@ -97,9 +97,9 @@ const { chromium } = require('playwright');
   await p.click('.cbtn.save');
   const saved = await pw(async () => {
     const { parseNCS } = await import('/circuitgm/js/vendor/ncs.js');
-    const pp = window.patchworker.proj, b = pp.pack.files.get(pp.entry.url);
+    const pp = window.tracksdeck.proj, b = pp.pack.files.get(pp.entry.url);
     const proj = parseNCS(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength));
-    const blk = proj.patterns ? proj.patterns[1][window.patchworker.panel().lane().p] : null;
+    const blk = proj.patterns ? proj.patterns[1][window.tracksdeck.panel().lane().p] : null;
     return { locks: blk?.paramLocks?.macro5 ?? null, m2: blk?.paramLocks?.macro2 ?? null };
   });
   const live = await locks();
@@ -108,7 +108,7 @@ const { chromium } = require('playwright');
     `Save keeps the lane in the project (${sk.map(([pos, v]) => `${+(pos + 1).toFixed(3)}:${v}`).join(' ')}; Macro 2 kept: ${!!saved.m2})`);
 
   // Drum 3: the drum grid's lane follows the selected drum, Pitch recorded in pattern 1.
-  await pw(() => window.patchworker.panel().selectTrack(6));
+  await pw(() => window.tracksdeck.panel().selectTrack(6));
   await p.waitForFunction(() => document.querySelector('.ct .roll').dataset.kind === 'drum');
   check(await lane() === 'pitch', `Drum 3's lane opens on Pitch (${await lane()})`);
   const dopts = await p.$$eval('.lane-sel option', (x) => x.map((o) => o.textContent.replace(/^• /, '')));
@@ -119,7 +119,7 @@ const { chromium } = require('playwright');
   const dn = await pw(() => { const a = document.querySelector('.ct .roll .roll-area'); return Math.round(parseFloat(a.style.width) / parseFloat(a.style.getPropertyValue('--sw'))); });
   const dsw = dbox.w / dn;
   await p.mouse.click(dbox.x + 2.5 * dsw, dbox.y + 1 + (1 - 30 / 127) * (dbox.h - 3));
-  const dl = await pw(() => { const pp = window.patchworker.proj; return pp.entry.project.patterns[6].flatMap((_, i) => pp.laneLocks(6, i, 'decay')); });
+  const dl = await pw(() => { const pp = window.tracksdeck.proj; return pp.entry.project.patterns[6].flatMap((_, i) => pp.laneLocks(6, i, 'decay')); });
   check(dl.length === 1 && dl[0][0] === 2 && Math.abs(dl[0][1] - 30) <= 2, `a click draws Drum 3's decay on step 3 (${dl.map(([pos, v]) => `${pos + 1}:${v}`).join(' ')})`);
   check(await p.$eval('.lane-area', (e, w) => Math.abs(e.getBoundingClientRect().width - w) < 2, await p.$eval('.ct .roll .roll-area', (e) => e.getBoundingClientRect().width)), 'the lane lines up with the grid\'s steps');
 

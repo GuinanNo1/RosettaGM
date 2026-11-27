@@ -75,9 +75,15 @@ hardware recordings stay local; the repo only describes the method.
   palette number 1–14, left to right (top row 1–7, bottom row 8–14), not
   by colour name.
 - The site menu is the same on every page (five dropdown groups: Devices,
-  General MIDI Packs, MIDI Converters, Patch Editors, Pack Trimming); add a
-  new tool to it on all pages, including PatchWorker's `topnav` and the
+  General MIDI Packs, MIDI Converters, Decks & Makers, Pack Trimming); add a
+  new tool to it on all pages, including TracksDECK's `topnav` and the
   RosettaGM home page.
+- Decks & Makers naming (27 Nov 2026): `<Device>DECK` is the offline player
+  and editor (TracksDECK, was PatchWorker), `<Device>MAKER` the live editor
+  over USB (TracksMAKER; RhythmDECK, RhythmMAKER; later MoveDECK / MoveMAKER).
+  Capitals in titles, menus and text; URLs, file names and storage keys stay
+  lower case (`tracksdeck/`, `circuitgm-tracksdeck-*`). Planned modules have
+  "Coming soon" placeholder pages and "(soon)" menu entries.
 - Not affiliated with Novation, Focusrite or Ableton. GeneralUser GS (S.
   Christian Collins) is credited wherever its samples are used; commercial
   Move packs on Ian's Mac are research only, never copied.

@@ -43,9 +43,12 @@
         </ul>
       </li>
       <li class="navgroup">
-        <button type="button" aria-haspopup="true">Patch Editors</button>
+        <button type="button" aria-haspopup="true">Decks &amp; Makers</button>
         <ul>
-          <li><a href="../patchworker/">PatchWorker</a></li>
+          <li><a href="../tracksdeck/">TracksDECK</a></li>
+          <li><a href="../tracksmaker/">TracksMAKER (soon)</a></li>
+          <li><a href="../rhythmdeck/">RhythmDECK (soon)</a></li>
+          <li><a href="../rhythmmaker/">RhythmMAKER (soon)</a></li>
         </ul>
       </li>
       <li class="navgroup">
@@ -59,7 +62,7 @@
 </nav>
 <header class="masthead">
   <div class="wrap">
-    <h1>MIDI2Rhythm <span>MIDI to Circuit Rhythm converter</span> <em class="badge" title="Version of the MIDI2Rhythm code running in this page">For testing · <span id="version">v0.21</span></em></h1>
+    <h1>MIDI2Rhythm <span>MIDI to Circuit Rhythm converter</span> <em class="badge" title="Version of the MIDI2Rhythm code running in this page">For testing · <span id="version">v0.22</span></em></h1>
     <p class="helplinks"><a href="help.html">How it works</a></p>
     <p class="lede">Turn a General MIDI file, or a project from a Circuit Tracks or Circuit Rhythm pack, into a Novation Circuit Rhythm pack. Every Rhythm track plays one note at a time, so MIDI2Rhythm picks the parts that matter most (drums, bass, melody, then the busiest), turns chords into a single line, and builds a <code>.circuitrhythmpack</code> on <a href="../rhythmgm/">RhythmInstGM</a> with a RhythmDrumGM kit in slots 113–128.</p>
     <p class="alpha">For testing: not yet tried on a Circuit Rhythm. The project format is reverse-engineered, so keep a backup of your packs, and please report anything odd on <a href="https://github.com/GuinanNo1/RosettaGM/issues">GitHub</a>.</p>
@@ -271,6 +274,6 @@
   <p>Samples: <a href="https://github.com/mrbumpy409/GeneralUser-GS">GeneralUser GS</a> by S. Christian Collins (<a href="../rhythmgm/LICENSE-GeneralUser-GS.txt">licence</a>). Not affiliated with Novation or Focusrite; "Circuit Rhythm" and "Components" are their trademarks.</p>
 </footer>
 
-<script type="module" src="../js/m2r/app.js?v=20261121rgm2"></script>
+<script type="module" src="../js/m2r/app.js?v=20261127dm"></script>
 </body>
 </html>

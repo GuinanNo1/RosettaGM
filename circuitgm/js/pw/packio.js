@@ -1,4 +1,4 @@
-// PatchWorker: reading and writing Circuit Tracks packs and patch files, and keeping the working
+// TracksDECK: reading and writing Circuit Tracks packs and patch files, and keeping the working
 // session in the browser between visits.
 import { readZip, writeZipDeflate } from '../vendor/zip.js';
 import { PATCH_SIZE, SYX_SIZE, parseSyx, toSyx, getName, initPatch } from './params.js?v=20261114s';
@@ -21,7 +21,7 @@ export async function openPack(buffer, fileName = '') {
   if (index.product && index.product !== 'circuit-tracks') {
     throw new Error(index.product === 'circuit-rhythm'
       ? 'This is a Circuit Rhythm pack. The Circuit Rhythm has no synth patches to edit.'
-      : `This pack is for "${index.product}". PatchWorker edits Circuit Tracks packs.`);
+      : `This pack is for "${index.product}". TracksDECK edits Circuit Tracks packs.`);
   }
   const files = new Map();
   for (const [name, get] of zip) files.set(name, new Uint8Array(await get()));
@@ -136,23 +136,54 @@ export function download(data, fileName, type = 'application/octet-stream') {
 export const fileSafe = (s) => (String(s).replace(/[^\w .()+-]/g, '').trim() || 'Patch');
 
 // ------------------------------------------------------------------ session (IndexedDB)
-const DB = 'circuitgm-patchworker';
-function idb() {
+const DB = 'circuitgm-tracksdeck';
+// TracksDECK was PatchWorker up to 0.29. Its saved data (localStorage keys and this IndexedDB
+// session) moves once to the new names, so an open session and the settings survive the rename.
+const OLD = 'circuitgm-patchworker';
+export function migrateLocalStorage() {
+  try {
+    for (const k of Object.keys(localStorage)) {
+      if (!k.startsWith(OLD)) continue;
+      const nk = DB + k.slice(OLD.length);
+      if (localStorage.getItem(nk) === null) localStorage.setItem(nk, localStorage.getItem(k));
+      localStorage.removeItem(k);
+    }
+  } catch { /* private mode */ }
+}
+migrateLocalStorage();
+function openDb(name) {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB, 1);
+    const req = indexedDB.open(name, 1);
     req.onupgradeneeded = () => req.result.createObjectStore('kv');
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
 }
-async function kv(mode, fn) {
-  const db = await idb();
+function run(db, mode, fn) {
   return new Promise((resolve, reject) => {
     const tx = db.transaction('kv', mode);
     const req = fn(tx.objectStore('kv'));
     tx.oncomplete = () => { db.close(); resolve(req?.result); };
     tx.onerror = () => { db.close(); reject(tx.error); };
   });
+}
+let moved = null;
+function migrateSession() {
+  return (moved ??= (async () => {
+    try {
+      if (indexedDB.databases && !(await indexedDB.databases()).some((d) => d.name === OLD)) return;
+      const pack = await run(await openDb(OLD), 'readonly', (s) => s.get('pack'));
+      const edits = await run(await openDb(OLD), 'readonly', (s) => s.get('edits'));
+      if ((pack || edits) && !(await run(await openDb(DB), 'readonly', (s) => s.count()))) {
+        await run(await openDb(DB), 'readwrite', (s) => { if (pack) s.put(pack, 'pack'); if (edits) s.put(edits, 'edits'); });
+      }
+      indexedDB.deleteDatabase(OLD);
+    } catch { /* private mode */ }
+  })());
+}
+async function kv(mode, fn) {
+  await migrateSession();
+  return run(await openDb(DB), mode, fn);
 }
 export const session = {
   // The opened pack file (once per pack) ...

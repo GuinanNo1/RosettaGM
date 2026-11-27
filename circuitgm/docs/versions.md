@@ -8,15 +8,17 @@ Each tool page shows its version next to its status badge, so you can tell which
 
 | Tool | Current | Shown as |
 |---|---|---|
-| MIDI2Circuit | 0.16 | alpha 0.16 |
-| MIDI2Rhythm | 0.21 | For testing · v0.21 |
-| Circuit2MIDI | 0.7 | alpha 0.7 |
-| CircuitTrim | 0.5 | alpha 0.5 |
-| PatchWorker | 0.29 | For testing · v0.29 (title line under the menu) |
+| MIDI2Circuit | 0.17 | alpha 0.17 |
+| MIDI2Rhythm | 0.22 | For testing · v0.22 |
+| Circuit2MIDI | 0.8 | alpha 0.8 |
+| CircuitTrim | 0.6 | alpha 0.6 |
+| TracksDECK (was PatchWorker) | 0.30 | For testing · v0.30 (title line under the menu) |
+| TracksMAKER, RhythmDECK, RhythmMAKER | – | Coming soon (placeholder pages) |
 
 Numbering started on 14 Nov 2026. Earlier changes are grouped roughly:
 
 ## MIDI2Circuit
+- **0.17** (27 Nov 2026): menu's Patch Editors group renamed Decks & Makers (TracksDECK, was PatchWorker; TracksMAKER, RhythmDECK, RhythmMAKER coming soon). Tool unchanged.
 - **0.16** (21 Nov 2026): menu lists the Ableton Move tools (Devices › Ableton Move, MoveGM, MIDI2Move). Tool unchanged.
 - **0.15** (21 Nov 2026): CircuitGM moved into RosettaGM (now guinanno1.github.io/RosettaGM/circuitgm/); menu brand RosettaGM, new Devices group, "Circuit MIDI Converters" renamed "MIDI Converters". Tool unchanged.
 - **0.14** (17 Nov 2026): PackTrim renamed CircuitTrim (button and links).
@@ -35,9 +37,10 @@ Numbering started on 14 Nov 2026. Earlier changes are grouped roughly:
 - 0.1 (6 Nov 2026): first public alpha.
 
 ## MIDI2Rhythm
-See `midi2rhythm/help.html` (Versions). 0.1–0.6 on 14 Nov 2026; 0.7 (15 Nov): Circuit packs as the song; 0.8: pack projects keep their layout; 0.9: drum Pitch to Tune, project colours; 0.10: scale-root fix for Tracks notes, scene mute recall copied; 0.11: pack colour names (wrong guess); 0.12: Components' real colour names; 0.13: Pack colour setting removed; 0.14: effects (presets and sends); 0.15: preset names; 0.16: preset tables shared with MIDI2Circuit (`js/fx.js`), packs unchanged; 0.17: Effects as step 5 with send sliders; 0.18: sidechain for all 8 tracks; 0.19: a kept layout keeps the source project's mix (FX, levels, pans, sends, sidechain); 0.20 (21 Nov): moved into RosettaGM, menu changes only; 0.21: Move tools in the menu.
+See `midi2rhythm/help.html` (Versions). 0.1–0.6 on 14 Nov 2026; 0.7 (15 Nov): Circuit packs as the song; 0.8: pack projects keep their layout; 0.9: drum Pitch to Tune, project colours; 0.10: scale-root fix for Tracks notes, scene mute recall copied; 0.11: pack colour names (wrong guess); 0.12: Components' real colour names; 0.13: Pack colour setting removed; 0.14: effects (presets and sends); 0.15: preset names; 0.16: preset tables shared with MIDI2Circuit (`js/fx.js`), packs unchanged; 0.17: Effects as step 5 with send sliders; 0.18: sidechain for all 8 tracks; 0.19: a kept layout keeps the source project's mix (FX, levels, pans, sends, sidechain); 0.20 (21 Nov): moved into RosettaGM, menu changes only; 0.21: Move tools in the menu; 0.22 (27 Nov): Decks & Makers in the menu (see help.html).
 
 ## Circuit2MIDI
+- **0.8** (27 Nov 2026): menu's Patch Editors group renamed Decks & Makers (TracksDECK, was PatchWorker; TracksMAKER, RhythmDECK, RhythmMAKER coming soon). Tool unchanged.
 - **0.7** (21 Nov 2026): menu lists the Ableton Move tools (Devices › Ableton Move, MoveGM, MIDI2Move). Tool unchanged.
 - **0.6** (21 Nov 2026): CircuitGM moved into RosettaGM (now guinanno1.github.io/RosettaGM/circuitgm/); menu brand RosettaGM, new Devices group, "Circuit MIDI Converters" renamed "MIDI Converters". Tool unchanged.
 - **0.5** (17 Nov 2026): PackTrim renamed CircuitTrim (button and links).
@@ -47,13 +50,16 @@ See `midi2rhythm/help.html` (Versions). 0.1–0.6 on 14 Nov 2026; 0.7 (15 Nov): 
 - 0.1 (8 Nov 2026): first alpha.
 
 ## CircuitTrim (was PackTrim)
+- **0.6** (27 Nov 2026): menu's Patch Editors group renamed Decks & Makers (TracksDECK, was PatchWorker; TracksMAKER, RhythmDECK, RhythmMAKER coming soon). Tool unchanged.
 - **0.5** (21 Nov 2026): menu lists the Ableton Move tools (Devices › Ableton Move, MoveGM, MIDI2Move). Tool unchanged.
 - **0.4** (21 Nov 2026): CircuitGM moved into RosettaGM (now guinanno1.github.io/RosettaGM/circuitgm/); menu brand RosettaGM, new Devices group, "Circuit MIDI Converters" renamed "MIDI Converters". Tool unchanged.
 - **0.3** (17 Nov 2026): renamed from PackTrim to CircuitTrim, at `circuittrim/` (the old `packtrim/` address redirects). Still under the menu's Pack Trimming group, which leaves room for trimmers for other devices.
 - **0.2** (14 Nov 2026): version shown; "Keep: only project N" (Advanced); takes packs handed over from the other tools.
 - 0.1 (10 Nov 2026): first alpha.
 
-## PatchWorker
+## TracksDECK (was PatchWorker)
+Called PatchWorker up to 0.29; the entries below 0.30 use the old name and paths (`patchworker/`, `js/patchworker.js`, `css/patchworker.css`).
+- **0.30** (27 Nov 2026): renamed TracksDECK, the offline module of the Decks & Makers family (`<Device>DECK` offline player and editor, `<Device>MAKER` live editor over USB). Page at `tracksdeck/` (`js/tracksdeck.js`, `css/tracksdeck.css`, test `tests/ui_tracksdeck.cjs`); no redirect from `patchworker/` (the address was never shared). Browser data moves once to the new names (`js/pw/packio.js`: localStorage keys `circuitgm-patchworker*` to `circuitgm-tracksdeck*`, the IndexedDB session `circuitgm-patchworker` to `circuitgm-tracksdeck`), so an open session and settings survive. The menu's Patch Editors group is now Decks & Makers, with TracksMAKER, RhythmDECK and RhythmMAKER as Coming soon placeholder pages (`tracksmaker/`, `rhythmdeck/`, `rhythmmaker/`). Title, help, README and overview card describe it as a player and editor. Test `tests/ui_migrate.cjs`. Nothing else changed in the tool.
 - **0.29** (27 Nov 2026): Save keeps the scene chain (0x2C0) and the pattern chains each track plays (0x2C4); loading brings them back. The hardware saves the scene playing at the time (6 of 21 projects in Ian's packs were saved partway through their chain), so saved pattern chains that match any scene leave the chain playing from its first scene; only chains that match no scene (chosen by hand) load as chosen. Choosing scenes or patterns isn't an unsaved edit by itself. Test `tests/ui_selsave.cjs`.
 - **0.28** (27 Nov 2026): Record mode (User Guide pp. 35-37, 62-64, 71). Record (or R) toggles it; held over half a second it ends on release; Shift + Record is Rec Quantise (remembered; Shift shows it on the legend). While playing: notes played by hand (pads, computer keys, MIDI keyboard) on synth/MIDI tracks in Note/Expanded Note view go into the playing pattern (nearest step, or micro step with Rec Quantise off; snapped to the scale) with the held length as gate; drum sample pads record hits (sample flip); turned knobs (synth macros, Mixer levels/pans, FX sends) write their value from then until Record ends, as on the hardware. Stopped with a step chosen in Note view, a turned macro is written on that step. Heard from the next time round without restarting playback (`player.swapEvents`). Red, thicker step cursor. Not yet: drum macro knobs, holding a step pad while playing. Test `tests/ui_record.cjs`.
 - **0.27** (27 Nov 2026): the pack column hides to a thin strip (‹ / › at its top, or the \ key; remembered between visits). With it hidden the TRACKS panel is centred (Ian) and grows as far as the window's height lets the pads fit (about 1200 px wide at 1920 × 1080; unchanged on a 1440 × 900 laptop); the piano roll and lane follow. Stacked (phone) layout: the column collapses to its toggle. Test `tests/ui_side.cjs`.

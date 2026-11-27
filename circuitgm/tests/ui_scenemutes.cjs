@@ -1,4 +1,4 @@
-// PatchWorker 0.22: scene mutes (Circuit Tracks firmware 1.2). Each scene saves the mutes it was
+// TracksDECK 0.22: scene mutes (Circuit Tracks firmware 1.2). Each scene saves the mutes it was
 // stored with; Mixer view's pad 9 is Mute Recall. With it on, a scene's mutes become the current
 // mutes when it starts (or is chosen while stopped) and the mute pads show them; mutes changed by
 // hand hold until the next scene. With it off, scenes leave the mutes alone. Saved with the project.
@@ -17,21 +17,21 @@ const { chromium } = require('playwright');
   const p = await (await browser.newContext({ viewport: { width: 1400, height: 1000 } })).newPage();
   p.on('console', (m) => { if (m.type() === 'error' && !/ERR_|fonts\./.test(m.text())) errors.push(m.text()); });
   p.on('pageerror', (e) => errors.push(e.message));
-  await p.goto('http://localhost:8765/circuitgm/patchworker/');
-  await p.evaluate(() => { indexedDB.deleteDatabase('circuitgm-patchworker'); localStorage.clear(); });
-  await p.goto('http://localhost:8765/circuitgm/patchworker/');
-  await p.waitForFunction(() => window.patchworker?.S.pack);
+  await p.goto('http://localhost:8765/circuitgm/tracksdeck/');
+  await p.evaluate(() => { indexedDB.deleteDatabase('circuitgm-tracksdeck'); localStorage.clear(); });
+  await p.goto('http://localhost:8765/circuitgm/tracksdeck/');
+  await p.waitForFunction(() => window.tracksdeck?.S.pack);
   await p.setInputFiles('#file-pack', packFile);
-  await p.waitForFunction(() => window.patchworker.proj.loaded);
+  await p.waitForFunction(() => window.tracksdeck.proj.loaded);
   const pw = (fn, ...a) => p.evaluate(fn, ...a);
-  await pw(() => window.patchworker.loadProject(24));
-  await p.waitForFunction(() => window.patchworker.proj.entry?.slot === 24);
+  await pw(() => window.tracksdeck.loadProject(24));
+  await p.waitForFunction(() => window.tracksdeck.proj.entry?.slot === 24);
   await p.click('#face [data-face=tracks]');
   await pw(() => [...document.querySelectorAll('button')].find((b) => b.textContent.trim().startsWith('Mixer')).click());
   await p.waitForSelector('.pad.recall');
 
   const maskOf = (m) => m.map((x, t) => (x ? 1 << t : 0)).reduce((a, b) => a | b, 0);
-  const state = () => pw(() => { const pp = window.patchworker.proj; return { recall: pp.muteRecall, mutes: pp.mutes.slice(), heard: pp.player.mutes.slice(), masks: pp.song.scenes.map((s) => s.mask) }; });
+  const state = () => pw(() => { const pp = window.tracksdeck.proj; return { recall: pp.muteRecall, mutes: pp.mutes.slice(), heard: pp.player.mutes.slice(), masks: pp.song.scenes.map((s) => s.mask) }; });
   const pads = () => p.$$eval('.pad.mute', (x) => x.map((e) => e.classList.contains('muted')));
 
   let s = await state();
@@ -49,19 +49,19 @@ const { chromium } = require('playwright');
   check(maskOf(s.mutes) === m2 && maskOf(await pads()) === m2, 'choosing scene 2 recalls its mutes');
 
   // Every hit is rendered (muting is by gain now), with a scene-mutes event at each scene start.
-  await pw(() => { const pp = window.patchworker.proj; pp.selectScene(0); pp.selectScene(1, { chain: true }); });
-  const ev = await pw(() => { const pp = window.patchworker.proj; const e = pp.render.events.filter((x) => x.sceneMutes != null); return { n: e.length, first: e[0], second: e.find((x) => x.scene === 1), d1: pp.render.events.some((x) => x.track === 0 && x.note != null) }; });
+  await pw(() => { const pp = window.tracksdeck.proj; pp.selectScene(0); pp.selectScene(1, { chain: true }); });
+  const ev = await pw(() => { const pp = window.tracksdeck.proj; const e = pp.render.events.filter((x) => x.sceneMutes != null); return { n: e.length, first: e[0], second: e.find((x) => x.scene === 1), d1: pp.render.events.some((x) => x.track === 0 && x.note != null) }; });
   check(ev.first?.t === 0 && ev.first.sceneMutes === m1, 'the chain starts with scene 1\'s mutes');
   check(ev.second?.sceneMutes === m2 && ev.second.t > 0, `scene 2's mutes come at its start (${ev.second?.t?.toFixed(2)} s)`);
   check(ev.d1, 'Synth 1\'s notes are in what plays even though scene 1 mutes it (so it can be unmuted)');
 
   // Unmute Synth 1 by hand in scene 1, then edit-style restart inside the scene: the hand mute holds.
   await p.click('.pad.mute[data-mute="0"]');
-  await pw(() => window.patchworker.proj.play());
+  await pw(() => window.tracksdeck.proj.play());
   await p.waitForTimeout(400);
   s = await state();
   check(!s.mutes[0] && maskOf(s.mutes) === (m1 & ~1), 'Synth 1 unmuted by hand plays in scene 1 (Play keeps the hand mutes in the scene they were set)');
-  await pw(() => window.patchworker.proj.changed(false));
+  await pw(() => window.tracksdeck.proj.changed(false));
   await p.waitForTimeout(200);
   s = await state();
   check(!s.mutes[0], 'a restart inside the scene keeps the hand mute');
@@ -73,7 +73,7 @@ const { chromium } = require('playwright');
     check(maskOf(s.heard) === maskOf(s.mutes), 'player and panel agree');
     check(maskOf(s.mutes) === m2 && maskOf(await pads()) === m2, 'when scene 2 starts, its mutes replace the current ones and the pads show them');
   } else console.log(`(scene 2 starts after ${ev.second.t.toFixed(1)} s: not waited for)`);
-  await pw(() => window.patchworker.proj.stop());
+  await pw(() => window.tracksdeck.proj.stop());
 
   // Mute Recall off: scenes leave the mutes alone; no scene-mutes events; a project edit.
   await p.click('.pad.recall');
@@ -83,21 +83,21 @@ const { chromium } = require('playwright');
   await p.click('.pad.scene[data-scene="0"]');
   s = await state();
   check(maskOf(s.mutes) === before, 'with it off, choosing a scene keeps the current mutes');
-  check(await pw(() => !window.patchworker.proj.render.events.some((x) => x.sceneMutes != null)), 'and nothing in playback changes them');
-  check(await pw(() => window.patchworker.proj.edited), 'the project counts as edited');
+  check(await pw(() => !window.tracksdeck.proj.render.events.some((x) => x.sceneMutes != null)), 'and nothing in playback changes them');
+  check(await pw(() => window.tracksdeck.proj.edited), 'the project counts as edited');
 
   // Save keeps it; reloading the project reads it back.
-  await pw(() => window.patchworker.proj.save());
-  check(await pw(() => window.patchworker.proj.entry.project.muteRecall === 0), 'Save writes Mute Recall off into the project');
-  await pw(() => window.patchworker.loadProject(24));
+  await pw(() => window.tracksdeck.proj.save());
+  check(await pw(() => window.tracksdeck.proj.entry.project.muteRecall === 0), 'Save writes Mute Recall off into the project');
+  await pw(() => window.tracksdeck.loadProject(24));
   await p.waitForTimeout(300);
   s = await state();
   check(s.recall === false && maskOf(s.mutes) === 0, 'reloaded: Mute Recall off, nothing muted');
   await p.click('.pad.recall');
   s = await state();
-  check(s.recall === true && maskOf(s.mutes) === s.masks[await pw(() => window.patchworker.proj.scene)], 'turning it on brings the chosen scene\'s mutes at once');
-  await pw(() => window.patchworker.proj.save());
-  check(await pw(() => window.patchworker.proj.entry.project.muteRecall === 1), 'Save writes Mute Recall on');
+  check(s.recall === true && maskOf(s.mutes) === s.masks[await pw(() => window.tracksdeck.proj.scene)], 'turning it on brings the chosen scene\'s mutes at once');
+  await pw(() => window.tracksdeck.proj.save());
+  check(await pw(() => window.tracksdeck.proj.entry.project.muteRecall === 1), 'Save writes Mute Recall on');
 
   check(errors.length === 0, `no page errors${errors.length ? ': ' + errors.join(' | ') : ''}`);
   await browser.close();

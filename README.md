@@ -5,7 +5,7 @@ General MIDI as a common language for grooveboxes. Like the Rosetta Stone, every
 
 | Device family | Packs and tools | Status |
 |---|---|---|
-| **CircuitGM**: Novation Circuit Tracks and Circuit Rhythm | TracksGM, RhythmGM, MIDI2Circuit, MIDI2Rhythm, Circuit2MIDI, PatchWorker, CircuitTrim: see [`circuitgm/README.md`](circuitgm/README.md) | Ready / alpha |
+| **CircuitGM**: Novation Circuit Tracks and Circuit Rhythm | TracksGM, RhythmGM, MIDI2Circuit, MIDI2Rhythm, Circuit2MIDI, TracksDECK, CircuitTrim: see [`circuitgm/README.md`](circuitgm/README.md) | Ready / alpha |
 | **MoveGM**: Ableton Move | MoveGM sound pack, MIDI2Move converter: see [`movegm/README.md`](movegm/README.md) | For testing |
 
 RosettaGM grew out of the CircuitGM repository (21 Nov 2026) and keeps its full history. The old CircuitGM addresses redirect to their new places under `circuitgm/`.
