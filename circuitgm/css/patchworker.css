@@ -472,6 +472,9 @@ body.doc { display: block; overflow: auto; }
 .mixbox .lvl { display: grid; gap: 3px; justify-items: center; font: 600 .66rem var(--head); color: var(--muted); }
 .mixbox .lvl input { width: 100%; }
 .mixbox .lvl output { font: 400 .72rem var(--mono); color: var(--lcd-ink); }
+/* A fader moved by a recorded level, pan or send movement while the song plays (0.26). */
+.mixbox .lvl.auto output, .faderbox .lvl.auto output { color: var(--accent); }
+.mixbox .lvl.auto input, .faderbox .lvl.auto input { filter: drop-shadow(0 0 3px var(--accent)); }
 .tempobox { display: grid; gap: 10px; padding: 14px; background: #15151d; border-radius: 10px; box-shadow: inset 0 2px 6px #000c; }
 .bigbpm { margin: 0; font: 600 2.6rem var(--mono); color: var(--lcd-ink); text-align: center; }
 .tempobox .trow { display: grid; grid-template-columns: 4.5em minmax(0, 1fr) auto auto; gap: 10px; align-items: center; font-size: .86rem; color: var(--muted); }

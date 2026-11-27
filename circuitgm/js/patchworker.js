@@ -8,10 +8,10 @@ import { PatchSynth, waveTable, lfoShape, envelopePoints } from './pw/engine.js?
 import { TracksLink, VIEW_CODES } from './pw/midi.js?v=20261114s';
 import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, projectsFollowing, download,
   fileSafe, session, PATCH_SLOTS } from './pw/packio.js?v=20261114s';
-import { buildPanel } from './pw/panel.js?v=20261127b';
+import { buildPanel } from './pw/panel.js?v=20261127c';
 import { drumRate } from './pw/mixlaws.js?v=20261114s';
 import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
-import { ProjectPlayer, packProjects } from './pw/project.js?v=20261127b';
+import { ProjectPlayer, packProjects } from './pw/project.js?v=20261127c';
 
 const DEFAULT_PACK = '../tracksgm/TracksGM_v1.circuittrackspack';
 // PatchWorker is Offline only for now (plan-patchworker-tracks-first.md, 22 Nov 2026): the browser is
@@ -722,7 +722,7 @@ function buildMacros() {
     const mix = () => tracksPanel?.mixKnobs?.() ?? null;
     const kn = knob({ addr, lo: 0, hi: 127, label: String(k + 1), aria: `Macro ${k + 1}`,
       def: () => mix()?.def ?? 0, bipolar: () => !!mix()?.pan, text: (v) => mix()?.text(v) ?? null,
-      get: () => { const m = mix(); if (m) return m.get(k); const i = projMacroSynth(); return i == null ? S.bytes[addr] : liveMacro(i, k); },
+      get: () => { const m = mix(); if (m) return m.live?.(k) ?? m.get(k); const i = projMacroSynth(); return i == null ? S.bytes[addr] : liveMacro(i, k); },
       set: (v) => { const m = mix(); if (m) { m.set(k, v); repaint(addr); return; } const i = projMacroSynth(); if (i == null) { setByte(addr, v); return; } proj.setMacro(i, k, v); syncEditorMacros(); repaint(addr); } });
     const cell = h('div', { class: 'macro', title: `Macro ${k + 1}: click to choose what it controls` }, kn, caption);
     cell.addEventListener('pointerdown', () => { if (mix()) return; if (S.macro !== k) { S.macro = k; paintMacroSel(); S.paintMacro?.(); } });
@@ -735,7 +735,10 @@ function buildMacros() {
       if (m) {
         // The knob lights as on the hardware: the track's colour, dimmer as the level drops; for pan
         // white in the centre, bluer to the left, pinker to the right.
-        const v = m.get(k);
+        // While the song plays it follows recorded movements of that level, pan or send (0.26).
+        const live = m.live?.(k) ?? null;
+        const v = live ?? m.get(k);
+        cell.classList.toggle('auto', live != null && live !== m.get(k));
         caption.textContent = m.label(k);
         cell.style.setProperty('--mix', m.colour ? m.colour(k, v) : m.pan ? (v === 64 ? '#ffffff' : `color-mix(in srgb, ${v < 64 ? '#4f8bff' : '#ff6fb5'} ${Math.round((Math.abs(v - 64) / 64) * 100)}%, #ffffff)`) : `color-mix(in srgb, var(--kc) ${Math.round(25 + (v / 127) * 75)}%, #24242e)`);
         cell.classList.remove('unused');
@@ -784,7 +787,16 @@ function mixKnobsChanged() {
   repaintMacros();
 }
 function paintKnobsLive() {
-  if (tracksPanel?.mixKnobs?.()) return;
+  const m = tracksPanel?.mixKnobs?.();
+  if (m) {
+    // Mixer and FX views: the knobs follow recorded level, pan and send movements.
+    const vals = Array.from({ length: 8 }, (_, k) => m.live?.(k) ?? '').join(',');
+    if (vals === knobsShown) return;
+    knobsShown = vals;
+    for (let k = 0; k < 8; k++) for (const fn of watchers.get(macroPosAddr(k)) ?? []) fn();
+    for (const fn of always) fn();
+    return;
+  }
   const i = projMacroSynth();
   const vals = i == null ? '' : Array.from({ length: 8 }, (_, k) => liveMacro(i, k)).join(',');
   if (vals === knobsShown) return;

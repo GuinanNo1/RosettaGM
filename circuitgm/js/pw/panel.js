@@ -262,7 +262,31 @@ export function buildPanel(root, api) {
       x.out.textContent = v;
       x.input.disabled = !pp?.loaded;
       x.input.title = `${TRACKS[i].label} ${st.fxMode} send (0-127). Double-click for 0.${i === 2 || i === 3 ? ' Saved for the Circuit Tracks\' rear input; not heard in the browser.' : ''}`;
+      x.cell.classList.remove('auto');
     });
+    paintMixLive();
+  }
+  // While the song plays, the faders follow recorded level, pan and send movements, as the
+  // hardware's knob LEDs do; a fader being dragged is left alone. `.auto` marks a track whose
+  // value is a recorded one (not the project's own). Stopped, they show the project's values.
+  function follow(input, out, live, base, text) {
+    if (input.matches(':active')) return false;
+    const v = live ?? base;
+    if (+input.value !== v) { input.value = v; out.textContent = text(v); }
+    return live != null && live !== base;
+  }
+  function paintMixLive() {
+    if (!pp?.loaded) return;
+    if (st.view === 'mixer') {
+      levels.forEach((l, i) => {
+        const a = follow(l.input, l.out, pp.liveMix(i, 'level'), pp.levels[i], String);
+        const b = follow(l.pan, l.pout, pp.liveMix(i, 'pan'), pp.pans[i], panText);
+        l.cell.classList.toggle('auto', a || b);
+      });
+    } else if (st.view === 'fx') {
+      const key = `${st.fxMode}_send`;
+      sends.forEach((x, i) => x.cell.classList.toggle('auto', follow(x.input, x.out, pp.liveMix(i, key), pp.send(i, st.fxMode), String)));
+    }
   }
   // Tempo view: tempo and swing as the hardware's macros 1 and 2 would set them, and Tap.
   const bpm = h('input', { type: 'number', min: 40, max: 240, value: 120, 'aria-label': 'Tempo (BPM)' });
@@ -584,9 +608,11 @@ export function buildPanel(root, api) {
     if (st.view !== 'mixer') return null;
     const pan = st.mixMode === 'pan';
     const arr = () => (pan ? pp.pans : pp.levels);
+    const key = pan ? 'pan' : 'level';
     return {
-      pan, mode: st.mixMode, name: pan ? 'pan' : 'level',
+      pan, mode: st.mixMode, name: key, key,
       def: pan ? 64 : 100,
+      live: (k) => pp.liveMix(k, key),
       label: (k) => TRACKS[k].label,
       kind: (k) => TRACKS[k].kind,
       get: (k) => arr()[k],
@@ -608,7 +634,8 @@ export function buildPanel(root, api) {
   function fxKnobs() {
     const kind = st.fxMode, key = `${kind}_send`;
     return {
-      pan: false, mode: kind, name: `${kind} send`, def: 0,
+      pan: false, mode: kind, name: `${kind} send`, def: 0, key,
+      live: (k) => pp.liveMix(k, key),
       colour: (k, v) => `color-mix(in srgb, ${kind === 'reverb' ? '#f4e2b0' : '#ffab7a'} ${Math.round(20 + (v / 127) * 80)}%, #24242e)`,
       label: (k) => TRACKS[k].label,
       kind: (k) => TRACKS[k].kind,
@@ -1291,8 +1318,10 @@ export function buildPanel(root, api) {
       l.pan.value = pn;
       l.pout.textContent = panText(pn);
       l.input.disabled = l.pan.disabled = !pp?.loaded;
+      l.cell.classList.remove('auto');
     });
     mixbox.dataset.mode = st.mixMode;
+    paintMixLive();
   }
 
   // FX view (User Guide pp. 90-92): rows 1-2 the 16 delay presets, row 3 the 8 reverb presets (the
@@ -1461,6 +1490,7 @@ export function buildPanel(root, api) {
     } else if (st.view === 'mixer') {
       if (sceneMoved) paintMixer();
     }
+    if (st.view === 'mixer' || st.view === 'fx') paintMixLive();
     if (sceneMoved && ['patterns', 'mixer', 'tempo'].includes(st.view)) paintLcd();
   }
   // A project was loaded: drums take its own samples.

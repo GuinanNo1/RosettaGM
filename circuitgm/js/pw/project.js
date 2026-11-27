@@ -14,6 +14,9 @@ import { snapToScale, CHROMATIC } from '../scales.js';
 import { macroPosAddr, P } from './params.js?v=20261114s';
 import { projectMix, sidechainShape } from './mixlaws.js?v=20261125f';
 import { REVERB_PRESETS, TRACKS_DELAY_PRESETS, SIDECHAIN_PRESETS } from '../fx.js';
+
+// Recorded automation keys that move Mixer and FX views' knobs and faders.
+const MIX_KEYS = new Set(['level', 'pan', 'reverb_send', 'delay_send']);
 // Each track's reverb / delay send byte in the tail (S1, S2, M1, M2, Drum 1-4).
 const SEND_AT = [0, 1, 6, 7, 2, 3, 4, 5];
 const MACRO_POS = Array.from({ length: 8 }, (_, k) => macroPosAddr(k));   // knob positions in a patch
@@ -274,7 +277,18 @@ export class ProjectPlayer {
       for (const a of rendered.autos ?? []) events.push({ t: off + sec(a.tick), d: 0, track: a.track, autoKey: a.key, value: a.value });
     }
     events.sort((a, b) => a.t - b.t);
-    this.render = { song, order, rendered, loop, reps, events };
+    // The recorded level, pan and send movements by track and key, so the macro knobs and the
+    // faders can follow them while the song plays (liveMix).
+    const lanes = new Map();
+    for (const e of events) {
+      if (!e.autoKey || !MIX_KEYS.has(e.autoKey)) continue;
+      const k = `${e.track}:${e.autoKey}`;
+      let l = lanes.get(k);
+      if (!l) lanes.set(k, (l = { t: [], v: [] }));
+      l.t.push(e.t);
+      l.v.push(e.value);
+    }
+    this.render = { song, order, rendered, loop, reps, events, lanes };
   }
 
   // ---- transport
@@ -832,6 +846,18 @@ export class ProjectPlayer {
   get delayPreset() { return this.entry?.project?.delayPreset ?? 0; }
   get fxOn() { return !this.fx?.fxBypass; }
   // Track t's reverb or delay send (kind 'reverb' | 'delay'), 0-127.
+  // Where a recorded movement has track t's level, pan or send (key: level, pan, reverb_send,
+  // delay_send) at the play head, as heard; null when stopped or when nothing recorded has moved it
+  // yet (the project's own value then). Recorded values hold until the next one, across loops.
+  liveMix(t, key) {
+    if (!this.playing) return null;
+    const l = this.render?.lanes?.get(`${t}:${key}`);
+    if (!l) return null;
+    const pos = this.player.position;
+    let lo = 0, hi = l.t.length;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (l.t[m] <= pos) lo = m + 1; else hi = m; }
+    return lo ? l.v[lo - 1] : null;
+  }
   send(t, kind) { return this.fx?.[kind === 'reverb' ? 'reverbSends' : 'delaySends']?.[SEND_AT[t]] ?? 0; }
   setSend(t, kind, v) {
     const f = this.fx;
