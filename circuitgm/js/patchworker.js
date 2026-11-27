@@ -833,6 +833,18 @@ function setFace(face) {
   try { localStorage.setItem('circuitgm-patchworker-face', face); } catch { /* private mode */ }
 }
 
+// The pack column (left) can be hidden to a thin strip (0.27), remembered between visits; with it
+// hidden the TRACKS panel may grow (CSS). The roll and lane take the pads' new height.
+function setSide(hidden) {
+  $('#app').classList.toggle('side-hidden', hidden);
+  const b = $('#side-toggle');
+  b.textContent = hidden ? '›' : '‹';
+  b.setAttribute('aria-expanded', String(!hidden));
+  b.title = hidden ? 'Show the pack column (\\ key)' : 'Hide the pack column (\\ key)';
+  try { localStorage.setItem('circuitgm-patchworker-side', hidden ? 'hidden' : 'shown'); } catch { /* private mode */ }
+  requestAnimationFrame(() => { if (document.body.dataset.face === 'tracks') tracksPanel?.paint(); });
+}
+
 function showPage(page) {
   for (const p of ['main', 'fx', 'mod']) $(`#page-${p}`).hidden = p !== page;
   document.querySelectorAll('.tabs [role=tab]').forEach((t) => t.setAttribute('aria-selected', t.dataset.page === page));
@@ -1948,6 +1960,7 @@ function bindKeys() {
     if (key === ' ' && (e.target.tagName !== 'BUTTON' || e.target.closest('#tracks'))) { e.preventDefault(); if (proj.loaded) { stopLoop(); proj.toggle(); } else toggleLoop(); return; }
     if (key === 'escape') { panic(); stopLoop(); if (proj.playing) proj.stop(); return; }
     if (e.repeat) return;
+    if (key === '\\') { e.preventDefault(); setSide(!$('#app').classList.contains('side-hidden')); return; }
     if (key === 'z') return setOctave(S.octave - 1);
     if (key === 'x') return setOctave(S.octave + 1);
     const i = KEY_ROW.indexOf(key);
@@ -2231,6 +2244,10 @@ async function start() {
   let face = 'editor';
   try { face = localStorage.getItem('circuitgm-patchworker-face') || 'editor'; } catch { /* private mode */ }
   setFace(face);
+  let side = 'shown';
+  try { side = localStorage.getItem('circuitgm-patchworker-side') || 'shown'; } catch { /* private mode */ }
+  setSide(side === 'hidden');
+  $('#side-toggle').addEventListener('click', () => setSide(!$('#app').classList.contains('side-hidden')));
   paintMacroSel();
   paintLink();
   try {

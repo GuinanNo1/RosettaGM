@@ -12,7 +12,7 @@ Each tool page shows its version next to its status badge, so you can tell which
 | MIDI2Rhythm | 0.21 | For testing · v0.21 |
 | Circuit2MIDI | 0.7 | alpha 0.7 |
 | CircuitTrim | 0.5 | alpha 0.5 |
-| PatchWorker | 0.26 | For testing · v0.26 (title line under the menu) |
+| PatchWorker | 0.27 | For testing · v0.27 (title line under the menu) |
 
 Numbering started on 14 Nov 2026. Earlier changes are grouped roughly:
 
@@ -54,6 +54,7 @@ See `midi2rhythm/help.html` (Versions). 0.1–0.6 on 14 Nov 2026; 0.7 (15 Nov): 
 - 0.1 (10 Nov 2026): first alpha.
 
 ## PatchWorker
+- **0.27** (27 Nov 2026): the pack column hides to a thin strip (‹ / › at its top, or the \ key; remembered between visits). With it hidden the TRACKS panel is centred (Ian) and grows as far as the window's height lets the pads fit (about 1200 px wide at 1920 × 1080; unchanged on a 1440 × 900 laptop); the piano roll and lane follow. Stacked (phone) layout: the column collapses to its toggle. Test `tests/ui_side.cjs`.
 - **0.26** (27 Nov 2026): while the song plays, Mixer view's and FX view's macro knobs and faders follow recorded level, pan and send movements (as the hardware's knob LEDs do), each held until the next recorded value; a followed knob or fader glows and the fader's value is highlighted. Turning or dragging still sets the project's own value; stopped, they show the project's values. Test `tests/ui_mixfollow.cjs`.
 - **0.25** (27 Nov 2026): the pulsing scene pad (User Guide p. 83). In Mixer view the scene chosen last pulses bright/dim, with a ring, while the patterns selected match those stored in it; choosing other patterns in Patterns view stops it and choosing the same ones again brings it back (only the scene chosen last counts; after patterns are chosen by hand a scene chain no longer plays, so its first scene stays unlit). Replaces 0.24's steady ring. The scene playing now stays filled green but no longer pulses, so only the matched scene does. Reduced motion: ring only. Test `tests/ui_scenematch.cjs`.
 - **0.24** (27 Nov 2026): storing scenes in Mixer view (User Guide pp. 81-84; Rhythm 2.0 addendum p. 8). Shift + scene pad stores the patterns (or pattern chains) each track plays now and the current mutes; with Shift held the scene pads turn gold, stored ones bright. Clear + scene pad clears a scene (pattern 1 for every track, no mutes); Duplicate, a scene, then other scenes copies it. As on the hardware, storing doesn't select the scene or change the scene chain. Saved with the project, dropped by Revert. Chaining scenes with a mouse is now ⌘/Alt-click (Shift-click stores); hold-and-press still works.

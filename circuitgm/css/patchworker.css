@@ -112,7 +112,17 @@ input[type=number], input[type=search], input[type=text] { background: var(--wel
 
 /* ---------- layout ---------- */
 .app { display: grid; grid-template-columns: 272px minmax(0, 1fr); min-height: 0; }
-.side { display: flex; flex-direction: column; min-height: 0; background: var(--chrome); border-right: 1px solid var(--edge); }
+.side { position: relative; display: flex; flex-direction: column; min-height: 0; background: var(--chrome); border-right: 1px solid var(--edge); }
+/* The pack column can be hidden to a thin strip (0.27): ‹ / › at its top, or the \ key. */
+.sidetoggle { position: absolute; top: 6px; right: 8px; z-index: 2; width: 24px; height: 24px; padding: 0; border: 1px solid #3c3c52; border-radius: 6px; background: #24242f; color: var(--muted); font: 700 1rem/1 var(--head); cursor: pointer; }
+.sidetoggle:hover { color: var(--ink); background: #2e2e3a; }
+.app.side-hidden { grid-template-columns: 30px minmax(0, 1fr); }
+.app.side-hidden .side > :not(.sidetoggle) { display: none; }
+.app.side-hidden .sidetoggle { position: static; margin: 8px auto 0; }
+/* With the column hidden the TRACKS panel may grow, as far as the window's height lets the pads fit
+   (they are square: the pad grid is about twice as wide as it is tall, plus ~234 px of side
+   columns; ~595 px of the height goes to the bars, knobs and buttons). */
+.app.side-hidden .ct { max-width: clamp(920px, calc(2 * (100vh - 595px) + 234px), 1500px); margin-inline: auto; }   /* centred in the space (Ian) */
 .packhead { padding: 10px 12px 12px; border-bottom: 1px solid var(--edge); }
 .packinfo { margin: 6px 0 0; font-size: .8rem; color: var(--muted); }
 .listhead { display: grid; grid-template-columns: minmax(0, 1fr) 92px; gap: 6px; padding: 8px 12px; }
@@ -224,8 +234,10 @@ input[type=number], input[type=search], input[type=text] { background: var(--wel
 }
 @media (max-width: 760px) {
   body { overflow: auto; display: block; }
-  .app { grid-template-columns: 1fr; }
+  .app, .app.side-hidden { grid-template-columns: 1fr; }
   .side { max-height: 45vh; }
+  .app.side-hidden .sidetoggle { margin: 4px 8px; transform: rotate(90deg); }
+  .sidetoggle { transform: rotate(90deg); }
   .grid.top, .grid.fx { grid-template-columns: minmax(0, 1fr); }
   .macro-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .topnav { flex-wrap: wrap; }
