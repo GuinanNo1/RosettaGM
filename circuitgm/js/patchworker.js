@@ -8,10 +8,10 @@ import { PatchSynth, waveTable, lfoShape, envelopePoints } from './pw/engine.js?
 import { TracksLink, VIEW_CODES } from './pw/midi.js?v=20261114s';
 import { openPack, buildPack, bankSyx, slotEdited, slotBlank, editedSlots, projectsFollowing, download,
   fileSafe, session, PATCH_SLOTS } from './pw/packio.js?v=20261114s';
-import { buildPanel } from './pw/panel.js?v=20261127c';
+import { buildPanel } from './pw/panel.js?v=20261127e';
 import { drumRate } from './pw/mixlaws.js?v=20261114s';
 import { MidiKeys, SYNTH_CHANNELS } from './pw/keys.js?v=20261122a';
-import { ProjectPlayer, packProjects } from './pw/project.js?v=20261127c';
+import { ProjectPlayer, packProjects } from './pw/project.js?v=20261127e';
 
 const DEFAULT_PACK = '../tracksgm/TracksGM_v1.circuittrackspack';
 // PatchWorker is Offline only for now (plan-patchworker-tracks-first.md, 22 Nov 2026): the browser is
@@ -105,12 +105,14 @@ function noteOn(note, velocity = S.velocity) {
   S.held.set(note, true);
   if (hearBrowser()) audio().noteOn(note, velocity);
   if (hearTracks()) link.noteOn(S.synth, note, velocity);
+  if (proj.recording) tracksPanel?.recNote?.(note, velocity, true);   // Record mode (0.28)
   paintKeys();
 }
 function noteOff(note, force = false) {
   if (!S.held.has(note)) return;
   if (S.hold && !force) return;
   S.held.delete(note);
+  tracksPanel?.recNote?.(note, 0, false);
   synth?.noteOff(note);
   if (link.connected) link.noteOff(S.synth, note);
   paintKeys();
@@ -723,7 +725,16 @@ function buildMacros() {
     const kn = knob({ addr, lo: 0, hi: 127, label: String(k + 1), aria: `Macro ${k + 1}`,
       def: () => mix()?.def ?? 0, bipolar: () => !!mix()?.pan, text: (v) => mix()?.text(v) ?? null,
       get: () => { const m = mix(); if (m) return m.live?.(k) ?? m.get(k); const i = projMacroSynth(); return i == null ? S.bytes[addr] : liveMacro(i, k); },
-      set: (v) => { const m = mix(); if (m) { m.set(k, v); repaint(addr); return; } const i = projMacroSynth(); if (i == null) { setByte(addr, v); return; } proj.setMacro(i, k, v); syncEditorMacros(); repaint(addr); } });
+      set: (v) => {
+        const m = mix(); if (m) { m.set(k, v); repaint(addr); return; }
+        const i = projMacroSynth(); if (i == null) { setByte(addr, v); return; }
+        // Record mode (0.28): while playing, the turn is a recorded movement; stopped, with a step
+        // chosen in Note view, it is written on that step (User Guide p. 37).
+        if (proj.recKnob(i, `macro${k + 1}`, v)) { repaint(addr); return; }
+        const at = tracksPanel?.recStep?.();
+        if (at && at.t === i) { proj.setLaneValue(i, at.p, `macro${k + 1}`, at.k, null, v); proj.commitLanes(); toast(`Macro ${k + 1}: ${v} recorded on step ${at.k + 1}.`); repaint(addr); return; }
+        proj.setMacro(i, k, v); syncEditorMacros(); repaint(addr);
+      } });
     const cell = h('div', { class: 'macro', title: `Macro ${k + 1}: click to choose what it controls` }, kn, caption);
     cell.addEventListener('pointerdown', () => { if (mix()) return; if (S.macro !== k) { S.macro = k; paintMacroSel(); S.paintMacro?.(); } });
     caption.addEventListener('click', () => { if (!mix()) showPage('mod'); });
@@ -1961,6 +1972,7 @@ function bindKeys() {
     if (key === 'escape') { panic(); stopLoop(); if (proj.playing) proj.stop(); return; }
     if (e.repeat) return;
     if (key === '\\') { e.preventDefault(); setSide(!$('#app').classList.contains('side-hidden')); return; }
+    if (key === 'r' && document.body.dataset.face === 'tracks' && proj.loaded && tracksPanel?.setRecord) { e.preventDefault(); tracksPanel.setRecord(!tracksPanel.recording()); return; }
     if (key === 'z') return setOctave(S.octave - 1);
     if (key === 'x') return setOctave(S.octave + 1);
     const i = KEY_ROW.indexOf(key);

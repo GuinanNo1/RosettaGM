@@ -585,6 +585,12 @@ body.doc { display: block; overflow: auto; }
 .ct .cbtn.tbtn.play.on { background: #1f3a2c; box-shadow: inset 0 0 0 1px #34d27b; }
 .ct .cbtn.tbtn.rec .nm { color: #ff4b5c; }
 .ct .cbtn.tbtn.rec .leg { color: #ff8a95; }
+/* Record mode (0.28): Record lit; the step cursor turns red, and thicker, so it doesn't rely on colour. */
+.ct .cbtn.tbtn.rec.on { background: #4a1c22; box-shadow: inset 0 0 0 2px #ff4b5c, 0 0 12px #ff4b5c66; }
+.ct .cbtn.tbtn.rec.on .leg { color: #fff; }
+.ct .cbtn.tbtn.rec.q-on .leg { color: #7dffb0; }
+.ct .cbtn.tbtn.rec.q-off .leg { color: #ff8a95; }
+.tracks.rec .pad.step.play { box-shadow: inset 0 0 0 4px #ff4b5c; }
 .ct .padzone { max-width: none; }
 .ct .status { min-width: 0; }
 .ct .status .panel-lcd { margin: 2px 0 6px; }

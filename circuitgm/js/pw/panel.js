@@ -45,7 +45,7 @@ const DIRECTIONS = ['Forward', 'Reverse', 'Ping-pong', 'Random'];
 const FIXED_VELOCITY = 96;
 // Note view keyboard on the bottom two rows of pads: white keys on the bottom row, the black
 // keys above them (null = no key), from C to the next C.
-import { SCALES, CHROMATIC, ROOT_NAMES, inScale, degreeNote } from '../scales.js';
+import { SCALES, CHROMATIC, ROOT_NAMES, inScale, degreeNote, snapToScale } from '../scales.js';
 import { buildRoll } from './roll.js?v=20261125a';
 import { DELAY_NAMES, REVERB_NAMES } from '../fx.js';
 const WHITE = [0, 2, 4, 5, 7, 9, 11, 12];
@@ -182,10 +182,70 @@ export function buildPanel(root, api) {
   const shiftBtn = btn('shift', 'Shift', { title: 'Shift: click to arm it for the next button or pad, or hold the computer\'s Shift key', onclick: () => { shift.on = !shift.on; paintShift(); } });
   const playBtn = btn('tbtn play', '▶', { title: 'Play or stop the project (Space). Choose a project first (Projects, or Project in the bottom bar).', onclick: () => { useShift(); pp?.toggle(); } });
   playBtn.setAttribute('aria-label', 'Play');
-  const recBtn = btn('tbtn rec idle', '●', { below: 'Rec Quantise', title: 'Record (comes with step editing). Shift: Rec Quantise.', disabled: true });
+  // Record (User Guide pp. 35-37): a short press turns Record mode on or off; held for more than
+  // half a second, Record mode ends when it is let go (punch in, punch out). Shift + Record turns
+  // Rec Quantise on or off (on: notes land on the nearest step; off: the nearest micro step).
+  const recBtn = btn('tbtn rec', '●', { below: 'Rec Quantise', title: 'Record (R). Hold to punch in and out. Shift: Rec Quantise.' });
   recBtn.setAttribute('aria-label', 'Record');
+  try { st.recQ = localStorage.getItem('circuitgm-patchworker-recq') !== 'off'; } catch { st.recQ = true; }
+  let recDown = null;
+  recBtn.addEventListener('pointerdown', (e) => {
+    if (!pp?.loaded) return;
+    e.preventDefault();
+    if (isShift(e)) { useShift(); setRecQuantise(!st.recQ); recDown = null; return; }
+    const on = !st.rec;
+    setRecord(on);
+    recDown = on ? { at: performance.now(), id: e.pointerId } : null;
+  });
+  const recUp = (e) => { if (recDown && recDown.id === e.pointerId && performance.now() - recDown.at > 500) setRecord(false); recDown = null; };
+  recBtn.addEventListener('pointerup', recUp);
+  recBtn.addEventListener('pointercancel', recUp);
+  function setRecord(on) {
+    st.rec = !!on;
+    pp?.setRecording(st.rec);
+    if (pp) pp.rec.quantise = st.recQ;
+    for (const h of st.recHeld?.values() ?? []) pp?.recNoteOff(h);
+    st.recHeld = new Map();
+    flash(st.rec ? `Record on${pp?.playing ? '' : ' (press Play)'}: notes and drum hits you play, and knobs you turn, go into the patterns playing (Rec Quantise ${st.recQ ? 'on: nearest step' : 'off: nearest micro step'}). Record again to stop.` : 'Record off.');
+    paint();
+  }
+  function setRecQuantise(on) {
+    st.recQ = !!on;
+    if (pp) pp.rec.quantise = st.recQ;
+    try { localStorage.setItem('circuitgm-patchworker-recq', st.recQ ? 'on' : 'off'); } catch { /* private mode */ }
+    flash(`Rec Quantise ${st.recQ ? 'on: recorded notes land on the nearest step' : 'off: recorded notes land on the nearest micro step (a sixth of a step)'}.`);
+    paint();
+  }
+  // A note played by hand (pads, computer keys, a MIDI keyboard) while recording: synth and MIDI
+  // tracks in Note or Expanded Note view, onto the pattern the track plays; a note not in the scale
+  // takes the nearest one in it, as from an external controller (User Guide p. 38).
+  function recNote(n, vel, on) {
+    st.recHeld ??= new Map();
+    if (!on) { const h = st.recHeld.get(n); if (h) { st.recHeld.delete(n); pp.recNoteOff(h); } return; }
+    if (!st.rec || !pp?.playing || !['note', 'expand'].includes(st.view) || TRACKS[st.track].kind === 'drum' || (st.view === 'note' && st.armed)) return;
+    const sc = curScale();
+    const note = sc.root + snapToScale(n - sc.root, sc.type);
+    const h = pp.recNoteOn(st.track, note, vel ?? velocity());
+    if (h) st.recHeld.set(n, h);
+  }
+  // Stopped, in Record mode, with a step chosen in Note view: a turned macro knob writes its value
+  // on that step (User Guide p. 37). Returns the target, or null.
+  function recStep() {
+    if (!st.rec || !pp?.loaded || pp.playing || st.view !== 'note' || !st.armed || st.sel == null || TRACKS[st.track].kind !== 'synth') return null;
+    const vp = viewPattern(st.track);
+    return vp ? { t: st.track, p: vp.index, k: st.sel } : null;
+  }
   let shownShift = false;
+  // Shift held: Record shows whether Rec Quantise is on (the hardware lights it green or red; here
+  // the legend says it too).
+  function paintRecLegend() {
+    const sh = shift.on || shift.held;
+    recBtn.classList.toggle('q-on', sh && st.recQ);
+    recBtn.classList.toggle('q-off', sh && !st.recQ);
+    recBtn.querySelector('.leg').textContent = sh ? `Quantise ${st.recQ ? 'on' : 'off'}` : 'Rec Quantise';
+  }
   function paintShift() {
+    paintRecLegend();
     const on = shift.on || shift.held;
     shiftBtn.classList.toggle('on', on);
     root.classList.toggle('shifted', on);
@@ -404,6 +464,8 @@ export function buildPanel(root, api) {
       e.preventDefault();
       const slot = +pad.dataset.dsample, t = st.track, down = performance.now();
       api.audition(slot, t);
+      // Recording (and playing): the hit goes into the pattern, with this sample (User Guide p. 64).
+      if (st.rec && pp?.playing) { pp.recHit(t, slot, velocity()); pad.classList.add('down'); setTimeout(() => pad.classList.remove('down'), 120); return; }
       pad.classList.add('down');
       const up = () => {
         pad.classList.remove('down');
@@ -625,6 +687,7 @@ export function buildPanel(root, api) {
           flash(gone ? `${TRACKS[k].label}: recorded ${pan ? 'pan' : 'level'} movements deleted from pattern ${p + 1}.` : `${TRACKS[k].label}: no recorded ${pan ? 'pan' : 'level'} movements in pattern ${p == null ? '-' : p + 1}.`);
           return;
         }
+        if (pp.recKnob(k, key, v)) return;   // recording while playing: a recorded movement
         if (pan) pp.setPan(k, v); else pp.setLevel(k, v);
       },
     };
@@ -648,6 +711,7 @@ export function buildPanel(root, api) {
           flash(gone ? `${TRACKS[k].label}: recorded ${kind} send movements deleted from pattern ${p + 1}.` : `${TRACKS[k].label}: no recorded ${kind} send movements in pattern ${p == null ? '-' : p + 1}.`);
           return;
         }
+        if (pp.recKnob(k, key, v)) return;   // recording while playing: a recorded movement
         pp.setSend(k, kind, v);
       },
     };
@@ -1401,6 +1465,12 @@ export function buildPanel(root, api) {
     playBtn.classList.toggle('on', !!pp?.playing);
     playBtn.querySelector('.nm').textContent = pp?.playing ? '■' : '▶';
     playBtn.setAttribute('aria-label', pp?.playing ? 'Stop' : 'Play');
+    if (!pp?.loaded && st.rec) { st.rec = false; }
+    recBtn.classList.toggle('idle', !pp?.loaded);
+    recBtn.classList.toggle('on', !!st.rec);
+    recBtn.setAttribute('aria-pressed', String(!!st.rec));
+    root.classList.toggle('rec', !!st.rec);
+    paintRecLegend();
     mixbox.hidden = st.view !== 'mixer';
     sendbox.hidden = st.view !== 'fx';
     tempobox.hidden = st.view !== 'tempo';
@@ -1510,5 +1580,5 @@ export function buildPanel(root, api) {
   paint();
   // selectTrack: a track chosen on the Circuit Tracks itself (0 Synth 1 … 7 Drum 4).
   // selectView: a view chosen on the Circuit Tracks itself (an id from VIEWS).
-  return { paint, refresh, step, projectLoaded, macroSlot, mixKnobs, lane: () => roll.lane, selectTrack: (i) => { if (i >= 0 && i < TRACKS.length) selectTrack(i); }, selectView: (id) => { if (VIEWS.some((v) => v.id === id) && id !== st.view) selectView(id); }, state: st };
+  return { paint, refresh, step, projectLoaded, macroSlot, mixKnobs, recNote, recStep, setRecord: (on) => setRecord(on), recording: () => !!st.rec, lane: () => roll.lane, selectTrack: (i) => { if (i >= 0 && i < TRACKS.length) selectTrack(i); }, selectView: (id) => { if (VIEWS.some((v) => v.id === id) && id !== st.view) selectView(id); }, state: st };
 }

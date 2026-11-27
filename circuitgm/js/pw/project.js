@@ -8,7 +8,7 @@
 // chain (as chosen in Patterns view), mutes, levels, tempo and swing.
 import { readProject, isEmpty } from '../pack.js?v=20261122b';
 import { songOf, renderSong, STEP_TICKS, PPQ } from '../song.js?v=20261124b';
-import { Player } from '../player.js?v=20261125f';
+import { Player } from '../player.js?v=20261127e';
 import { serializeNCS } from '../vendor/ncs.js';
 import { snapToScale, CHROMATIC } from '../scales.js';
 import { macroPosAddr, P } from './params.js?v=20261114s';
@@ -79,6 +79,7 @@ export class ProjectPlayer {
     this.mutes = new Array(8).fill(false);
     this.muteRecall = true;  // Mixer view pad 9 (firmware 1.2): scenes recall their saved mutes
     this.recalled = null;    // the scene whose saved mutes were last recalled
+    this.rec = { on: false, quantise: true, latches: new Map() };   // Record mode
     this.levels = null;      // per track 0-127, as saved in the project (Mixer view)
     this.pans = null;        // per track 0-127, 64 = centre
     this.render = null;      // { order, rendered, scenes (song with the live scene), loop, events }
@@ -124,6 +125,8 @@ export class ProjectPlayer {
     this.player.solo = -1;
     this.muteRecall = proj.muteRecall !== 0;
     this.recalled = null;
+    this.rec.latches.clear();
+    this.player.holdKeys?.clear();
     this.player.setProject(proj, { patches: [0, 1].map((i) => this.ownCopy[i] ?? this.o.patchBytes(this.patchSlots[i])) });
     this.applyMacros();
     this.masterFilter = this.player.mix?.filter?.cutoff ?? 64;
@@ -315,6 +318,7 @@ export class ProjectPlayer {
   applyFilter() { this.player.mixer?.setFilter(this.masterFilter, this.player.mix?.filter?.resonance ?? 64); }
   stop() {
     this.wantPlay = false;
+    this.recEnd();
     this.player.stop();
     this.o.onStep?.(null);
     this.o.onChange?.();
@@ -851,6 +855,8 @@ export class ProjectPlayer {
   // yet (the project's own value then). Recorded values hold until the next one, across loops.
   liveMix(t, key) {
     if (!this.playing) return null;
+    const held = this.recLatched(t, key);
+    if (held != null) return held;
     const l = this.render?.lanes?.get(`${t}:${key}`);
     if (!l) return null;
     const pos = this.player.position;
@@ -934,12 +940,14 @@ export class ProjectPlayer {
   setSwing(v) { this.swing = Math.max(20, Math.min(80, Math.round(v))); this.changed(false); }
 
   // ---- where the play head is: the scene playing, and each track's pattern and step
-  tickAt(pos) {
-    if (!this.render?.loop) return;
+  // At audio position pos (seconds): the scene playing, and for each track the pattern, the step,
+  // its index in the play order (ord), how far into the step (frac, 0-1) and the step's length.
+  placeAt(pos) {
+    if (!this.render?.loop) return null;
     const { rendered, song, loop } = this.render;
     const tick = ((pos % loop) / (60 / this.tempo)) * PPQ;
     const sc = rendered.sceneStarts.find((s) => tick >= s.tick && tick < s.tick + s.length) ?? rendered.sceneStarts[0];
-    if (!sc) return;
+    if (!sc) return null;
     const t0 = tick - sc.tick;
     const tracks = this.song.tracks.map((tr) => {
       const c = song.scenes[sc.scene].chains[tr.index];
@@ -950,12 +958,137 @@ export class ProjectPlayer {
       for (let p = c.start; p <= c.end; p++) {
         const pat = tr.patterns[p];
         const ord = stepOrder(pat);
-        const len = ord.length * stepTicks(pat.rate);
-        if (t < len) return { pattern: p, step: ord[Math.floor(t / stepTicks(pat.rate))] };
+        const st = stepTicks(pat.rate);
+        const len = ord.length * st;
+        if (t < len) { const oi = Math.floor(t / st); return { pattern: p, step: ord[oi], oi, ord, frac: (t - oi * st) / st, stepSec: (st / PPQ) * (60 / this.tempo) }; }
         t -= len;
       }
       return null;
     });
-    this.o.onStep?.({ scene: sc.scene < 16 ? sc.scene : null, tracks, beat: Math.floor(tick / PPQ) });
+    return { scene: sc.scene, tracks, tick };
+  }
+  tickAt(pos) {
+    const at = this.placeAt(pos);
+    if (!at) return;
+    if (this.rec.latches.size) this.recWriteLatches(at);
+    const tracks = at.tracks.map((x) => (x ? { pattern: x.pattern, step: x.step } : null));
+    this.o.onStep?.({ scene: at.scene < 16 ? at.scene : null, tracks, beat: Math.floor(at.tick / PPQ) });
+  }
+
+  // ---- Record mode (User Guide pp. 35-37, 62-64, 71). While recording and playing, notes and drum
+  // hits played by hand go into the pattern each track is playing, on the nearest step (Rec
+  // Quantise on) or the nearest micro step (off); knob movements are written from the moment a
+  // knob is turned until Record mode ends, overwriting what was recorded there (as on the
+  // hardware: leave Record before the pattern comes round again to keep a movement). What is
+  // recorded is heard from the next time round, without stopping playback. Save keeps it.
+  setRecording(on) {
+    this.rec.on = !!on;
+    if (!on) this.recEnd();
+  }
+  get recording() { return this.rec.on; }
+  // Where a note played now lands: { p, k, m } (pattern, step, micro step 0-5), or null.
+  recPlace(t) {
+    if (!this.playing) return null;
+    const x = this.placeAt(this.player.position)?.tracks[t];
+    if (!x) return null;
+    let oi = x.oi, m = 0;
+    if (this.rec.quantise) { if (x.frac >= 0.5) oi++; }
+    else { m = Math.round(x.frac * 6); if (m === 6) { m = 0; oi++; } }
+    return { p: x.pattern, k: x.ord[oi % x.ord.length], m, stepSec: x.stepSec };
+  }
+  // A note played by hand on synth / MIDI track t: returns a handle for recNoteOff, or null.
+  recNoteOn(t, note, vel) {
+    if (!this.rec.on || this.isDrum(t)) return null;
+    const at = this.recPlace(t);
+    if (!at) return null;
+    const had = this.stepNotes(t, at.p, at.k).length;
+    if (!this.addNote(t, at.p, at.k, note, vel, 6, { commit: false })) return null;
+    if (!had) { const s = this.raw(t, at.p).steps[at.k]; for (let j = 0; j < 6; j++) if ((s.mask >> j) & 1) s.notes[j].delay = at.m; }
+    const pos = this.player.position;
+    this.recRefresh((e) => e.track === t && e.note === note && e.t > pos - 0.05 && e.t < pos + at.stepSec);
+    return { t, ...at, note, pos };
+  }
+  // The key is let go: the note's gate is how long it was held (in sixths of a step, 1-96).
+  recNoteOff(h) {
+    if (!h) return;
+    const held = this.playing ? Math.max(0, this.player.position - h.pos) : h.stepSec;
+    const n = this.stepNotes(h.t, h.p, h.k).find((x) => x.note === h.note);
+    if (!n) return;
+    const s = this.raw(h.t, h.p).steps[h.k].notes[n.j];
+    s.gate = (s.gate & 0x80) | Math.max(1, Math.min(96, Math.round((held / h.stepSec) * 6)));
+    this.recRefresh();
+  }
+  // A drum sample pad hit on drum track t: a hit with that sample (a sample flip if it isn't the
+  // track's own) at the step, or its micro step.
+  recHit(t, slot, vel) {
+    if (!this.rec.on || !this.isDrum(t)) return false;
+    const at = this.recPlace(t);
+    if (!at) return false;
+    const s = this.raw(t, at.p).steps[at.k];
+    const dflt = this.entry.project.defaultDrums?.[t - 4];
+    const choice = slot === dflt ? 0xff : slot;
+    if (!s.active) Object.assign(s, { active: true, micro: null, velocity: Math.max(1, Math.min(127, vel)), probability: 7, drumChoice: choice });
+    else s.drumChoice = choice;
+    if (at.m || s.micro) {
+      const mic = s.micro ? s.micro.slice(0, 6) : [true, false, false, false, false, false];
+      mic[at.m] = true;
+      this.setMicro(s, mic);
+    }
+    const pos = this.player.position;
+    this.recRefresh((e) => e.track === t && e.part && e.t > pos - 0.05 && e.t < pos + at.stepSec);
+    return true;
+  }
+  // A knob turned while recording: track t's automation key (macro1-8, level, pan, reverb_send,
+  // delay_send) holds value v from here until Record mode ends. Heard at once.
+  recKnob(t, key, v) {
+    if (!this.rec.on || !this.playing) return false;
+    const id = `${t}:${key}`;
+    const l = this.rec.latches.get(id) ?? { t, key, last: null };
+    l.v = Math.max(0, Math.min(127, Math.round(v)));
+    this.rec.latches.set(id, l);
+    (this.player.holdKeys ??= new Set()).add(id);
+    this.player.automate({ track: t, autoKey: key, value: l.v, live: true }, this.player.ctx.currentTime);
+    const at = this.placeAt(this.player.position);
+    if (at) this.recWriteLatches(at);
+    return true;
+  }
+  recLatched(t, key) { return this.rec.latches.get(`${t}:${key}`)?.v ?? null; }
+  // Write each turned knob's value at every sixth of a step the play head has passed since last time.
+  recWriteLatches(at) {
+    let wrote = false;
+    for (const l of this.rec.latches.values()) {
+      const x = at.tracks[l.t];
+      if (!x) continue;
+      const six = Math.min(5, Math.floor(x.frac * 6));
+      const n = x.ord.length * 6, cur = x.oi * 6 + six;
+      let from = cur;
+      if (l.last && l.last.p === x.pattern && l.last.n === n) {
+        if (cur === l.last.i) continue;              // still in the same sixth: already written
+        from = l.last.i + 1;
+        if (cur < l.last.i) from -= n;               // came round the end of the pattern
+      }
+      for (let i = from; i <= cur; i++) { const j = ((i % n) + n) % n; this.setLaneValue(l.t, x.pattern, l.key, x.ord[Math.floor(j / 6)], j % 6, l.v); wrote = true; }
+      l.last = { p: x.pattern, i: cur, n };
+    }
+    if (wrote) {
+      const now = performance.now();
+      if (now - (this.rec.refreshed ?? 0) > 300) this.recRefresh();
+    }
+  }
+  // Recording ends: the knobs go back to playing what was recorded.
+  recEnd() {
+    const had = this.rec.latches.size;
+    this.rec.latches.clear();
+    this.player.holdKeys?.clear();
+    if (had) this.recRefresh();
+  }
+  // Re-render after a recorded edit and hand the new events to the player without stopping it.
+  recRefresh(drop = null) {
+    this.rec.refreshed = performance.now();
+    this.entry.edited = true;
+    this.song = songOf(songPack(this.pack, this.o.patchName), this.entry);
+    this.rerender();
+    this.player.swapEvents(this.render.events, drop);
+    this.o.onChange?.();
   }
 }

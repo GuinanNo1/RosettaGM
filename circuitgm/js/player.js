@@ -164,6 +164,17 @@ export class Player {
     this.raf = requestAnimationFrame(frame);
   }
 
+  // New events for the same timeline while playing (a recorded note or knob movement): what is
+  // already scheduled stays, the rest comes from the new list, without stopping (PatchWorker's
+  // Record mode). drop(e): leave out an event not yet scheduled (a note just played by hand).
+  swapEvents(events, drop = null) {
+    if (!this.playing) return;
+    const from = this.scheduledTo ?? 0;
+    this.events = drop ? events.filter((e) => !(e.t >= from && drop(e))) : events;
+    this.idx = this.events.findIndex((e) => e.t >= from);
+    if (this.idx < 0) this.idx = this.events.length;
+  }
+
   stop() {
     if (this.timer) clearInterval(this.timer);
     if (this.raf) cancelAnimationFrame(this.raf);
@@ -194,6 +205,8 @@ export class Player {
   // to the mixer. Only with a project's mix (a Circuit Tracks project).
   automate(e, at) {
     if (!this.mix) return;
+    // A knob being recorded (Record mode, PatchWorker) is heard where the hand has it, not as recorded.
+    if (!e.live && this.holdKeys?.has(`${e.track}:${e.autoKey}`)) return;
     const m = /^macro(\d)$/.exec(e.autoKey);
     if (m) {
       const syn = e.track < 2 ? this.synths?.[e.track] : null;
@@ -211,6 +224,7 @@ export class Player {
   schedule() {
     const ctx = this.ctx;
     const horizon = ctx.currentTime + LOOKAHEAD - this.startTime;
+    this.scheduledTo = horizon;
     while (this.idx < this.events.length && this.events[this.idx].t < horizon) {
       const e = this.events[this.idx++];
       const at = this.startTime + e.t;
