@@ -170,7 +170,7 @@ export function buildPanel(root, api) {
     const sh = isShift(e); useShift();
     if (sh) { flash('Mutate is not built yet.'); return; }
     if (presetKind() === 'synth') { st.copying = !st.copying; paint(); return; }
-    if (STEP_VIEWS.includes(st.view)) setMode(st.mode === 'dup' ? null : 'dup');
+    if (STEP_VIEWS.includes(st.view) || st.view === 'mixer') setMode(st.mode === 'dup' ? null : 'dup');
   } });
   const saveBtn = btn('save half', 'Save', { title: 'Save: press once (it flashes), then again to save the project into the browser\'s copy of the pack (nothing is written to disk). In Projects view, press Save and then a pad to save to that project. Download pack writes a new pack file. Shift: Setup.', onclick: (e) => {
     const sh = isShift(e); useShift();
@@ -189,8 +189,9 @@ export function buildPanel(root, api) {
     const on = shift.on || shift.held;
     shiftBtn.classList.toggle('on', on);
     root.classList.toggle('shifted', on);
-    // Pattern Settings shows the start point while Shift is held, as on the hardware.
-    if (on !== shownShift && st.view === 'pattern' && !root.hidden) { shownShift = on; paint(); }
+    // Pattern Settings shows the start point while Shift is held, and Mixer view's scene pads turn
+    // gold, as on the hardware.
+    if (on !== shownShift && ['pattern', 'mixer'].includes(st.view) && !root.hidden) { shownShift = on; paint(); }
     shownShift = on;
   }
   document.addEventListener('keydown', (e) => { if (e.key === 'Shift' && !shift.held) { shift.held = true; paintShift(); } });
@@ -423,7 +424,8 @@ export function buildPanel(root, api) {
     if (pad.dataset.val != null) { e.preventDefault(); valuePress(+pad.dataset.val); return; }
     if (pad.dataset.keynote != null) { e.preventDefault(); setScale(+pad.dataset.keynote, null); return; }
     if (pad.dataset.scale != null) { e.preventDefault(); setScale(null, +pad.dataset.scale); return; }
-    // Chains, as on the hardware: hold one pattern (or scene) pad and press another. Shift-click too.
+    // Chains, as on the hardware: hold one pattern (or scene) pad and press another. Shift-click
+    // too for patterns; for scenes Shift stores the scene, so ⌘/Alt-click chains them.
     if (pad.dataset.pattern != null) {
       e.preventDefault();
       const t = +pad.dataset.ptrack, pt = +pad.dataset.pattern;
@@ -437,10 +439,26 @@ export function buildPanel(root, api) {
     if (pad.dataset.scene != null) {
       e.preventDefault();
       const i = +pad.dataset.scene;
+      if (!pp?.loaded) return;
+      // Shift + scene: store the patterns playing now and the mutes (User Guide p. 81; addendum p. 8).
+      if (isShift(e)) {
+        useShift();
+        const muted = pp.mutes.map((m, t) => (m ? TRACKS[t].label : null)).filter(Boolean);
+        pp.storeScene(i);
+        flash(`Scene ${i + 1} stored: the patterns playing now${muted.length ? `, with ${muted.join(', ')} muted` : ', no tracks muted'}. Save keeps it.`);
+        return;
+      }
+      if (st.mode === 'clear') { pp.clearScene(i); flash(`Scene ${i + 1} cleared: pattern 1 for every track, no mutes.`); return; }
+      if (st.mode === 'dup') {
+        if (st.dupSrc == null) { st.dupSrc = i; paint(); flash(`Copying scene ${i + 1}: press the scenes to copy it to. Duplicate again stops.`); return; }
+        pp.copyScene(st.dupSrc, i);
+        flash(st.dupSrc === i ? `That is scene ${i + 1} itself: press another scene to copy it to.` : `Scene ${st.dupSrc + 1} copied to scene ${i + 1}.`);
+        return;
+      }
+      // Chains: hold one scene pad and press another (touch), or ⌘/Alt-click with a mouse.
       const held = st.held?.kind === 'scene';
-      if (held) { pp?.selectScene(st.held.index); pp?.selectScene(i, { chain: true }); }
-      else pp?.selectScene(i, { chain: isShift(e) });
-      useShift();
+      if (held) { pp.selectScene(st.held.index); pp.selectScene(i, { chain: true }); }
+      else pp.selectScene(i, { chain: e.metaKey || e.altKey });
       if (!held) st.held = { kind: 'scene', index: i, id: e.pointerId };
       return;
     }
@@ -1225,7 +1243,8 @@ export function buildPanel(root, api) {
 
   // Mixer view: row 1 mutes each track; pad 9 (row 2, first pad) is Mute Recall (firmware 1.2:
   // bright white = scenes recall the mutes saved with them); rows 3-4 are the 16 scenes (click to
-  // select, Shift-click to chain from the selected one).
+  // select, hold and press another or ⌘/Alt-click to chain; Shift-click stores, Clear clears,
+  // Duplicate copies).
   function paintMixer() {
     st.pads.forEach((p, k) => {
       clearPad(p);
@@ -1249,10 +1268,15 @@ export function buildPanel(root, api) {
         const i = (row - 2) * 8 + col;
         const inChain = !pp.custom && i >= pp.sceneChain.start && i <= pp.sceneChain.end;
         const now = pp.playing && st.pos?.scene === i;
-        p.className = `pad scene${pp.sceneStored(i) ? ' stored' : ''}${inChain ? ' chain' : ''}${!pp.custom && i === pp.scene ? ' sel' : ''}${now ? ' now' : ''}`;
+        // Shift held: the scene pads turn gold (stored ones bright), ready to store (User Guide p. 81).
+        const storing = shift.on || shift.held;
+        p.className = `pad scene${pp.sceneStored(i) ? ' stored' : ''}${inChain ? ' chain' : ''}${!pp.custom && i === pp.scene ? ' sel' : ''}${now ? ' now' : ''}${storing ? ' storing' : ''}${st.mode === 'dup' && st.dupSrc === i ? ' src' : ''}`;
         p.dataset.scene = i;
         p.textContent = String(i + 1);
-        p.title = `Scene ${i + 1}${pp.sceneStored(i) ? '' : ' (not saved in the project: plays pattern 1 of each track)'}. Click to play it; Shift-click to chain scenes.`;
+        p.title = storing ? `Scene ${i + 1}: click to store the patterns playing now and the current mutes here${pp.sceneStored(i) ? ' (replaces what is stored)' : ''}.`
+          : st.mode === 'clear' ? `Scene ${i + 1}: click to clear it (pattern 1 for every track, no mutes).`
+          : st.mode === 'dup' ? (st.dupSrc == null ? `Scene ${i + 1}: click to copy it.` : `Scene ${i + 1}: click to copy scene ${st.dupSrc + 1} here.`)
+          : `Scene ${i + 1}${pp.sceneStored(i) ? '' : ' (not saved in the project: plays pattern 1 of each track)'}. Click to play it; hold it and press another (or ⌘/Alt-click) to chain scenes; Shift-click to store.`;
         p.setAttribute('aria-pressed', String(inChain));
       } else p.className = 'pad off';
       p.setAttribute('aria-label', p.title || '');
@@ -1374,7 +1398,7 @@ export function buildPanel(root, api) {
     const saveHint = st.saveArm && pp?.loaded ? ` Save is waiting: press Save again to save over project ${pp.entry.slot + 1}${v.id === 'projects' ? ', or press another project\'s pad to save there' : ', or go to Projects view and press Save, then a pad, to save to another project'}. Esc cancels.` : '';
     if (v.id === 'projects') { setHint((st.saveArm && pp?.loaded ? '' : 'Press a project to load it, then ▶ (or Space) to play it. Synth 1 and 2 play the pack\'s patches as you edit them. Edits stay here until you Save (a dot marks a project with unsaved edits, a ring one saved into the pack here).') + saveHint); paintProjects(); return; }
     if (v.id === 'patterns') { setHint(pp?.loaded ? 'The lit pads are the patterns each track plays. Click a pattern to play it; hold it and press another (or Shift-click) to chain the patterns between them. ▼ ▲ show patterns 1-4 or 5-8. Choosing a scene in Mixer view puts back its patterns.' + saveHint : none); paintPatterns(); return; }
-    if (v.id === 'mixer') { setHint(pp?.loaded ? `Top row: mute each track. Pad 9 (Mute recall): when lit, each scene brings back the mutes saved with it as it starts; when dim, scenes keep the current mutes. Bottom two rows: the 16 scenes (white: saved in the project). Click a scene to play it; hold it and press another (or Shift-click) to chain the scenes between them. The macro knobs set each track\'s ${st.mixMode === 'pan' ? 'pan (▲ for levels)' : 'level (▼ for pan)'}, as do the faders (level) and sliders (pan) below; Save keeps them. With Clear on, turning a knob deletes that track\'s recorded ${st.mixMode === 'pan' ? 'pan movements (clockwise: back to the centre)' : 'level movements'} in the pattern it plays.` + saveHint : none); paintMixer(); return; }
+    if (v.id === 'mixer') { setHint(pp?.loaded ? `Top row: mute each track. Pad 9 (Mute recall): when lit, each scene brings back the mutes saved with it as it starts; when dim, scenes keep the current mutes. Bottom two rows: the 16 scenes (white: saved in the project). Click a scene to play it; hold it and press another (or ⌘/Alt-click) to chain the scenes between them. Shift-click a scene to store the patterns playing now (as chosen in Patterns view) and the current mutes in it; with Clear on, click a scene to clear it; with Duplicate on, click a scene and then the scenes to copy it to. The macro knobs set each track\'s ${st.mixMode === 'pan' ? 'pan (▲ for levels)' : 'level (▼ for pan)'}, as do the faders (level) and sliders (pan) below; Save keeps them. With Clear on, turning a knob deletes that track\'s recorded ${st.mixMode === 'pan' ? 'pan movements (clockwise: back to the centre)' : 'level movements'} in the pattern it plays.` + saveHint : none); paintMixer(); return; }
     if (v.id === 'fx') { setHint(pp?.loaded ? `Rows 1-2: the 16 delay presets; row 3: the 8 reverb presets (bright: the project's). Pressing a preset also makes the macro knobs that effect's send for each track (now: ${st.fxMode} sends; the knob brightens as the send rises). The faders below show and set the same sends; Reverb sends / Delay sends switches them and the knobs without changing the preset. Pad 25 turns FX on or off. With Clear on, turning a knob deletes that track's recorded ${st.fxMode} send movements in the pattern it plays. Save keeps all of it. Press FX again (or Shift + FX) for Side Chain.` + saveHint : none); paintFx(); return; }
     if (v.id === 'sidechain') { setHint(pp?.loaded ? `Side chain for ${st.scPage ? 'MIDI 1 (row 3) and MIDI 2 (row 4)' : 'Synth 1 (row 3) and Synth 2 (row 4)'}: Off, or presets 1-7 (how the drum ducks the track). Pads 5-8: the drum that ducks ${TRACKS[st.scTrack].label} (the track whose preset you pressed last). ${st.scPage ? '▲ for Synth 1 and 2.' : '▼ for MIDI 1 and 2.'} A muted drum doesn't duck. Save keeps it.${st.scPage ? ' The MIDI tracks\' side chains act on the Circuit Tracks\' rear inputs; the browser keeps and saves them but doesn\'t play them.' : ''}` + saveHint : none); paintSidechain(); return; }
     if (v.id === 'roll') {

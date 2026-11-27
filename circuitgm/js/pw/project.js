@@ -339,6 +339,45 @@ export class ProjectPlayer {
     this.changed(true);
   }
   sceneStored(i) { return !!this.song?.scenes[i]?.used; }
+  // ---- storing scenes (Mixer view; User Guide v3 pp. 81-84, Rhythm 2.0 addendum p. 8). Each is a
+  // project edit (Save keeps it, Revert drops it) and, as on the hardware, doesn't select the scene
+  // or change the scene chain; what plays changes only if the scene is in the chain being played.
+  // Shift + scene pad: the patterns (or pattern chains) each track plays now, and the current mutes.
+  storeScene(i) {
+    if (!this.loaded) return;
+    const sc = this.entry.project.scenes[i];
+    sc.trackChains = this.sel.map((c, t) => ({ ...sc.trackChains[t], start: c.start, end: c.end }));
+    sc.flags = 1;
+    sc.mask = this.mutes.reduce((m, on, t) => m | (on ? 1 << t : 0), 0);
+    this.sceneEdited(i);
+  }
+  // Clear + scene pad: back to its default state, pattern 1 for every track and no mutes.
+  clearScene(i) {
+    if (!this.loaded) return;
+    const sc = this.entry.project.scenes[i];
+    sc.trackChains = sc.trackChains.map((c) => ({ ...c, start: 0, end: 0 }));
+    sc.flags = 0;
+    sc.mask = 0;
+    this.sceneEdited(i);
+  }
+  // Duplicate: scene `from` copied to scene `to` (its patterns, mutes and stored flag).
+  copyScene(from, to) {
+    if (!this.loaded || from === to) return;
+    const scs = this.entry.project.scenes, a = scs[from], b = scs[to];
+    b.trackChains = a.trackChains.map((c) => ({ ...c }));
+    b.flags = a.flags;
+    b.mask = a.mask;
+    this.sceneEdited(to);
+  }
+  sceneEdited(i) {
+    // The scene being chosen (and not since changed in Patterns view) takes its new patterns.
+    const pick = !this.custom && i === this.scene;
+    this.entry.edited = true;
+    this.song = songOf(songPack(this.pack, this.o.patchName), this.entry);
+    if (pick) this.sel = this.song.scenes[i].chains.map((x) => ({ ...x }));
+    if (this.recalled === i) this.recalled = null;
+    this.changed(false);
+  }
 
   // ---- step editing (Note, Velocity, Gate, Probability and Pattern Settings views)
   // Edits change the project loaded here (its parsed model, entry.project) and are heard at once.

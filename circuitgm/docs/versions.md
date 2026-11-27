@@ -12,7 +12,7 @@ Each tool page shows its version next to its status badge, so you can tell which
 | MIDI2Rhythm | 0.21 | For testing · v0.21 |
 | Circuit2MIDI | 0.7 | alpha 0.7 |
 | CircuitTrim | 0.5 | alpha 0.5 |
-| PatchWorker | 0.23 | For testing · v0.23 (title line under the menu) |
+| PatchWorker | 0.24 | For testing · v0.24 (title line under the menu) |
 
 Numbering started on 14 Nov 2026. Earlier changes are grouped roughly:
 
@@ -54,6 +54,7 @@ See `midi2rhythm/help.html` (Versions). 0.1–0.6 on 14 Nov 2026; 0.7 (15 Nov): 
 - 0.1 (10 Nov 2026): first alpha.
 
 ## PatchWorker
+- **0.24** (27 Nov 2026): storing scenes in Mixer view (User Guide pp. 81-84; Rhythm 2.0 addendum p. 8). Shift + scene pad stores the patterns (or pattern chains) each track plays now and the current mutes; with Shift held the scene pads turn gold, stored ones bright. Clear + scene pad clears a scene (pattern 1 for every track, no mutes); Duplicate, a scene, then other scenes copies it. As on the hardware, storing doesn't select the scene or change the scene chain. Saved with the project, dropped by Revert. Chaining scenes with a mouse is now ⌘/Alt-click (Shift-click stores); hold-and-press still works.
 - **0.23** (25 Nov 2026): FX view and Side Chain view (User Guide pp. 90-94). FX: delay presets on rows 1-2, reverb presets on row 3, pad 25 FX on/off; pressing a preset makes the macro knobs that effect's sends (Clear + turn deletes recorded send movements); faders under the pads show and set the same sends, with a Reverb sends / Delay sends switch (Ian's request). Side Chain (FX again or Shift + FX): Off or presets 1-7 for Synth 1/2 (▼ MIDI 1/2), pads 5-8 the trigger drum. All saved with the project, put back by Revert. Fixes: drum reverb/delay sends were read from the drum settings (always 0) instead of the tail's send bytes, so drums had no FX in projects that send them; a muted drum no longer fires the side chain.
 - **0.22** (25 Nov 2026): scene mutes (Circuit Tracks firmware 1.2). Mixer view's pad 9 is Mute Recall (bright white when on, saved with the project): each scene then brings back the mutes saved with it as it starts or is chosen, and the mute pads show them; mutes changed by hand hold until the next scene. Before, playback dropped scene-muted tracks without showing it and they couldn't be unmuted.
 - **0.21.2** (25 Nov 2026): Mixer view's level faders 60 px tall (were 96 px), as Ian asked.

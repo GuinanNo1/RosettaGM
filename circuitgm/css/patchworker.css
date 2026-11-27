@@ -457,6 +457,10 @@ body.doc { display: block; overflow: auto; }
 .pad.scene.chain { background: color-mix(in srgb, var(--s2) 45%, #2a2a36); color: #12111a; }
 .pad.scene.sel { box-shadow: inset 0 0 0 2px var(--s2); }
 .pad.scene.now { background: var(--s2); color: #12111a; animation: padpulse 1s ease-in-out infinite; }
+/* Shift held: the scene pads dim gold, stored ones bright gold (User Guide p. 81). */
+.pad.scene.storing { background: #4d4122; color: #d9c48a; box-shadow: none; animation: none; }
+.pad.scene.storing.stored { background: #e0b84a; color: #1a1408; }
+.pad.scene.src { box-shadow: inset 0 0 0 3px #fff; }
 @keyframes padpulse { 50% { filter: brightness(.7); } }
 @media (prefers-reduced-motion: reduce) { .pad.scene.now, .pad.project.playing { animation: none; } }
 .tbtn.play.on { color: #fff; background: color-mix(in srgb, var(--s2) 35%, #24242f); }

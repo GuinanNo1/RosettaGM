@@ -111,8 +111,8 @@ const fs = require('fs');
     check(await p.evaluate(() => window.patchworker.proj.levels[1] === 40), `${name}: a level slider sets Synth 2's level`);
     await p.click('.pad[data-scene="1"]');
     check(await p.evaluate(() => { const w = window.patchworker.proj; return !w.custom && w.scene === 1 && w.sceneChain.start === 1 && w.sceneChain.end === 1; }), `${name}: a scene pad plays that scene (and puts back its patterns)`);
-    await p.click('.pad[data-scene="3"]', { modifiers: ['Shift'] });
-    check(await p.evaluate(() => { const c = window.patchworker.proj.sceneChain; return c.start === 1 && c.end === 3; }), `${name}: Shift-click chains scenes 2 to 4`);
+    await p.click('.pad[data-scene="3"]', { modifiers: ['Alt'] });
+    check(await p.evaluate(() => { const c = window.patchworker.proj.sceneChain; return c.start === 1 && c.end === 3; }), `${name}: Alt-click chains scenes 2 to 4 (Shift-click stores, 0.24)`);
     check(await p.$$eval('.pad.scene.chain', (x) => x.length) === 3, `${name}: the chain is lit`);
 
     // Tempo view.
