@@ -339,6 +339,17 @@ export class ProjectPlayer {
     this.changed(true);
   }
   sceneStored(i) { return !!this.song?.scenes[i]?.used; }
+  // The hardware's pulsing scene pad (User Guide v3 p. 83): true while the patterns selected match
+  // those stored in the scene chosen last. Choosing other patterns in Patterns view stops it, and
+  // choosing the matching ones again brings it back; only the most recently chosen scene counts.
+  // Once patterns have been chosen by hand, a scene chain no longer plays, so it only counts then
+  // when the chain is that one scene.
+  sceneMatches() {
+    if (!this.loaded) return false;
+    if (this.custom && this.sceneChain.end > this.sceneChain.start) return false;
+    const sc = this.song.scenes[this.scene];
+    return this.sel.every((c, t) => c.start === sc.chains[t].start && c.end === sc.chains[t].end);
+  }
   // ---- storing scenes (Mixer view; User Guide v3 pp. 81-84, Rhythm 2.0 addendum p. 8). Each is a
   // project edit (Save keeps it, Revert drops it) and, as on the hardware, doesn't select the scene
   // or change the scene chain; what plays changes only if the scene is in the chain being played.

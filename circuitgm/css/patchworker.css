@@ -455,14 +455,18 @@ body.doc { display: block; overflow: auto; }
 .pad.scene { cursor: pointer; font: 600 .72rem var(--mono); color: #6d6d82; background: #23232e; }
 .pad.scene.stored { background: #4a4a5e; color: #e9e9f2; }
 .pad.scene.chain { background: color-mix(in srgb, var(--s2) 45%, #2a2a36); color: #12111a; }
-.pad.scene.sel { box-shadow: inset 0 0 0 2px var(--s2); }
-.pad.scene.now { background: var(--s2); color: #12111a; animation: padpulse 1s ease-in-out infinite; }
+/* The scene chosen last, while the selected patterns match it: a ring and a bright/dim pulse
+   (User Guide p. 83). Only this pad pulses; the scene playing now is filled. */
+.pad.scene.match { box-shadow: inset 0 0 0 3px var(--s2), 0 0 10px color-mix(in srgb, var(--s2) 55%, transparent); animation: scenepulse 1.1s ease-in-out infinite; }
+.pad.scene.now { background: var(--s2); color: #12111a; }
+.pad.scene.now.match { box-shadow: inset 0 0 0 3px #fff, 0 0 12px color-mix(in srgb, var(--s2) 70%, transparent); }
 /* Shift held: the scene pads dim gold, stored ones bright gold (User Guide p. 81). */
 .pad.scene.storing { background: #4d4122; color: #d9c48a; box-shadow: none; animation: none; }
 .pad.scene.storing.stored { background: #e0b84a; color: #1a1408; }
 .pad.scene.src { box-shadow: inset 0 0 0 3px #fff; }
 @keyframes padpulse { 50% { filter: brightness(.7); } }
-@media (prefers-reduced-motion: reduce) { .pad.scene.now, .pad.project.playing { animation: none; } }
+@keyframes scenepulse { 50% { filter: brightness(.55); } }
+@media (prefers-reduced-motion: reduce) { .pad.scene.match, .pad.project.playing { animation: none; } }
 .tbtn.play.on { color: #fff; background: color-mix(in srgb, var(--s2) 35%, #24242f); }
 .mixbox { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 7px; padding: 8px 10px 0; }
 .mixbox .lvl { display: grid; gap: 3px; justify-items: center; font: 600 .66rem var(--head); color: var(--muted); }
